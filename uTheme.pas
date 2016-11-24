@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, Buttons, ExtCtrls, uGlobal, uData;
+  Dialogs, Buttons, ExtCtrls, uData;
 
 type
   TfrmTopics = class(TForm)
@@ -31,8 +31,13 @@ type
     topicIndex: integer;
     page:integer;
     links: array of TLinkLabel;
+    currentTopic: TTopicInfo;
+
+    procedure clear;
     procedure createTopicLinks();
+   // procedure loadPage(pageNo, topicNo: integer);overload;
     procedure loadPage(pageNo, topicNo: integer);
+    function isSetCurrentTopic(raiseException: boolean = true): boolean;
   public
     { Public declarations }
     procedure showTopics();
@@ -40,30 +45,49 @@ type
   end;
 
 implementation
-uses jpeg, uOGE;
+uses jpeg, FWZipReader, uOGE;
 
 {$R *.dfm}
 
 { TfrmTheme }
 
+function TfrmTopics.isSetCurrentTopic(raiseException: boolean = true): boolean;
+begin
+     if currentTopic.id < 0 then
+     begin
+        messageBox(self.Handle, 'Выберите тему!', 'Ошибка', MB_OK or MB_ICONERROR);
+        if raiseException then abort else exit(false);
+     end;
+     result := true;
+end;
+
 procedure TfrmTopics.showTopics;
 begin
     page := 1;
+    currentTopic.id := -1;
     topics := dm.loadTopics();
+    if topics = nil then
+    begin
+        messageBox(self.Handle, 'Не удалось загузить темы', 'Ошибка', MB_OK or MB_ICONERROR);
+        abort;
+    end;
     createTopicLinks();
     show;
 end;
 
 procedure TfrmTopics.btNextPageClick(Sender: TObject);
 begin
+    isSetCurrentTopic();
+
     inc(page);
-    if page > topics[topicIndex].pageCount then page := topics[topicIndex].pageCount;
+    if page > currentTopic.pageCount then page := currentTopic.pageCount;
 
     loadPage(page, topicIndex);
 end;
 
 procedure TfrmTopics.btPrevPageClick(Sender: TObject);
 begin
+     isSetCurrentTopic();
      dec(page);
      if page < 1 then page := 1;
 
@@ -71,8 +95,27 @@ begin
 end;
 
 procedure TfrmTopics.btTestClick(Sender: TObject);
+var testList: TTestList;
 begin
+     isSetCurrentTopic;
+
+     testList := getTestListByTopic(currentTopic.id, frmOGE.Tests.Tests);
+     if testList = nil then
+     begin
+          messageBox(self.Handle, 'По данной теме тестов нет', 'Ошибка', MB_OK or MB_ICONERROR);
+          abort;
+     end;
+
+     frmOGE.Tests.setNewTopic(currentTopic.id);
+     frmOGE.Tests.loadTest(testList[0], 1, 1);
      frmOGE.pgPages.ActivePage := frmOGE.tabTests;
+end;
+
+procedure TfrmTopics.clear;
+begin
+    img.Canvas.Brush.Color:=ClWhite;
+    img.Canvas.FillRect(img.Canvas.ClipRect);
+    currentTopic.id := -1;
 end;
 
 procedure TfrmTopics.createTopicLinks;
@@ -103,17 +146,45 @@ procedure TfrmTopics.linkClick(Sender: TObject);
 begin
     if not (Sender is TLinkLabel) then exit;
 
+    clear;
     page := 1;
     topicIndex := TLinkLabel(Sender).Tag;
+    currentTopic := topics[topicIndex];
     loadPage(page, topicIndex);
 end;
 
 procedure TfrmTopics.loadPage(pageNo, topicNo: integer);
 var fileName: string;
     jpg: TJpegImage;
+    mem: TMemoryStream;
 begin
+     isSetCurrentTopic();
+
+     fileName := format('%s/%s/%d.jpg',
+        [TOPIC_DIR, currentTopic.dir, pageNo]);
+
+     mem := TMemoryStream(FindData(dm.DataFile, fileName, tMemory));
+     if mem = nil then exit;
+
+     jpg := TJpegImage.Create;
+     try
+      //  mem.Position := 0;
+        jpg.LoadFromStream(mem);
+        img.Picture.Bitmap.Assign(jpg);
+        ScrollBox.VertScrollBar.Range := img.Picture.Bitmap.Height;
+     finally
+         jpg.Free;
+     end;
+end;
+
+{procedure TfrmTopics.loadPage(pageNo, topicNo: integer);
+var fileName: string;
+    jpg: TJpegImage;
+begin
+    isSetCurrentTopic();
+
     fileName := format('%s%s\%s\%d.jpg',
-        [dm.exePath(), TOPIC_DIR, topics[topicNo].dir, pageNo]);
+        [exePath(), TOPIC_DIR, currentTopic.dir, pageNo]);
 
     if not FileExists(fileName) then exit;
 
@@ -125,7 +196,7 @@ begin
     finally
        jpg.Free;
     end;
-end;
+end; }
 
 procedure TfrmTopics.FormDestroy(Sender: TObject);
 var i: integer;
@@ -137,11 +208,6 @@ procedure TfrmTopics.FormMouseWheel(Sender: TObject; Shift: TShiftState;
   WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
 begin
     with scrollBox.VertScrollBar do
-    begin
-        if (wheelDelta < 0) and (position < range)
-        then position := position + increment
-        else if (position > 0) then position := position - increment
-    end;with scrollBox.VertScrollBar do
     begin
         if (wheelDelta < 0) and (position < range)
         then position := position + increment

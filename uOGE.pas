@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, OleCtrls, SHDocVw, ComCtrls, StdCtrls, ExtCtrls, ExtDlgs, Grids,
-  ToolWin, Buttons, uAdmin, PlatformDefaultStyleActnCtrls, ActnList, ActnMan,
+  ToolWin, Buttons, PlatformDefaultStyleActnCtrls, ActnList, ActnMan,
   AppEvnts, uTests, uTheme, uData;
 
 type
@@ -24,14 +24,14 @@ type
       const pDisp: IDispatch; var URL: OleVariant);
   private
     { Private declarations }
-    frmAdmin: TfrmAdmin;
     frmTests: TfrmTests;
     frmTopics: TfrmTopics;
     path: string;
-    function getTopicList: TTopicList;
   public
     { Public declarations }
-    property TopicList: TTopicList read getTopicList;
+
+    property Tests: TfrmTests read frmTests;
+    property Topics: TfrmTopics read frmTopics;
   end;
 
 var
@@ -40,10 +40,14 @@ var
 implementation
 
 {$R *.dfm}
+{$DEFINE TEST}
 
 procedure TfrmOGE.FormCreate(Sender: TObject);
 begin
-    Path := dm.exePath();
+    {$IFDEF TEST}
+    showMessage('Тестовый образец');
+    {$ENDIF}
+    Path := exePath();
     WebBrowser1.Navigate(path + '1.html');
     WebBrowser1.OleObject.Document.bgColor := '#E0FFFF';
     pgPages.ActivePage := tabInfo;
@@ -59,14 +63,8 @@ end;
 
 procedure TfrmOGE.FormDestroy(Sender: TObject);
 begin
-    freeAndNil(frmAdmin);
     freeAndNil(frmTests);
     freeAndNil(frmTopics);
-end;
-
-function TfrmOGE.getTopicList: TTopicList;
-begin
-    result := frmTopics.TopicList;
 end;
 
 procedure TfrmOGE.WebBrowser1DocumentComplete(ASender: TObject;

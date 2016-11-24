@@ -4,8 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, uGlobal, uData, OleCtrls, SHDocVw, Menus,
-  uNewTask, Buttons;
+  Dialogs, StdCtrls, ExtCtrls, uData, OleCtrls, SHDocVw, Menus,
+  Buttons;
 
 type
   TfrmTests = class(TForm)
@@ -15,37 +15,90 @@ type
     Panel3: TPanel;
     cboTopics: TComboBox;
     rgVariants: TRadioGroup;
-    PopupMenu1: TPopupMenu;
-    mNewTask: TMenuItem;
-    btNextTest: TSpeedButton;
-    btPrevTest: TSpeedButton;
-    SpeedButton1: TSpeedButton;
+    btAnswear: TSpeedButton;
     SpeedButton2: TSpeedButton;
     SpeedButton3: TSpeedButton;
-    Panel2: TPanel;
+    pnlTask: TPanel;
     img: TImage;
+    btPrevTask: TSpeedButton;
+    btNextTask: TSpeedButton;
     procedure rgVariantsClick(Sender: TObject);
+    procedure btNextTaskClick(Sender: TObject);
+    procedure btPrevTaskClick(Sender: TObject);
+    procedure cboTopicsChange(Sender: TObject);
+    procedure btAnswearClick(Sender: TObject);
   private
     { Private declarations }
-     task: integer;
-     tests: TTestList;
+     fTask: integer;
+     fTests: TTestList;
+     currentTest: TTestInfo;
+     answears: TAnswears;
      procedure fillcboTopics(topics: TTopicList);
-     procedure loadTest(test:TTestInfo; testVariant, taskNo: integer);
-     function getTestListByTopic(topicID: integer): TTestList;
+     procedure clear;
   public
     { Public declarations }
+    property Tests: TTEstList read fTests;
+    procedure setNewTopic(newTopicID: integer);
+    procedure loadTest(test:TTestInfo; testVariant, taskNo: integer);
     procedure ShowTests();
   end;
+
 
 implementation
 
 uses uOGE, jpeg;
 
 {$R *.dfm}
+
              // Если выбран вариант с 6 - 10 то насчитываем баллы по таблице
 const userPoints: array[0..9] of double = (0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1, 2, 2, 2);
+      e = 0.01;
 
 { TfrmTests }
+procedure TfrmTests.btAnswearClick(Sender: TObject);
+var usrAnswear: double;
+begin
+     if (self.answears = nil) or (fTask = 0) then exit;
+     usrAnswear := strToFloatEx(trim(txtAnswer.Text));
+
+     if abs(usrAnswear - self.answears[fTask - 1]) < e then
+     begin
+        showMessage('Верно!')
+     end
+     else begin
+        showMessage('Подумай.');
+     end;
+end;
+
+procedure TfrmTests.btNextTaskClick(Sender: TObject);
+begin
+    inc(fTask);
+    if fTask > TASK_COUNT then fTask := TASK_COUNT;
+
+    loadTest(currentTest, rgVariants.ItemIndex + 1, fTask);
+end;
+
+procedure TfrmTests.btPrevTaskClick(Sender: TObject);
+begin
+    dec(fTask);
+    if fTask < 1 then fTask := 1;
+
+    loadTest(currentTest, rgVariants.ItemIndex + 1, fTask);
+end;
+
+procedure TfrmTests.cboTopicsChange(Sender: TObject);
+begin
+    clear;
+end;
+
+procedure TfrmTests.clear;
+begin
+    img.Canvas.Brush.Color:=ClWhite;
+    img.Canvas.FillRect(img.Canvas.ClipRect);
+
+    rgVariants.ItemIndex := -1;
+end;
+
 procedure TfrmTests.fillcboTopics(topics: TTopicList);
 var i: integer;
 begin
@@ -53,55 +106,90 @@ begin
           cboTopics.Items.AddObject(topics[i].displayLabel, Tobject(topics[i].id));
 end;
 
-function TfrmTests.getTestListByTopic(topicID: integer): TTestList;
-var i: integer;
-begin
-    result := nil;
-
-    for i := 0 to length(tests) - 1 do
-    begin
-          if tests[i].topic = topicID then
-          begin
-                setLength(result, length(result) + 1);
-                result[high(result)] := tests[i];
-          end;
-    end;
-end;
-
 procedure TfrmTests.loadTest(test: TTestInfo; testVariant, taskNo: integer);
-var fileName: string;
+var fileName, answearName: string;
     jpg: TJpegImage;
+    mem: TMemoryStream;
 begin
-    fileName := format('%s%s\%s\%d\%d.jpg',
-        [dm.exePath(), TEST_DIR, test.dir, testVariant, taskNo]);
+     clear;
 
-    if not FileExists(fileName) then exit;
+     fileName := format('%s/%s/%d/%d.jpg',
+        [TEST_DIR, test.dir, testVariant, taskNo]);
 
-    jpg := TJpegImage.Create;
-    try
-      jpg.LoadFromFile(fileName);
-      img.Picture.Bitmap.Assign(jpg);
-    finally
-       jpg.Free;
-    end;
+     mem := TMemoryStream(FindData(dm.DataFile, fileName, tMemory));
+
+     if mem = nil then
+     begin
+         messageBox(self.Handle, 'По данной теме тесты не загружены', 'Ошибка', MB_OK or MB_ICONERROR);
+         abort;
+     end;
+
+     fTask := taskNo;
+     currentTest := test;
+
+     if answears = nil then
+     begin
+          answearName := format('%s/%s/answ.xml', [TEST_DIR, currentTest.dir]);
+          answears := dm.loadAnswears(answearName, testVariant);
+     end;
+
+     rgVariants.OnClick := nil;
+     rgVariants.ItemIndex := testVariant - 1;
+     rgVariants.OnClick := rgVariantsClick;
+
+     jpg := TJpegImage.Create;
+     try
+        jpg.LoadFromStream(mem);
+        img.Top   := 10;
+        img.Left  := 10;
+        img.Width := jpg.Width;
+        img.Height := jpg.Height;
+        img.Picture.Bitmap.Assign(jpg);
+     finally
+        jpg.Free;
+     end;
 end;
 
 procedure TfrmTests.rgVariantsClick(Sender: TObject);
-var test: TTestList;
+var topicTestList: TTestList;
 begin
-    test := getTestListByTopic(integer(cboTopics.Items.Objects[cboTopics.ItemIndex]));
-    if test = nil then exit;
+    if rgVariants.ItemIndex < 0 then exit;
 
-    task := 1;
-    loadTest(test[0], rgVariants.ItemIndex + 1, task);
+    answears := nil;
+
+    topicTestList := getTestListByTopic(
+        integer(cboTopics.Items.Objects[cboTopics.ItemIndex]), fTests
+        );
+    if topicTestList = nil then exit;
+
+    fTask := 1;
+    loadTest(topicTestList[0], rgVariants.ItemIndex + 1, fTask);
+end;
+
+procedure TfrmTests.setNewTopic(newTopicID: integer);
+var i: integer;
+begin
+     for i := 0 to cboTopics.Items.Count - 1 do
+     begin
+          if integer(cboTopics.Items.Objects[i]) = newTopicID then
+          begin
+              cboTopics.ItemIndex := i;
+              exit;
+          end;
+     end;
 end;
 
 procedure TfrmTests.ShowTests;
 begin
-    tests := dm.loadTests();
-    fillcboTopics(frmOGE.TopicList);
+    fTests := dm.loadTests();
+    if fTests = nil then
+    begin
+      messageBox(self.Handle, 'Не удалось загузить тесты', 'Ошибка', MB_OK or MB_ICONERROR);
+      abort;
+    end;
+    fillcboTopics(frmOGE.Topics.TopicList);
     cboTopics.ItemIndex := 0;
-    rgVariants.ItemIndex := 0;
+   // rgVariants.ItemIndex := 0;
     show;
 end;
 
