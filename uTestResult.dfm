@@ -15,38 +15,11 @@ object frmTestResult: TfrmTestResult
   Position = poMainFormCenter
   PixelsPerInch = 96
   TextHeight = 16
-  object Chart: TChart
-    Left = 0
-    Top = 27
-    Width = 794
-    Height = 425
-    Legend.Visible = False
-    Title.Font.Height = -13
-    Title.Font.Name = 'Tahoma'
-    Title.Text.Strings = (
-      #1056#1077#1079#1091#1083#1100#1090#1072#1090' '#1090#1077#1089#1090#1080#1088#1086#1074#1072#1085#1080#1103)
-    View3D = False
-    View3DOptions.Elevation = 315
-    View3DOptions.Orthogonal = False
-    View3DOptions.Perspective = 0
-    View3DOptions.Rotation = 360
-    Align = alClient
-    TabOrder = 0
-    ExplicitTop = 33
-    ExplicitWidth = 555
-    object Series1: TPieSeries
-      Marks.Arrow.Visible = True
-      Marks.Callout.Brush.Color = clBlack
-      Marks.Callout.Arrow.Visible = True
-      Marks.Visible = True
-      Title = #1056#1077#1079#1091#1083#1100#1090#1072#1090' '#1090#1077#1089#1090#1080#1088#1086#1074#1072#1085#1080#1103
-      Gradient.Direction = gdRadial
-      OtherSlice.Legend.Visible = False
-      PiePen.Visible = False
-      PieValues.Name = 'Pie'
-      PieValues.Order = loNone
-      Data = {0000000000}
-    end
+  object img: TImage
+    Left = 2
+    Top = 31
+    Width = 790
+    Height = 420
   end
   object Panel1: TPanel
     Left = 0
@@ -57,8 +30,7 @@ object frmTestResult: TfrmTestResult
     BevelOuter = bvNone
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 1
-    ExplicitWidth = 555
+    TabOrder = 0
     object btExit: TSpeedButton
       Left = 759
       Top = 0
@@ -140,7 +112,6 @@ object frmTestResult: TfrmTestResult
       Height = 17
       Caption = #1057#1083#1091#1095#1072#1085#1099#1077' '#1095#1080#1089#1083#1072
       TabOrder = 0
-      OnClick = chkRandomClick
     end
   end
 end
