@@ -14,6 +14,7 @@ object frmTopics: TfrmTopics
   OldCreateOrder = False
   OnDestroy = FormDestroy
   OnMouseWheel = FormMouseWheel
+  OnResize = FormResize
   PixelsPerInch = 96
   TextHeight = 16
   object Splitter1: TSplitter
@@ -49,7 +50,7 @@ object frmTopics: TfrmTopics
       Visible = False
     end
   end
-  object Panel5: TPanel
+  object pnlTopic: TPanel
     Left = 206
     Top = 0
     Width = 285
@@ -67,22 +68,17 @@ object frmTopics: TfrmTopics
       VertScrollBar.Increment = 2
       Align = alClient
       AutoScroll = False
-      AutoSize = True
       BevelEdges = []
       BevelInner = bvNone
       BevelOuter = bvNone
       BorderStyle = bsNone
       TabOrder = 0
       object img: TImage
-        Left = 0
-        Top = 0
+        Left = 3
+        Top = 3
         Width = 262
         Height = 249
-        Align = alClient
-        ExplicitLeft = 3
-        ExplicitTop = 6
-        ExplicitWidth = 338
-        ExplicitHeight = 255
+        Align = alCustom
       end
     end
     object Panel4: TPanel

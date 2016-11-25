@@ -24,7 +24,6 @@ object frmTests: TfrmTests
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
-    ExplicitWidth = 541
     DesignSize = (
       657
       29)
@@ -109,7 +108,7 @@ object frmTests: TfrmTests
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
     end
-    object SpeedButton3: TSpeedButton
+    object btResults: TSpeedButton
       Left = 310
       Top = 2
       Width = 40
@@ -144,6 +143,7 @@ object frmTests: TfrmTests
         DFF4E389D395B4DCB7BCE0BAB9E1B5CEEACBA4CEA695C99AF3DAC4E3AB7CF6E6
         D8FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF9FDFABDE7C492D49C6CC37965
         BD7180C689ACD7B0FEFEFDFEFCF9FFFFFFFFFFFFFFFFFFFFFFFF}
+      OnClick = btResultsClick
     end
     object txtAnswer: TEdit
       Left = 42
@@ -162,7 +162,6 @@ object frmTests: TfrmTests
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitWidth = 708
     object btPrevTask: TSpeedButton
       Left = 577
       Top = 0
@@ -282,9 +281,6 @@ object frmTests: TfrmTests
     Color = clWhite
     ParentBackground = False
     TabOrder = 2
-    ExplicitTop = 41
-    ExplicitWidth = 541
-    ExplicitHeight = 207
     object img: TImage
       Left = 42
       Top = 24

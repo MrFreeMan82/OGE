@@ -5,7 +5,8 @@ uses
   uOGE in 'uOGE.pas' {frmOGE},
   uData in 'uData.pas' {dm: TDataModule},
   uTests in 'uTests.pas' {frmTests},
-  uTheme in 'uTheme.pas' {frmTopics};
+  uTheme in 'uTheme.pas' {frmTopics},
+  uTestResult in 'uTestResult.pas' {frmTestResult};
 
 {$R *.res}
 

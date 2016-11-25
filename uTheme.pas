@@ -10,7 +10,7 @@ type
   TfrmTopics = class(TForm)
     pnlLinks: TPanel;
     lkNums: TLinkLabel;
-    Panel5: TPanel;
+    pnlTopic: TPanel;
     ScrollBox: TScrollBox;
     img: TImage;
     Panel4: TPanel;
@@ -25,18 +25,18 @@ type
     procedure btNextPageClick(Sender: TObject);
     procedure btPrevPageClick(Sender: TObject);
     procedure btTestClick(Sender: TObject);
+    procedure FormResize(Sender: TObject);
   private
     { Private declarations }
     topics: TTopicList;
-    topicIndex: integer;
     page:integer;
     links: array of TLinkLabel;
-    currentTopic: TTopicInfo;
+    fCurrentTopic: TTopicInfo;
 
     procedure clear;
     procedure createTopicLinks();
    // procedure loadPage(pageNo, topicNo: integer);overload;
-    procedure loadPage(pageNo, topicNo: integer);
+    procedure loadPage(pageNo: integer);
     function isSetCurrentTopic(raiseException: boolean = true): boolean;
   public
     { Public declarations }
@@ -53,10 +53,15 @@ uses jpeg, FWZipReader, uOGE;
 
 function TfrmTopics.isSetCurrentTopic(raiseException: boolean = true): boolean;
 begin
-     if currentTopic.id < 0 then
+     if fCurrentTopic.id < 0 then
      begin
-        messageBox(self.Handle, 'Выберите тему!', 'Ошибка', MB_OK or MB_ICONERROR);
-        if raiseException then abort else exit(false);
+        if raiseException then
+        begin
+            messageBox(self.Handle, 'Выберите тему!', 'Ошибка', MB_OK or MB_ICONERROR);
+            abort
+        end
+        else
+           exit(false);
      end;
      result := true;
 end;
@@ -64,7 +69,7 @@ end;
 procedure TfrmTopics.showTopics;
 begin
     page := 1;
-    currentTopic.id := -1;
+    fcurrentTopic.id := -1;
     topics := dm.loadTopics();
     if topics = nil then
     begin
@@ -80,9 +85,9 @@ begin
     isSetCurrentTopic();
 
     inc(page);
-    if page > currentTopic.pageCount then page := currentTopic.pageCount;
+    if page > fcurrentTopic.pageCount then page := fcurrentTopic.pageCount;
 
-    loadPage(page, topicIndex);
+    loadPage(page);
 end;
 
 procedure TfrmTopics.btPrevPageClick(Sender: TObject);
@@ -91,7 +96,7 @@ begin
      dec(page);
      if page < 1 then page := 1;
 
-     loadPage(page, topicIndex);
+     loadPage(page);
 end;
 
 procedure TfrmTopics.btTestClick(Sender: TObject);
@@ -99,15 +104,15 @@ var testList: TTestList;
 begin
      isSetCurrentTopic;
 
-     testList := getTestListByTopic(currentTopic.id, frmOGE.Tests.Tests);
+     testList := getTestListByTopic(fcurrentTopic.id, frmOGE.Tests.Tests);
      if testList = nil then
      begin
           messageBox(self.Handle, 'По данной теме тестов нет', 'Ошибка', MB_OK or MB_ICONERROR);
           abort;
      end;
 
-     frmOGE.Tests.setNewTopic(currentTopic.id);
-     frmOGE.Tests.loadTest(testList[0], 1, 1);
+     frmOGE.Tests.setNewTopic(fcurrentTopic.id);
+     frmOGE.Tests.SelectVariant(1);
      frmOGE.pgPages.ActivePage := frmOGE.tabTests;
 end;
 
@@ -115,7 +120,7 @@ procedure TfrmTopics.clear;
 begin
     img.Canvas.Brush.Color:=ClWhite;
     img.Canvas.FillRect(img.Canvas.ClipRect);
-    currentTopic.id := -1;
+    fcurrentTopic.id := -1;
 end;
 
 procedure TfrmTopics.createTopicLinks;
@@ -148,12 +153,11 @@ begin
 
     clear;
     page := 1;
-    topicIndex := TLinkLabel(Sender).Tag;
-    currentTopic := topics[topicIndex];
-    loadPage(page, topicIndex);
+    fcurrentTopic := topics[TLinkLabel(Sender).Tag];
+    loadPage(page);
 end;
 
-procedure TfrmTopics.loadPage(pageNo, topicNo: integer);
+procedure TfrmTopics.loadPage(pageNo: integer);
 var fileName: string;
     jpg: TJpegImage;
     mem: TMemoryStream;
@@ -161,7 +165,7 @@ begin
      isSetCurrentTopic();
 
      fileName := format('%s/%s/%d.jpg',
-        [TOPIC_DIR, currentTopic.dir, pageNo]);
+        [TOPIC_DIR, fcurrentTopic.dir, pageNo]);
 
      mem := TMemoryStream(FindData(dm.DataFile, fileName, tMemory));
      if mem = nil then exit;
@@ -170,33 +174,18 @@ begin
      try
       //  mem.Position := 0;
         jpg.LoadFromStream(mem);
+        img.Top := 5;
+        img.Left := (ScrollBox.ClientWidth - jpg.Width) div 2;
+        if img.Left < 0 then img.Left := 5;
+        img.Width := jpg.Width;
+        img.Height := jpg.Height;
         img.Picture.Bitmap.Assign(jpg);
-        ScrollBox.VertScrollBar.Range := img.Picture.Bitmap.Height;
+        ScrollBox.HorzScrollBar.Range := img.Picture.Width;
+        ScrollBox.VertScrollBar.Range := img.Picture.Height;
      finally
          jpg.Free;
      end;
 end;
-
-{procedure TfrmTopics.loadPage(pageNo, topicNo: integer);
-var fileName: string;
-    jpg: TJpegImage;
-begin
-    isSetCurrentTopic();
-
-    fileName := format('%s%s\%s\%d.jpg',
-        [exePath(), TOPIC_DIR, currentTopic.dir, pageNo]);
-
-    if not FileExists(fileName) then exit;
-
-    jpg := TJpegImage.Create;
-    try
-      jpg.LoadFromFile(fileName);
-      img.Picture.Bitmap.Assign(jpg);
-      ScrollBox.VertScrollBar.Range := img.Picture.Bitmap.Height;
-    finally
-       jpg.Free;
-    end;
-end; }
 
 procedure TfrmTopics.FormDestroy(Sender: TObject);
 var i: integer;
@@ -213,6 +202,11 @@ begin
         then position := position + increment
         else if (position > 0) then position := position - increment
     end;
+end;
+
+procedure TfrmTopics.FormResize(Sender: TObject);
+begin
+  if isSetCurrentTopic(false) then loadPage(page)
 end;
 
 end.

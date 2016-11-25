@@ -17,7 +17,7 @@ type
     rgVariants: TRadioGroup;
     btAnswear: TSpeedButton;
     SpeedButton2: TSpeedButton;
-    SpeedButton3: TSpeedButton;
+    btResults: TSpeedButton;
     pnlTask: TPanel;
     img: TImage;
     btPrevTask: TSpeedButton;
@@ -27,22 +27,25 @@ type
     procedure btPrevTaskClick(Sender: TObject);
     procedure cboTopicsChange(Sender: TObject);
     procedure btAnswearClick(Sender: TObject);
+    procedure btResultsClick(Sender: TObject);
   private
     { Private declarations }
      fTask: integer;
      fTests: TTestList;
      currentTest: TTestInfo;
      answears: TAnswears;
-     procedure fillcboTopics(topics: TTopicList);
+     usrResults: TUserResultList;  // Результаты по данной теме
      procedure clear;
+     procedure loadTest(test:TTestInfo; testVariant, taskNo: integer);
   public
     { Public declarations }
     property Tests: TTEstList read fTests;
+    property UserResults: TUserResultList read usrResults;
+    procedure clearUserResults();
     procedure setNewTopic(newTopicID: integer);
-    procedure loadTest(test:TTestInfo; testVariant, taskNo: integer);
+    procedure SelectVariant(aVariant: integer);
     procedure ShowTests();
   end;
-
 
 implementation
 
@@ -51,22 +54,55 @@ uses uOGE, jpeg;
 {$R *.dfm}
 
              // Если выбран вариант с 6 - 10 то насчитываем баллы по таблице
-const userPoints: array[0..9] of double = (0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1, 2, 2, 2);
-      e = 0.01;
+const pointsByTask: array[0..9] of double = (0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1, 2, 2, 2);
+      e = 0.001;
 
 { TfrmTests }
 procedure TfrmTests.btAnswearClick(Sender: TObject);
 var usrAnswear: double;
+    TrueAnswear: boolean;
 begin
-     if (self.answears = nil) or (fTask = 0) then exit;
+     if (self.answears = nil) or
+        not (fTask in [1..TASK_COUNT]) or
+            (trim(txtAnswer.Text) = '') then exit;
+
      usrAnswear := strToFloatEx(trim(txtAnswer.Text));
 
-     if abs(usrAnswear - self.answears[fTask - 1]) < e then
+     trueAnswear := abs(usrAnswear - self.answears[fTask - 1]) < e;
+     if (rgVariants.ItemIndex + 1) >= CALC_POINTS_FROM_V then
      begin
-        showMessage('Верно!')
+        with usrResults[cboTopics.ItemIndex] do
+        begin
+            if trueAnswear then
+            begin
+                 if (taskResult[rgVariants.ItemIndex, fTask - 1] = false) then
+                 begin
+                      points := points + pointsByTask[fTask - 1];
+                      taskResult[rgVariants.ItemIndex, fTask - 1] := true;
+                 end
+                 else begin
+                     messageBox(self.Handle,
+                          'Верно! Баллы за это задание уже были засчитаны.',
+                                           'ОГЕ', MB_OK or MB_ICONINFORMATION);
+                     //exit;
+                 end;
+                 btNextTaskClick(Sender);
+            end
+        end;
      end
      else begin
-        showMessage('Подумай.');
+        if trueAnswear then
+        begin
+           messageBox(Handle, 'Верно!', 'ОГЕ', MB_OK or MB_ICONINFORMATION);
+           usrResults[cboTopics.ItemIndex].
+                taskResult[rgVariants.ItemIndex, fTask - 1] := true;
+           btNextTaskClick(Sender);
+        end
+        else begin
+             messageBox(Handle, 'Подумай!', 'ОГЕ', MB_OK or MB_ICONINFORMATION);
+             usrResults[cboTopics.ItemIndex].
+                  taskResult[rgVariants.ItemIndex, fTask - 1] := false;
+        end;
      end;
 end;
 
@@ -86,6 +122,12 @@ begin
     loadTest(currentTest, rgVariants.ItemIndex + 1, fTask);
 end;
 
+procedure TfrmTests.btResultsClick(Sender: TObject);
+begin
+    frmOGE.TestResults.showResults();
+    frmOGE.TestResults := nil;
+end;
+
 procedure TfrmTests.cboTopicsChange(Sender: TObject);
 begin
     clear;
@@ -95,15 +137,19 @@ procedure TfrmTests.clear;
 begin
     img.Canvas.Brush.Color:=ClWhite;
     img.Canvas.FillRect(img.Canvas.ClipRect);
+    txtAnswer.Text := '';
 
     rgVariants.ItemIndex := -1;
 end;
 
-procedure TfrmTests.fillcboTopics(topics: TTopicList);
+procedure TfrmTests.clearUserResults;
 var i: integer;
 begin
-     for i := 0 to length(topics) - 1 do
-          cboTopics.Items.AddObject(topics[i].displayLabel, Tobject(topics[i].id));
+     for i := 0 to length(usrResults) - 1 do
+     begin
+         fillchar(usrResults[i].taskResult, sizeof(usrResults[i].taskResult), 0);
+         usrResults[i].points := 0;
+     end;
 end;
 
 procedure TfrmTests.loadTest(test: TTestInfo; testVariant, taskNo: integer);
@@ -133,10 +179,6 @@ begin
           answears := dm.loadAnswears(answearName, testVariant);
      end;
 
-     rgVariants.OnClick := nil;
-     rgVariants.ItemIndex := testVariant - 1;
-     rgVariants.OnClick := rgVariantsClick;
-
      jpg := TJpegImage.Create;
      try
         jpg.LoadFromStream(mem);
@@ -148,6 +190,10 @@ begin
      finally
         jpg.Free;
      end;
+
+     rgVariants.OnClick := nil;
+     rgVariants.ItemIndex := testVariant - 1;
+     rgVariants.OnClick := rgVariantsClick;
 end;
 
 procedure TfrmTests.rgVariantsClick(Sender: TObject);
@@ -166,6 +212,11 @@ begin
     loadTest(topicTestList[0], rgVariants.ItemIndex + 1, fTask);
 end;
 
+procedure TfrmTests.SelectVariant(aVariant: integer);
+begin
+     rgVariants.ItemIndex := aVariant - 1;
+end;
+
 procedure TfrmTests.setNewTopic(newTopicID: integer);
 var i: integer;
 begin
@@ -180,6 +231,7 @@ begin
 end;
 
 procedure TfrmTests.ShowTests;
+var i: integer;
 begin
     fTests := dm.loadTests();
     if fTests = nil then
@@ -187,9 +239,22 @@ begin
       messageBox(self.Handle, 'Не удалось загузить тесты', 'Ошибка', MB_OK or MB_ICONERROR);
       abort;
     end;
-    fillcboTopics(frmOGE.Topics.TopicList);
+
+    with frmOGE.Topics do
+    begin
+        setLength(usrResults, length(TopicList));
+        for i := 0 to length(TopicList) - 1 do
+        begin
+            cboTopics.Items.AddObject(TopicList[i].displayLabel, Tobject(TopicList[i].id));
+            usrResults[i].topic := TopicList[i];
+            usrResults[i].points := 0;
+        end;
+    end;
     cboTopics.ItemIndex := 0;
-   // rgVariants.ItemIndex := 0;
+
+    fillchar(usrResults[cboTopics.ItemIndex].taskResult,
+        sizeof(usrResults[cboTopics.ItemIndex].taskResult), 0);
+
     show;
 end;
 

@@ -5,6 +5,16 @@ interface
 uses
   SysUtils, Classes, Forms, xmldom, XMLIntf, msxmldom, XMLDoc, FWZipReader, dialogs;
 
+
+const VARIANT_COUNT = 10;
+      TASK_COUNT = 10;
+
+const CALC_POINTS_FROM_V = 6;
+
+const TOPIC_DIR = 'Topics';
+      TEST_DIR = 'Tests';
+
+
 type
   TStreamType = (tString, tMemory);
 
@@ -27,6 +37,14 @@ type
   end;
   TTestList = array of TTestInfo;
 
+  TUserResult = record
+      topic: TTopicInfo;
+      taskResult: array[0..VARIANT_COUNT - 1, 0..TASK_COUNT - 1] of boolean;
+      points: double;
+  end;
+
+  TUserResultList = array of TUserResult;
+
   TAnswears = array of double;
 
   Tdm = class(TDataModule)
@@ -47,13 +65,6 @@ type
 
 var
   dm: Tdm;
-
-const VARIANT_COUNT = 10;
-      TASK_COUNT = 10;
-
-const TOPIC_DIR = 'Topics';
-      TEST_DIR = 'Tests';
-
 
 function strToFloatEx(s: string): double;
 
