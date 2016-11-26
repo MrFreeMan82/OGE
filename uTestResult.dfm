@@ -1,10 +1,9 @@
 object frmTestResult: TfrmTestResult
   Left = 0
   Top = 0
-  BorderStyle = bsDialog
   Caption = #1056#1077#1079#1091#1083#1100#1090#1072#1090
-  ClientHeight = 452
-  ClientWidth = 794
+  ClientHeight = 504
+  ClientWidth = 792
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -13,26 +12,36 @@ object frmTestResult: TfrmTestResult
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
+  OnDestroy = FormDestroy
+  OnResize = FormResize
   PixelsPerInch = 96
   TextHeight = 16
   object img: TImage
-    Left = 2
-    Top = 31
-    Width = 790
-    Height = 420
+    Left = 0
+    Top = 27
+    Width = 792
+    Height = 477
+    Align = alClient
+    ExplicitTop = 30
+    ExplicitWidth = 500
+    ExplicitHeight = 400
   end
-  object Panel1: TPanel
+  object pnlTools: TPanel
     Left = 0
     Top = 0
-    Width = 794
+    Width = 792
     Height = 27
     Align = alTop
     BevelOuter = bvNone
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
+    ExplicitWidth = 794
+    DesignSize = (
+      792
+      27)
     object btExit: TSpeedButton
-      Left = 759
+      Left = 757
       Top = 0
       Width = 35
       Height = 27
@@ -110,6 +119,7 @@ object frmTestResult: TfrmTestResult
       Top = 4
       Width = 129
       Height = 17
+      Anchors = [akTop, akRight]
       Caption = #1057#1083#1091#1095#1072#1085#1099#1077' '#1095#1080#1089#1083#1072
       Checked = True
       State = cbChecked
