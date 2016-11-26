@@ -111,6 +111,8 @@ object frmTestResult: TfrmTestResult
       Width = 129
       Height = 17
       Caption = #1057#1083#1091#1095#1072#1085#1099#1077' '#1095#1080#1089#1083#1072
+      Checked = True
+      State = cbChecked
       TabOrder = 0
     end
   end

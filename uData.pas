@@ -28,22 +28,26 @@ type
 
   TTopicList = array of TTopicInfo;
 
+  PtestInfo = ^TTestinfo;
   TTestInfo = record
       id: integer;
       topic: integer;
       name: string;
       dir: string;
       displayLabel: string;
-  end;
-  TTestList = array of TTestInfo;
-
-  TUserResult = record
-      topic: TTopicInfo;
-      taskResult: array[0..VARIANT_COUNT - 1, 0..TASK_COUNT - 1] of boolean;
+      taskResultMask: array[0..TASK_COUNT - 1] of boolean;
       points: double;
   end;
 
-  TUserResultList = array of TUserResult;
+  TTestList = array of TTestInfo;
+
+ { TUserResult = record
+      topic: TTopicInfo;
+      taskResult: array[0..VARIANT_COUNT - 1, 0..TASK_COUNT - 1] of boolean;
+      points: double;
+  end;  }
+
+ // TUserResultList = array of TUserResult;
 
   TAnswears = array of double;
 
@@ -69,7 +73,7 @@ var
 function strToFloatEx(s: string): double;
 
 function exePath(): string;
-function getTestListByTopic(topicID: integer; const tests: TTestList): TTestList;
+function getTestByTopic(topicID: integer; const tests: TTestList): PTestInfo;
 function FindData(const zipFile, name: string; dataType: TStreamType): TStream;
 
 implementation
@@ -97,19 +101,13 @@ begin
      result := ExtractFilePath(Application.ExeName);
 end;
 
-function getTestListByTopic(topicID: integer; const tests: TTestList): TTestList;
+function getTestByTopic(topicID: integer; const tests: TTestList): PTestInfo;
 var i: integer;
 begin
     result := nil;
 
     for i := 0 to length(tests) - 1 do
-    begin
-          if tests[i].topic = topicID then
-          begin
-                setLength(result, length(result) + 1);
-                result[high(result)] := tests[i];
-          end;
-    end;
+          if tests[i].topic = topicID then result := @tests[i];
 end;
 
 function Tdm.loadAnswears(const fileName: string; aVariant: integer): TAnswears;

@@ -32,15 +32,15 @@ type
     { Private declarations }
      fTask: integer;
      fTests: TTestList;
-     currentTest: TTestInfo;
+     currentTest: PTestInfo;
      answears: TAnswears;
-     usrResults: TUserResultList;  // Результаты по данной теме
+   //  usrResults: TUserResultList;  // Результаты по данной теме
      procedure clear;
      procedure loadTest(test:TTestInfo; testVariant, taskNo: integer);
   public
     { Public declarations }
     property Tests: TTEstList read fTests;
-    property UserResults: TUserResultList read usrResults;
+  //  property UserResults: TUserResultList read usrResults;
     procedure clearUserResults();
     procedure setNewTopic(newTopicID: integer);
     procedure SelectVariant(aVariant: integer);
@@ -62,46 +62,43 @@ procedure TfrmTests.btAnswearClick(Sender: TObject);
 var usrAnswear: double;
     TrueAnswear: boolean;
 begin
-     if (self.answears = nil) or
-        not (fTask in [1..TASK_COUNT]) or
-            (trim(txtAnswer.Text) = '') then exit;
+     if (answears = nil) or
+           (currentTest = nil) or
+              not (fTask in [1..TASK_COUNT]) or
+                    (trim(txtAnswer.Text) = '') then exit;
 
      usrAnswear := strToFloatEx(trim(txtAnswer.Text));
 
      trueAnswear := abs(usrAnswear - self.answears[fTask - 1]) < e;
      if (rgVariants.ItemIndex + 1) >= CALC_POINTS_FROM_V then
      begin
-        with usrResults[cboTopics.ItemIndex] do
-        begin
-            if trueAnswear then
-            begin
-                 if (taskResult[rgVariants.ItemIndex, fTask - 1] = false) then
-                 begin
-                      points := points + pointsByTask[fTask - 1];
-                      taskResult[rgVariants.ItemIndex, fTask - 1] := true;
-                 end
-                 else begin
-                     messageBox(self.Handle,
-                          'Верно! Баллы за это задание уже были засчитаны.',
-                                           'ОГЕ', MB_OK or MB_ICONINFORMATION);
+          if trueAnswear then
+          with currentTest^ do
+          begin
+              if (taskResultMask[fTask - 1] = false) then
+              begin
+                   points := points + pointsByTask[fTask - 1];
+                   taskResultMask[fTask - 1] := true;
+              end
+              else begin
+                messageBox(self.Handle,
+                   'Верно! Баллы за это задание уже были засчитаны.',
+                                       'ОГЕ', MB_OK or MB_ICONINFORMATION);
                      //exit;
-                 end;
-                 btNextTaskClick(Sender);
-            end
-        end;
+              end;
+          end;
+          btNextTaskClick(Sender);
      end
      else begin
         if trueAnswear then
         begin
            messageBox(Handle, 'Верно!', 'ОГЕ', MB_OK or MB_ICONINFORMATION);
-           usrResults[cboTopics.ItemIndex].
-                taskResult[rgVariants.ItemIndex, fTask - 1] := true;
+           currentTest^.taskResultMask[fTask - 1] := true;
            btNextTaskClick(Sender);
         end
         else begin
              messageBox(Handle, 'Подумай!', 'ОГЕ', MB_OK or MB_ICONINFORMATION);
-             usrResults[cboTopics.ItemIndex].
-                  taskResult[rgVariants.ItemIndex, fTask - 1] := false;
+             currentTest^.taskResultMask[fTask - 1] := false;
         end;
      end;
 end;
@@ -111,7 +108,7 @@ begin
     inc(fTask);
     if fTask > TASK_COUNT then fTask := TASK_COUNT;
 
-    loadTest(currentTest, rgVariants.ItemIndex + 1, fTask);
+    loadTest(currentTest^, rgVariants.ItemIndex + 1, fTask);
 end;
 
 procedure TfrmTests.btPrevTaskClick(Sender: TObject);
@@ -119,7 +116,7 @@ begin
     dec(fTask);
     if fTask < 1 then fTask := 1;
 
-    loadTest(currentTest, rgVariants.ItemIndex + 1, fTask);
+    loadTest(currentTest^, rgVariants.ItemIndex + 1, fTask);
 end;
 
 procedure TfrmTests.btResultsClick(Sender: TObject);
@@ -143,12 +140,12 @@ begin
 end;
 
 procedure TfrmTests.clearUserResults;
-var i: integer;
 begin
-     for i := 0 to length(usrResults) - 1 do
+     if assigned(currentTest) then
      begin
-         fillchar(usrResults[i].taskResult, sizeof(usrResults[i].taskResult), 0);
-         usrResults[i].points := 0;
+          currentTest^.points := 0;
+          fillchar(currentTest^.taskResultMask,
+                sizeOf(currentTest^.taskResultMask), 0);
      end;
 end;
 
@@ -171,7 +168,6 @@ begin
      end;
 
      fTask := taskNo;
-     currentTest := test;
 
      if answears = nil then
      begin
@@ -197,19 +193,20 @@ begin
 end;
 
 procedure TfrmTests.rgVariantsClick(Sender: TObject);
-var topicTestList: TTestList;
 begin
     if rgVariants.ItemIndex < 0 then exit;
 
     answears := nil;
 
-    topicTestList := getTestListByTopic(
+    currentTest := getTestByTopic(
         integer(cboTopics.Items.Objects[cboTopics.ItemIndex]), fTests
         );
-    if topicTestList = nil then exit;
+    if currentTest = nil then exit;
+
+    clearUserResults();
 
     fTask := 1;
-    loadTest(topicTestList[0], rgVariants.ItemIndex + 1, fTask);
+    loadTest(currentTest^, rgVariants.ItemIndex + 1, fTask);
 end;
 
 procedure TfrmTests.SelectVariant(aVariant: integer);
@@ -233,6 +230,7 @@ end;
 procedure TfrmTests.ShowTests;
 var i: integer;
 begin
+    currentTest := nil;
     fTests := dm.loadTests();
     if fTests = nil then
     begin
@@ -242,18 +240,10 @@ begin
 
     with frmOGE.Topics do
     begin
-        setLength(usrResults, length(TopicList));
         for i := 0 to length(TopicList) - 1 do
-        begin
             cboTopics.Items.AddObject(TopicList[i].displayLabel, Tobject(TopicList[i].id));
-            usrResults[i].topic := TopicList[i];
-            usrResults[i].points := 0;
-        end;
     end;
     cboTopics.ItemIndex := 0;
-
-    fillchar(usrResults[cboTopics.ItemIndex].taskResult,
-        sizeof(usrResults[cboTopics.ItemIndex].taskResult), 0);
 
     show;
 end;

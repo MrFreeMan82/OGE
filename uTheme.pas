@@ -100,12 +100,12 @@ begin
 end;
 
 procedure TfrmTopics.btTestClick(Sender: TObject);
-var testList: TTestList;
+var test: PTestInfo;
 begin
      isSetCurrentTopic;
 
-     testList := getTestListByTopic(fcurrentTopic.id, frmOGE.Tests.Tests);
-     if testList = nil then
+     test := getTestByTopic(fcurrentTopic.id, frmOGE.Tests.Tests);
+     if test = nil then
      begin
           messageBox(self.Handle, 'По данной теме тестов нет', 'Ошибка', MB_OK or MB_ICONERROR);
           abort;
