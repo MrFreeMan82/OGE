@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, Buttons, ExtCtrls, uData;
+  Dialogs, Buttons, ExtCtrls, uData, ActnList;
 
 type
   TfrmTopics = class(TForm)
@@ -38,10 +38,13 @@ type
    // procedure loadPage(pageNo, topicNo: integer);overload;
     procedure loadPage(pageNo: integer);
     function isSetCurrentTopic(raiseException: boolean = true): boolean;
+    function getItem(topicID: integer): TTopicInfo;
+    procedure ZoomOut(sourceBmp, destinationBmp: TBitmap);
   public
     { Public declarations }
     procedure showTopics();
     property TopicList: TTopicList read topics;
+    property Item[topicID: integer]: TTopicInfo read getItem;
   end;
 
 implementation
@@ -80,6 +83,37 @@ begin
     show;
 end;
 
+procedure Streach(sourceBMP: TBitmap; destBMP: TBitmap; DestWidth, DestHeight: integer);
+const e = 0.0001;
+var x_ratio, y_ratio, ratio: double;
+    w,h:integer;
+    w_or, h_or:integer;
+    use_x_ratio: boolean;
+begin
+     w := DestWidth;
+     h := DestHeight ;
+     w_or := sourceBMP.Width;
+     h_or := sourceBMP.Height;
+
+     x_ratio := w / w_or;
+     y_ratio := h / h_or;
+
+     if x_ratio < (y_ratio - e) then ratio := x_ratio else ratio := y_ratio;
+
+     use_x_ratio := abs(x_ratio - e) < ratio;
+     if use_x_ratio then destBMP.Width := w else destBMP.Width := trunc(w_or * ratio);
+     if not use_x_ratio then destBMP.Height := h  else destBMP.Height := trunc(h_or * ratio);
+
+     destBMP.Canvas.StretchDraw(Rect(0, 0, destBMP.Width, destBMP.Height), sourceBMP);
+end;
+
+procedure TfrmTopics.ZoomOut(sourceBmp, destinationBMP: TBitmap);
+begin
+    destinationBMP.Width := trunc(sourceBmp.Width / 1.2);
+    destinationBMP.Height := trunc(sourceBmp.Height / 1.2);
+    Streach(sourceBmp, destinationBMP, destinationBMP.Width, destinationBMP.Height);
+end;
+
 procedure TfrmTopics.btNextPageClick(Sender: TObject);
 begin
     isSetCurrentTopic();
@@ -97,6 +131,7 @@ end;
 procedure TfrmTopics.btPrevPageClick(Sender: TObject);
 begin
      isSetCurrentTopic();
+
      dec(page);
      if page < 1 then
      begin
@@ -128,7 +163,9 @@ procedure TfrmTopics.clear;
 begin
     img.Canvas.Brush.Color:=ClWhite;
     img.Canvas.FillRect(img.Canvas.ClipRect);
-    fcurrentTopic.id := -1;
+    //fcurrentTopic.id := -1;
+    ScrollBox.HorzScrollBar.Range := 0;
+    ScrollBox.VertScrollBar.Range := 0
 end;
 
 procedure TfrmTopics.createTopicLinks;
@@ -159,7 +196,6 @@ procedure TfrmTopics.linkClick(Sender: TObject);
 begin
     if not (Sender is TLinkLabel) then exit;
 
-    clear;
     page := 1;
     fcurrentTopic := topics[TLinkLabel(Sender).Tag];
     loadPage(page);
@@ -168,8 +204,10 @@ end;
 procedure TfrmTopics.loadPage(pageNo: integer);
 var fileName: string;
     jpg: TJpegImage;
+    bmp, bmpDest : TBitmap;
     mem: TMemoryStream;
 begin
+     clear;
      isSetCurrentTopic();
 
      fileName := format('%s/%s/%d.jpg',
@@ -179,19 +217,40 @@ begin
      if mem = nil then exit;
 
      jpg := TJpegImage.Create;
+
      try
-      //  mem.Position := 0;
         jpg.LoadFromStream(mem);
-        img.Top := 5;
-        img.Left := (ScrollBox.ClientWidth - jpg.Width) div 2;
-        if img.Left < 0 then img.Left := 5;
-        img.Width := jpg.Width;
-        img.Height := jpg.Height;
-        img.Picture.Bitmap.Assign(jpg);
+
+        if jpg.Width > ScrollBox.ClientWidth then
+        begin
+             bmp := TBitMap.Create;
+             bmpDest := TBitMap.Create;
+             try
+                bmp.Assign(jpg);
+                zoomOut(bmp, bmpDest);
+                img.SetBounds(
+                    (ScrollBox.ClientWidth - bmpDest.Width) div 2,
+                                      5, bmpDest.Width, bmpDest.Height
+                );
+                img.Picture.Bitmap.Assign(bmpDest);
+             finally
+                bmp.Free;
+                bmpDest.Free;
+             end;
+        end
+        else begin
+            img.SetBounds(
+              (ScrollBox.ClientWidth - jpg.Width) div 2,
+                                      5, jpg.Width, jpg.Height
+            );
+            img.Picture.Bitmap.Assign(jpg);
+
+        end;
         ScrollBox.HorzScrollBar.Range := img.Picture.Width;
         ScrollBox.VertScrollBar.Range := img.Picture.Height;
      finally
          jpg.Free;
+         mem.Free;
      end;
 end;
 
@@ -215,6 +274,14 @@ end;
 procedure TfrmTopics.FormResize(Sender: TObject);
 begin
   if isSetCurrentTopic(false) then loadPage(page)
+end;
+
+function TfrmTopics.getItem(topicID: integer): TTopicInfo;
+var i: integer;
+
+begin
+    for i := 0 to length(self.topics) - 1 do
+        if topics[i].id = topicID then exit(topics[i]);
 end;
 
 end.

@@ -13,8 +13,6 @@ type
     pgPages: TPageControl;
     tabInfo: TTabSheet;
     tabAdmin: TTabSheet;
-    ActionList: TActionList;
-    Action1: TAction;
     tabThemes: TTabSheet;
     tabTests: TTabSheet;
     WebBrowser1: TWebBrowser;
@@ -46,6 +44,7 @@ implementation
 {$R *.dfm}
 {$DEFINE TEST}
 
+
 procedure TfrmOGE.FormCreate(Sender: TObject);
 begin
     {$IFDEF TEST}
@@ -72,7 +71,7 @@ procedure TfrmOGE.FormDestroy(Sender: TObject);
 begin
     freeAndNil(frmTests);
     freeAndNil(frmTopics);
-    freeAndNil(frmTestResult)
+    freeAndNil(frmTestResult);
 end;
 
 function TfrmOGE.getFrmTestResult: TfrmTestResult;

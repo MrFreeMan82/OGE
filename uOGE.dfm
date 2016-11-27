@@ -22,7 +22,7 @@ object frmOGE: TfrmOGE
     Top = 0
     Width = 892
     Height = 425
-    ActivePage = tabInfo
+    ActivePage = tabAdmin
     Align = alClient
     MultiLine = True
     TabOrder = 0
@@ -50,35 +50,15 @@ object frmOGE: TfrmOGE
     object tabThemes: TTabSheet
       Caption = #1058#1077#1084#1099
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 784
-      ExplicitHeight = 0
     end
     object tabTests: TTabSheet
       Caption = #1059#1095#1077#1073#1085#1086'-'#1090#1088#1077#1085#1080#1088#1086#1074#1086#1095#1085#1099#1077' '#1090#1077#1089#1090#1099
       ImageIndex = 4
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 784
-      ExplicitHeight = 0
     end
     object tabAdmin: TTabSheet
       Caption = 'Admin'
       ImageIndex = 2
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 784
-      ExplicitHeight = 0
-    end
-  end
-  object ActionList: TActionList
-    Left = 40
-    Top = 312
-    object Action1: TAction
-      Caption = 'Action1'
-      ShortCut = 49217
     end
   end
 end

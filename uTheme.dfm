@@ -72,6 +72,8 @@ object frmTopics: TfrmTopics
       BevelInner = bvNone
       BevelOuter = bvNone
       BorderStyle = bsNone
+      DoubleBuffered = True
+      ParentDoubleBuffered = False
       TabOrder = 0
       object img: TImage
         Left = 3
@@ -88,6 +90,8 @@ object frmTopics: TfrmTopics
       Height = 26
       Align = alTop
       BevelOuter = bvNone
+      DoubleBuffered = True
+      ParentDoubleBuffered = False
       TabOrder = 1
       object btPrevPage: TSpeedButton
         Left = 205

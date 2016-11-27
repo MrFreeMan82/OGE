@@ -162,42 +162,42 @@ var fileName, answearName: string;
     jpg: TJpegImage;
     mem: TMemoryStream;
 begin
-     clear;
+   clear;
 
-     fileName := format('%s/%s/%d/%d.jpg',
+   fileName := format('%s/%s/%d/%d.jpg',
         [TEST_DIR, test.dir, testVariant, taskNo]);
 
-     mem := TMemoryStream(FindData(dm.DataFile, fileName, tMemory));
+   mem := TMemoryStream(FindData(dm.DataFile, fileName, tMemory));
 
-     if mem = nil then
-     begin
-         messageBox(self.Handle, 'По данной теме тесты не загружены', 'Ошибка', MB_OK or MB_ICONERROR);
-         abort;
-     end;
+   if mem = nil then
+   begin
+       messageBox(self.Handle, 'По данной теме тесты не загружены', 'Ошибка', MB_OK or MB_ICONERROR);
+       abort;
+   end;
 
+   jpg := TJpegImage.Create;
+   try
      fTask := taskNo;
-
      if answears = nil then
      begin
-          answearName := format('%s/%s/answ.xml', [TEST_DIR, currentTest.dir]);
-          answears := dm.loadAnswears(answearName, testVariant);
+        answearName := format('%s/%s/answ.xml', [TEST_DIR, currentTest.dir]);
+        answears := dm.loadAnswears(answearName, testVariant);
      end;
 
-     jpg := TJpegImage.Create;
-     try
-        jpg.LoadFromStream(mem);
-        img.Top   := 10;
-        img.Left  := 10;
-        img.Width := jpg.Width;
-        img.Height := jpg.Height;
-        img.Picture.Bitmap.Assign(jpg);
-     finally
+     jpg.LoadFromStream(mem);
+     img.Top   := 10;
+     img.Left  := 10;
+     img.Width := jpg.Width;
+     img.Height := jpg.Height;
+     img.Picture.Bitmap.Assign(jpg);
+   finally
         jpg.Free;
-     end;
+        mem.Free;
+   end;
 
-     rgVariants.OnClick := nil;
-     rgVariants.ItemIndex := testVariant - 1;
-     rgVariants.OnClick := rgVariantsClick;
+   rgVariants.OnClick := nil;
+   rgVariants.ItemIndex := testVariant - 1;
+   rgVariants.OnClick := rgVariantsClick;
 end;
 
 procedure TfrmTests.rgVariantsClick(Sender: TObject);

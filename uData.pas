@@ -3,7 +3,7 @@ unit uData;
 interface
 
 uses
-  SysUtils, Classes, Forms, xmldom, XMLIntf, msxmldom, XMLDoc, FWZipReader, dialogs;
+  SysUtils, Classes, Forms, xmldom, XMLIntf, msxmldom, XMLDoc, dialogs;
 
 
 const VARIANT_COUNT = 10;
@@ -41,14 +41,6 @@ type
 
   TTestList = array of TTestInfo;
 
- { TUserResult = record
-      topic: TTopicInfo;
-      taskResult: array[0..VARIANT_COUNT - 1, 0..TASK_COUNT - 1] of boolean;
-      points: double;
-  end;  }
-
- // TUserResultList = array of TUserResult;
-
   TAnswears = array of double;
 
   Tdm = class(TDataModule)
@@ -75,8 +67,10 @@ function strToFloatEx(s: string): double;
 function exePath(): string;
 function getTestByTopic(topicID: integer; const tests: TTestList): PTestInfo;
 function FindData(const zipFile, name: string; dataType: TStreamType): TStream;
+function ModifyData(const zipFile, name: string; input:TStream; dataType: TStreamType): boolean;
 
 implementation
+uses FWZipModifier, FWZipReader;
 
 {$R *.dfm}
 
@@ -251,6 +245,30 @@ begin
     finally
         zip.Free;
     end;
+end;
+
+function ModifyData(const zipFile, name: string; input:TStream; dataType: TStreamType): boolean;
+var zip: TFWZipModifier;
+    Index: TReaderIndex;
+    i: integer;
+begin
+    zip := TFWZipModifier.Create;
+    try
+       Index := zip.AddZipFile(zipFile);
+       zip.AddFromZip(index);
+       for i := 0 to zip.Count - 1 do
+           if (zip.Item[i].FileName = name) then zip.DeleteItem(i);
+
+       case dataType of
+        tString: zip.AddStream(extractFileName(name), TStringStream(input));
+        tMemory: zip.AddStream(extractFileName(name), TMemoryStream(input));
+       end;
+
+       zip.BuildZip(zipFile);
+    finally
+        zip.Free;
+    end;
+    result := false;
 end;
 
 end.
