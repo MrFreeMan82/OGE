@@ -85,7 +85,11 @@ begin
     isSetCurrentTopic();
 
     inc(page);
-    if page > fcurrentTopic.pageCount then page := fcurrentTopic.pageCount;
+    if page > fcurrentTopic.pageCount then
+    begin
+       page := fcurrentTopic.pageCount;
+       exit;
+    end;
 
     loadPage(page);
 end;
@@ -94,7 +98,11 @@ procedure TfrmTopics.btPrevPageClick(Sender: TObject);
 begin
      isSetCurrentTopic();
      dec(page);
-     if page < 1 then page := 1;
+     if page < 1 then
+     begin
+         page := 1;
+         exit;
+     end;
 
      loadPage(page);
 end;

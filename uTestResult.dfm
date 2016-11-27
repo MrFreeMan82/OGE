@@ -36,7 +36,6 @@ object frmTestResult: TfrmTestResult
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
-    ExplicitWidth = 794
     DesignSize = (
       792
       27)
@@ -121,9 +120,8 @@ object frmTestResult: TfrmTestResult
       Height = 17
       Anchors = [akTop, akRight]
       Caption = #1057#1083#1091#1095#1072#1085#1099#1077' '#1095#1080#1089#1083#1072
-      Checked = True
-      State = cbChecked
       TabOrder = 0
+      OnClick = chkRandomClick
     end
   end
 end

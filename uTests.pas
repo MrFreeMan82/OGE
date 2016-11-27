@@ -106,7 +106,11 @@ end;
 procedure TfrmTests.btNextTaskClick(Sender: TObject);
 begin
     inc(fTask);
-    if fTask > TASK_COUNT then fTask := TASK_COUNT;
+    if fTask > TASK_COUNT then
+    begin
+       fTask := TASK_COUNT;
+       exit;
+    end;
 
     loadTest(currentTest^, rgVariants.ItemIndex + 1, fTask);
 end;
@@ -114,7 +118,11 @@ end;
 procedure TfrmTests.btPrevTaskClick(Sender: TObject);
 begin
     dec(fTask);
-    if fTask < 1 then fTask := 1;
+    if fTask < 1 then
+    begin
+         fTask := 1;
+         exit;
+    end;
 
     loadTest(currentTest^, rgVariants.ItemIndex + 1, fTask);
 end;

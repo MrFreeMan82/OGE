@@ -49,7 +49,7 @@ implementation
 procedure TfrmOGE.FormCreate(Sender: TObject);
 begin
     {$IFDEF TEST}
-  //  showMessage('Тестовый образец');
+    showMessage('Тестовый образец');
     {$ENDIF}
     Path := exePath();
     WebBrowser1.Navigate(path + '1.html');
@@ -64,8 +64,8 @@ begin
     frmTests.Dock(tabTests, tabTests.ClientRect);
     frmTests.ShowTests();
 
-    TestResults.showResults;   // DELETE AFTER TESTT
-    Application.Terminate;
+  //  TestResults.showResults;   // DELETE AFTER TESTT
+  //  Application.Terminate;
 end;
 
 procedure TfrmOGE.FormDestroy(Sender: TObject);

@@ -18,10 +18,7 @@ end;
 
 TLineGraduation = array[0..MAX_GRADUATION - 1] of Tline;
 
-TaxisAngle = record
-  axisindex: integer;
-  angle: integer;
-end;
+TaxisAngle = integer;
 
 TTopicResult = record
     topic: TTopicInfo;
@@ -47,6 +44,7 @@ TfrmTestResult = class(TForm)
     procedure btClearResultsClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormResize(Sender: TObject);
+    procedure chkRandomClick(Sender: TObject);
   private
     { Private declarations }
     Graphic: IGPGraphics;
@@ -57,9 +55,10 @@ TfrmTestResult = class(TForm)
     ColorBrush: IGPBrush;
     bmp: TBitmap;
 
+    AXIS_ANGLE: integer;
     center: TGPPointF;
    // centerX, centerY: double;
-    rect:TGPRectF;
+    CircleRect:TGPRectF;
     axis: array of TLine;
     axisAngle: array of TaxisAngle;
     scale : array of TLineGraduation;
@@ -69,12 +68,13 @@ TfrmTestResult = class(TForm)
     procedure createCircle();
     procedure createScale();
     procedure createResultList();
-    procedure createDisplayLabel(i: integer);
+    procedure createDisplayLabel(pts: double; i: integer);
     procedure createCurvePoints(i: integer);
     procedure Render();
     function lineLen(line:TLine):double;
     function rotatePoint(angle:integer; p: TGPpointF): TGPPointF;
     function rotateLine(angle: integer; line: Tline): Tline;
+    procedure measureDisplayStringWidthAndHeight(text: string; var width, height: double);
   public
     { Public declarations }
     procedure showResults();
@@ -87,37 +87,34 @@ uses uOGE, math;
 {$R *.dfm}
 const
   colors: array[0..3] of cardinal = (TGPColor.Red, TGPColor.Green, TGPColor.Aqua, TGPColor.Lime);
-  AXIS_ANGLE = 45;
-
-procedure TfrmTestResult.btExitClick(Sender: TObject);
-begin
-    close
-end;
+ // AXIS_ANGLE = 45;
 
 procedure TfrmTestResult.createCircle();
 var i, angle, rect_width: integer;
 begin
-     rect_Width := bmp.Width div 2;
-
-     rect.X := (bmp.Width - RECT_WIDTH) / 2;
-     rect.Y  := (bmp.Height - RECT_WIDTH) / 2;
-     rect.Width := RECT_WIDTH;
-     rect.Height := RECT_WIDTH;
-
-              // Центр круга
-     center.X := (rect.Left + rect.Right) / 2;
-     center.Y := (rect.Top + rect.Bottom) / 2;
+     if length(topicResultList) = 0 then abort;
 
      setLength(axis, length(topicResultList));
      setLength(axisAngle, length(axis));
+     AXIS_ANGLE := 360 div length(axis);
+
+     rect_Width := bmp.Width div 2;
+
+     CircleRect.X := (bmp.Width - RECT_WIDTH) / 2;
+     CircleRect.Y  := (bmp.Height - RECT_WIDTH) / 2;
+     CircleRect.Width := RECT_WIDTH;
+     CircleRect.Height := RECT_WIDTH;
+
+              // Центр круга
+     center.X := (CircleRect.Left + CircleRect.Right) / 2;
+     center.Y := (CircleRect.Top + CircleRect.Bottom) / 2;
 
      axis[0].p1.x := center.X;
      axis[0].p1.y := center.Y;
-     axis[0].p2.x := (rect.Left + rect.Right) / 2;
-     axis[0].p2.y := rect.Top;
+     axis[0].p2.x := (CircleRect.Left + CircleRect.Right) / 2;
+     axis[0].p2.y := CircleRect.Top;
      axis[0].len  := lineLen(axis[0]);
-     axisAngle[0].axisindex := 0;
-     axisAngle[0].angle := 0;
+     axisAngle[0] := 0;
 
      angle := AXIS_ANGLE;
 
@@ -125,8 +122,7 @@ begin
      begin
           // if (angle mod 90) = 0 then incLen := 40 else incLen := 0;
            axis[i] := rotateLine(angle, axis[0]);
-           axisAngle[i].axisindex := i;
-           axisAngle[i].angle := angle;
+           axisAngle[i] := angle;
            angle := angle + AXIS_ANGLE;
      end;
 
@@ -149,106 +145,106 @@ begin
      topicResultList[i].pie.AddPolygon(points);
 end;
 
-procedure MeasureDisplayStringWidthAndHeight(Graphics: IGPGraphics; Text: String; Font: IGPFont; Var Width, Height: Extended);
-Var
-    StringFormat: IGPStringFormat;
+procedure TfrmTestResult.measureDisplayStringWidthAndHeight(text: string; var width, height: double);
+var StringFormat: IGPStringFormat;
     R: TGPRectF;
     CharRanges: IGPCharacterRanges;
     CharRange: TGPCharacterRange;
     Regions: IGPRegions;
-Begin
+begin
     R.Initialize(0, 0, 1000, 1000);
     CharRanges := TGPArray<TGPCharacterRange>.Create(1);
     CharRange.Initialize(0, Length(Text));
     CharRanges[0] := CharRange;
     StringFormat:= TGPStringFormat.Create;
     StringFormat.SetMeasurableCharacterRanges(CharRanges);
-    Regions := Graphics.MeasureCharacterRanges(Text, Font, R, StringFormat);
-    Regions[0].GetBounds(R, Graphics);
-    Width:=R.Width; //ширина без отступов, если нужно с отступами R.Right
+    Regions := Graphic.MeasureCharacterRanges(Text, Font, R, StringFormat);
+    Regions[0].GetBounds(R, Graphic);
+    Width:=R.Right; //ширина без отступов, если нужно с отступами R.Right
     Height:=R.Height; //можно так же получить из IGPFont
-End;
+end;
 
-procedure TfrmTestResult.createDisplayLabel(i: integer);
+procedure TfrmTestResult.createDisplayLabel(pts: double; i: integer);
 var s: string;
-    txtH, txtW: extended;
+    txtH, txtW: double;
     angle: integer;
 begin
-    s := format('%s - %f', [topicResultList[i].topic.displayLabel, topicResultList[i].test.points]);
-    MeasureDisplayStringWidthAndHeight(graphic, s, font, txtW, txtH);
+    with topicResultList[i] do
+        s := format('%s - %f', [topic.displayLabel, pts]);
+
+    MeasureDisplayStringWidthAndHeight(s, txtW, txtH);
     topicResultList[i].DisplayLabel := s;
 
     txtH := txtH * 2;
     txtW := txtW - 10;
-    angle := axisAngle[i].angle;
-    if angle in [0..89] then
+    angle := axisAngle[i];
+    with topicResultList[i] do
     begin
-         topicResultList[i].labelRect.X := topicResultList[i].labelPoint.X;
-         topicResultList[i].labelRect.Y := topicResultlist[i].labelPoint.Y - txtH;
-    end
-    else if angle in [90..179] then
-    begin
-         topicResultList[i].labelRect.X := topicResultList[i].labelPoint.X;
-         topicResultList[i].labelRect.Y := topicResultlist[i].labelPoint.Y;
-    end
-    else if (angle >= 180) and (axisAngle[i].angle < 270) then
-    begin
-         topicResultList[i].labelRect.X := topicResultList[i].labelPoint.X - txtW;
-         topicResultList[i].labelRect.Y := topicResultList[i].labelPoint.Y;
-    end
-    else if (angle >= 270) and (axisAngle[i].angle < 360) then
-    begin
-          topicResultList[i].labelRect.X := topicResultList[i].labelPoint.X - txtW;
-          if topicResultList[i].labelRect.X < 0 then
-                    topicResultList[i].labelRect.X := 0;
-          topicResultList[i].labelRect.Y := topicResultlist[i].labelPoint.Y - txtH;
-    end;
-    topicResultList[i].labelRect.Width := txtW;
-    topicResultList[i].labelRect.Height := txtH;
+        if angle in [0..89] then
+        begin
+            labelRect.X := labelPoint.X;
+            labelRect.Y := labelPoint.Y - txtH;
+        end
+        else if angle in [90..179] then
+        begin
+            labelRect.X := labelPoint.X;
+            labelRect.Y := labelPoint.Y;
+        end
+        else if (angle >= 180) and (axisAngle[i] < 270) then
+        begin
+            labelRect.X := labelPoint.X - txtW;
+            labelRect.Y := labelPoint.Y;
+        end
+        else if (angle >= 270) and (axisAngle[i] < 360) then
+        begin
+            labelRect.X := labelPoint.X - txtW;
+            labelRect.Y := labelPoint.Y - txtH;
+        end;
+        labelRect.Width := txtW;
+        labelRect.Height := txtH;
 
-    if (topicResultList[i].labelRect.X < 0) then
-    begin
-         topicResultList[i].labelRect.Width :=
-              topicResultList[i].labelRect.Width + topicResultList[i].labelRect.X;
-         topicResultList[i].labelRect.X := 20;
+        if (labelRect.X < 0) then
+        begin
+            labelRect.Width := labelRect.Width + labelRect.X;
+            labelRect.X := 20;
+        end;
     end;
 end;
 
 procedure TfrmTestResult.createResultList;
 var i, angle: integer;
-    k, l: double;
+    k, l, pts: double;
 begin
      for i := 0 to length(topicResultList) - 1 do
      begin
-          topicResultList[i].topic := frmOGE.Topics.TopicList[i];
-          topicResultList[i].test  :=
-                getTestByTopic(topicResultList[i].topic.id, frmOGE.Tests.Tests);
+        with topicResultList[i] do
+        begin
+          topic := frmOGE.Topics.TopicList[i];
+          test  := getTestByTopic(topic.id, frmOGE.Tests.Tests);
 
-          if chkRandom.Checked then
-              topicResultList[i].test.points := random(10);
+          if chkRandom.Checked then pts := random(11) else pts := test.points;
 
               // define result points
-          l := (axis[i].len / MAX_GRADUATION) * topicResultList[i].test.points;
+          l := (axis[i].len / MAX_GRADUATION) * pts;
           k := l / axis[i].len;
 
-          topicResultList[i].MaxP1 := axis[i].p2;
+          MaxP1 := axis[i].p2;
 
-          topicResultList[i].ResultP1.X := center.X +
-                (topicResultList[i].MaxP1.X - center.X) * k;
-          topicResultList[i].ResultP1.Y := center.Y +
-                (topicResultList[i].MaxP1.Y - center.Y) * k;
+          ResultP1.X := center.X + (MaxP1.X - center.X) * k;
+          ResultP1.Y := center.Y + (MaxP1.Y - center.Y) * k;
 
-          topicResultList[i].ResultP2 := rotatePoint(AXIS_ANGLE, topicResultList[i].ResultP1);
+          ResultP2 := rotatePoint(AXIS_ANGLE, ResultP1);
 
           // define labelPoint
-          angle := trunc(axisAngle[i].angle + (AXIS_ANGLE / 2));
-          topicResultList[i].labelPoint := rotatePoint(angle, topicResultList[0].MaxP1);
+          angle := trunc(axisAngle[i] + (AXIS_ANGLE / 2));
+          labelPoint := rotatePoint(angle, topicResultList[0].MaxP1);
 
           // create labels
-          createDisplayLabel(i);
+          createDisplayLabel(pts, i);
 
           // define curve points
           createCurvePoints(i);
+        end;
      end;
 
 end;
@@ -292,7 +288,7 @@ end;
 procedure TfrmTestResult.Render;
 var i, j, c: integer;
 begin
-    graphic.DrawEllipse(Pen, rect);
+    graphic.DrawEllipse(Pen, CircleRect);
 
     for i := 0 to length(axis) - 1 do
     begin
@@ -349,7 +345,10 @@ begin
     if messageBox(handle,
          'Вы уверены что хотите сбросить результаты?',
               'ОГЕ', MB_YESNO or MB_ICONQUESTION) = mrYes then
-                                             frmOGE.Tests.clearUserResults();
+    begin
+         frmOGE.Tests.clearUserResults();
+         createNewBMP;
+    end;
 end;
 
 procedure TfrmTestResult.createNewBmp;
@@ -367,16 +366,26 @@ begin
     Font := TGPFont.Create(FontFamily, 10, FontStyleRegular, UnitPoint);
     Graphic.TextRenderingHint := TextRenderingHintAntiAlias;
     SolidBrush := TGPSolidBrush.Create(TGPColor.Black);
-end;
 
-procedure TfrmTestResult.showResults;
-begin
-    createNewBmp();
     setLength(topicResultList, length(frmOGE.Topics.TopicList));
     createCircle();
     createScale();
     createResultList();
     Render();
+end;
+
+procedure TfrmTestResult.btExitClick(Sender: TObject);
+begin
+    close
+end;
+
+procedure TfrmTestResult.chkRandomClick(Sender: TObject);
+begin
+    createNewBmp();
+end;
+
+procedure TfrmTestResult.showResults;
+begin
     showModal;
 end;
 
@@ -389,11 +398,6 @@ end;
 procedure TfrmTestResult.FormResize(Sender: TObject);
 begin
     createNewBmp();
-    setLength(topicResultList, length(frmOGE.Topics.TopicList));
-    createCircle();
-    createScale();
-    createResultList();
-    Render();
 end;
 
 end.
