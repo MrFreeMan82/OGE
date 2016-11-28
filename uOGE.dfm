@@ -28,6 +28,10 @@ object frmOGE: TfrmOGE
     TabOrder = 0
     object tabInfo: TTabSheet
       Caption = #1048#1085#1092#1086#1088#1084#1072#1094#1080#1103
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object WebBrowser1: TWebBrowser
         Left = 0
         Top = 0
@@ -50,10 +54,18 @@ object frmOGE: TfrmOGE
     object tabThemes: TTabSheet
       Caption = #1058#1077#1084#1099
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
     object tabTests: TTabSheet
       Caption = #1059#1095#1077#1073#1085#1086'-'#1090#1088#1077#1085#1080#1088#1086#1074#1086#1095#1085#1099#1077' '#1090#1077#1089#1090#1099
       ImageIndex = 4
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
     object tabAdmin: TTabSheet
       Caption = 'Admin'

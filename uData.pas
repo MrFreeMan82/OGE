@@ -21,7 +21,6 @@ type
   TTopicInfo = record
       id: integer;
       pageCount: integer;
-      name: string;
       dir: string;
       displayLabel: string;
   end;
@@ -31,8 +30,7 @@ type
   PtestInfo = ^TTestinfo;
   TTestInfo = record
       id: integer;
-      topic: integer;
-      name: string;
+      topicID: integer;
       dir: string;
       displayLabel: string;
       taskResultMask: array[0..TASK_COUNT - 1] of boolean;
@@ -101,7 +99,7 @@ begin
     result := nil;
 
     for i := 0 to length(tests) - 1 do
-          if tests[i].topic = topicID then result := @tests[i];
+          if tests[i].topicID = topicID then result := @tests[i];
 end;
 
 function Tdm.loadAnswears(const fileName: string; aVariant: integer): TAnswears;
@@ -153,11 +151,10 @@ begin
           node := root.ChildNodes.Get(i);
           with node.ChildNodes do
           begin
-              result[i].name := FindNode('NAME').Text;
               result[i].dir  := FindNode('DIR').Text;
               result[i].displayLabel := FindNode('DISPLAY_LABEL').Text;
               result[i].id := strToInt(FindNode('ID').Text);
-              result[i].topic := strToint(FindNode('TOPIC').Text);
+              result[i].topicID := strToint(FindNode('TOPIC').Text);
           end;
      end;
 end;
@@ -195,7 +192,6 @@ begin
           node := root.ChildNodes.Get(i);
           with node.ChildNodes do
           begin
-              result[i].name := FindNode('NAME').Text;
               result[i].dir  := FindNode('DIR').Text;
               result[i].displayLabel := FindNode('DISPLAY_LABEL').Text;
               result[i].id := strToInt(FindNode('ID').Text);

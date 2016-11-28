@@ -44,6 +44,11 @@
 			<DelphiCompile Include="OGE.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
+			<RcCompile Include="html.rc">
+				<ContainerId>RC</ContainerId>
+				<ContainerId>RC</ContainerId>
+				<Form>html.res</Form>
+			</RcCompile>
 			<DCCReference Include="uOGE.pas">
 				<Form>frmOGE</Form>
 			</DCCReference>

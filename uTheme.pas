@@ -39,7 +39,6 @@ type
     procedure loadPage(pageNo: integer);
     function isSetCurrentTopic(raiseException: boolean = true): boolean;
     function getItem(topicID: integer): TTopicInfo;
-    procedure ZoomOut(sourceBmp, destinationBmp: TBitmap);
   public
     { Public declarations }
     procedure showTopics();
@@ -107,13 +106,6 @@ begin
      destBMP.Canvas.StretchDraw(Rect(0, 0, destBMP.Width, destBMP.Height), sourceBMP);
 end;
 
-procedure TfrmTopics.ZoomOut(sourceBmp, destinationBMP: TBitmap);
-begin
-    destinationBMP.Width := trunc(sourceBmp.Width / 1.2);
-    destinationBMP.Height := trunc(sourceBmp.Height / 1.2);
-    Streach(sourceBmp, destinationBMP, destinationBMP.Width, destinationBMP.Height);
-end;
-
 procedure TfrmTopics.btNextPageClick(Sender: TObject);
 begin
     isSetCurrentTopic();
@@ -179,10 +171,9 @@ begin
 
      for i := 0 to length(links) - 1 do
      begin
-          links[i] := TLinkLabel.Create(self);
+          links[i] := TLinkLabel.Create(pnlLinks);
           links[i].Parent := pnlLinks;
           links[i].OnClick := linkClick;
-          links[i].Name := topics[i].name;
           links[i].Left := l;
           links[i].Top := t;
           links[i].Tag := i;
@@ -206,6 +197,7 @@ var fileName: string;
     jpg: TJpegImage;
     bmp, bmpDest : TBitmap;
     mem: TMemoryStream;
+    marginLeft: integer;
 begin
      clear;
      isSetCurrentTopic();
@@ -217,40 +209,27 @@ begin
      if mem = nil then exit;
 
      jpg := TJpegImage.Create;
+     bmp := TBitMap.Create;
+     bmpDest := TBitMap.Create;
 
      try
         jpg.LoadFromStream(mem);
+        bmp.Assign(jpg);
+        bmpDest.Width := 1000;
+        bmpDest.Height := jpg.Height;
+        Streach(bmp, bmpDest, bmpDest.Width, bmpDest.Height);
 
-        if jpg.Width > ScrollBox.ClientWidth then
-        begin
-             bmp := TBitMap.Create;
-             bmpDest := TBitMap.Create;
-             try
-                bmp.Assign(jpg);
-                zoomOut(bmp, bmpDest);
-                img.SetBounds(
-                    (ScrollBox.ClientWidth - bmpDest.Width) div 2,
-                                      5, bmpDest.Width, bmpDest.Height
-                );
-                img.Picture.Bitmap.Assign(bmpDest);
-             finally
-                bmp.Free;
-                bmpDest.Free;
-             end;
-        end
-        else begin
-            img.SetBounds(
-              (ScrollBox.ClientWidth - jpg.Width) div 2,
-                                      5, jpg.Width, jpg.Height
-            );
-            img.Picture.Bitmap.Assign(jpg);
-
-        end;
+        marginLeft := (ScrollBox.ClientWidth - bmpDest.Width) div 2;
+        img.SetBounds(marginLeft, 5, bmpDest.Width, bmpDest.Height);
+        img.Picture.Bitmap.Assign(bmpDest);
+ 
         ScrollBox.HorzScrollBar.Range := img.Picture.Width;
         ScrollBox.VertScrollBar.Range := img.Picture.Height;
      finally
          jpg.Free;
          mem.Free;
+         bmp.Free;
+         bmpDest.Free;
      end;
 end;
 

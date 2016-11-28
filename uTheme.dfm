@@ -59,11 +59,10 @@ object frmTopics: TfrmTopics
     BevelOuter = bvNone
     TabOrder = 1
     object ScrollBox: TScrollBox
-      AlignWithMargins = True
-      Left = 20
-      Top = 29
-      Width = 262
-      Height = 249
+      Left = 0
+      Top = 26
+      Width = 285
+      Height = 255
       Margins.Left = 20
       VertScrollBar.Increment = 2
       Align = alClient
@@ -75,11 +74,15 @@ object frmTopics: TfrmTopics
       DoubleBuffered = True
       ParentDoubleBuffered = False
       TabOrder = 0
+      ExplicitLeft = 20
+      ExplicitTop = 29
+      ExplicitWidth = 262
+      ExplicitHeight = 249
       object img: TImage
         Left = 3
         Top = 3
-        Width = 262
-        Height = 249
+        Width = 230
+        Height = 230
         Align = alCustom
       end
     end

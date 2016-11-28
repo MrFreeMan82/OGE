@@ -51,7 +51,7 @@ begin
     showMessage('Тестовый образец');
     {$ENDIF}
     Path := exePath();
-    WebBrowser1.Navigate(path + '1.html');
+    WebBrowser1.Navigate('res://' + Application.ExeName + '/HTML/FIRST_PAGE');
     WebBrowser1.OleObject.Document.bgColor := '#E0FFFF';
     pgPages.ActivePage := tabInfo;
 

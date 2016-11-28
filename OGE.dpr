@@ -1,5 +1,7 @@
 program OGE;
 
+{$R 'html.res' 'html.rc'}
+
 uses
   Forms,
   uOGE in 'uOGE.pas' {frmOGE},
