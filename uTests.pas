@@ -8,6 +8,8 @@ uses
   Buttons;
 
 type
+  TMode = (mNormal, mReTest);
+
   TfrmTests = class(TForm)
     Panel1: TPanel;
     Label1: TLabel;
@@ -16,7 +18,6 @@ type
     cboTopics: TComboBox;
     rgVariants: TRadioGroup;
     btAnswear: TSpeedButton;
-    SpeedButton2: TSpeedButton;
     btResults: TSpeedButton;
     pnlTask: TPanel;
     img: TImage;
@@ -30,6 +31,7 @@ type
     procedure btResultsClick(Sender: TObject);
   private
     { Private declarations }
+     mode: Tmode;
      fTask: integer;
      fTests: TTestList;
      currentTest: PTestInfo;
@@ -37,10 +39,13 @@ type
    //  usrResults: TUserResultList;  // Результаты по данной теме
      procedure clear;
      procedure loadTest(test:TTestInfo; testVariant, taskNo: integer);
+     function getNextFalseTask(fromBegin: boolean = false): integer;
+     function getPrevFalseTask(): integer;
+     function AllComplete(): boolean;
+   //  function nextFalseTask(): integer;
   public
     { Public declarations }
     property Tests: TTEstList read fTests;
-  //  property UserResults: TUserResultList read usrResults;
     procedure clearUserResults();
     procedure setNewTopic(newTopicID: integer);
     procedure SelectVariant(aVariant: integer);
@@ -49,7 +54,7 @@ type
 
 implementation
 
-uses uOGE, jpeg;
+uses uOGE, jpeg, uTestResult;
 
 {$R *.dfm}
 
@@ -58,6 +63,16 @@ const pointsByTask: array[0..9] of double = (0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1, 2,
       e = 0.001;
 
 { TfrmTests }
+function TfrmTests.AllComplete: boolean;
+var i: integer;
+begin
+     if currentTest = nil then exit(false);
+
+     result := true;
+     for i := 0 to length(currentTest.taskResultMask) - 1 do
+           if currentTest.taskResultMask[i] = false then exit(false)
+end;
+
 procedure TfrmTests.btAnswearClick(Sender: TObject);
 var usrAnswear: double;
     TrueAnswear: boolean;
@@ -103,34 +118,75 @@ begin
      end;
 end;
 
+function TfrmTests.getNextFalseTask(fromBegin: boolean = false): integer;
+begin
+     if fromBegin then fTask := 1 else inc(fTask);
+
+     while fTask <= TASK_COUNT do
+     begin
+         if currentTest.taskResultMask[fTask - 1] = false then break;;
+         inc(fTask);
+     end;
+
+    if fTask > TASK_COUNT then
+         fTask := getPrevFalseTask();
+
+    if allComplete then mode := mNormal;   // All tasks complete
+
+    result := fTask;
+end;
+
+function TfrmTests.getPrevFalseTask: integer;
+begin
+     dec(fTask);
+     while (fTask >= 1) do
+     begin
+         if currentTest.taskResultMask[fTask - 1] = false then break;
+         dec(fTask);
+     end;
+
+     if fTask < 1 then
+          fTask := getNextFalseTask();
+
+     if allComplete then mode := mNormal;   // All Tasks complete
+
+     result := fTask;
+end;
+
 procedure TfrmTests.btNextTaskClick(Sender: TObject);
 begin
-    inc(fTask);
-    if fTask > TASK_COUNT then
-    begin
-       fTask := TASK_COUNT;
-       exit;
-    end;
+    if mode = mReTest then fTask := getNextFalseTask() else inc(fTask);
+    if fTask > TASK_COUNT then fTask := TASK_COUNT;
 
     loadTest(currentTest^, rgVariants.ItemIndex + 1, fTask);
 end;
 
 procedure TfrmTests.btPrevTaskClick(Sender: TObject);
 begin
-    dec(fTask);
-    if fTask < 1 then
-    begin
-         fTask := 1;
-         exit;
-    end;
+    if mode = mRetest then fTask := getPrevFalseTask() else dec(fTask);
+    if fTask < 1 then fTask := 1;
 
     loadTest(currentTest^, rgVariants.ItemIndex + 1, fTask);
 end;
 
 procedure TfrmTests.btResultsClick(Sender: TObject);
+var mr: TmodalResult;
 begin
-    frmOGE.TestResults.showResults();
-    frmOGE.TestResults := nil;
+    mr := TfrmTestResult.showResults;
+    case mr of
+      mrYes: mode := mNormal;
+      mrNo:
+        begin
+              if not assigned(currentTest) then exit;
+
+          // Перейдем в режим прохода теста заново
+          // Найдем первый не пройденый тест
+              mode := mReTest;
+
+              ftask := getNextFalseTask(true);
+              loadTest(currentTest^, rgVariants.ItemIndex + 1, fTask);
+        end;
+    end;
 end;
 
 procedure TfrmTests.cboTopicsChange(Sender: TObject);
@@ -204,6 +260,8 @@ procedure TfrmTests.rgVariantsClick(Sender: TObject);
 begin
     if rgVariants.ItemIndex < 0 then exit;
 
+    mode := mNormal;
+
     answears := nil;
 
     currentTest := getTestByTopic(
@@ -247,10 +305,9 @@ begin
     end;
 
     with frmOGE.Topics do
-    begin
         for i := 0 to length(TopicList) - 1 do
             cboTopics.Items.AddObject(TopicList[i].displayLabel, Tobject(TopicList[i].id));
-    end;
+
     cboTopics.ItemIndex := 0;
 
     show;

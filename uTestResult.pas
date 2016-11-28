@@ -38,13 +38,19 @@ TfrmTestResult = class(TForm)
     pnlTools: TPanel;
     btExit: TSpeedButton;
     btClearResults: TSpeedButton;
-    chkRandom: TCheckBox;
     img: TImage;
+    pnlOptions: TPanel;
+    Label1: TLabel;
+    btYes: TSpeedButton;
+    btNo: TSpeedButton;
+    chkRandom: TCheckBox;
     procedure btExitClick(Sender: TObject);
     procedure btClearResultsClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure chkRandomClick(Sender: TObject);
+    procedure btNoClick(Sender: TObject);
+    procedure btYesClick(Sender: TObject);
   private
     { Private declarations }
     Graphic: IGPGraphics;
@@ -77,7 +83,7 @@ TfrmTestResult = class(TForm)
     procedure measureDisplayStringWidthAndHeight(text: string; var width, height: double);
   public
     { Public declarations }
-    procedure showResults();
+    class function showResults(): TModalResult;
   end;
 
 implementation
@@ -85,6 +91,9 @@ implementation
 uses uOGE, math;
 
 {$R *.dfm}
+
+var frmTestResult: TfrmTestResult;
+
 const
   colors: array[0..3] of cardinal = (TGPColor.Red, TGPColor.Green, TGPColor.Aqua, TGPColor.Lime);
  // AXIS_ANGLE = 45;
@@ -376,7 +385,17 @@ end;
 
 procedure TfrmTestResult.btExitClick(Sender: TObject);
 begin
-    close
+    modalResult := mrCancel
+end;
+
+procedure TfrmTestResult.btNoClick(Sender: TObject);
+begin
+    modalResult := mrNo;
+end;
+
+procedure TfrmTestResult.btYesClick(Sender: TObject);
+begin
+    modalResult := mrYes;
 end;
 
 procedure TfrmTestResult.chkRandomClick(Sender: TObject);
@@ -384,9 +403,11 @@ begin
     createNewBmp();
 end;
 
-procedure TfrmTestResult.showResults;
+class function TfrmTestResult.showResults(): TModalResult;
 begin
-    showModal;
+    if not Assigned(frmTestResult) then frmTestResult := TFrmTestResult.Create(frmOGE);
+    result := frmTestResult.showModal;
+    freeAndNil(frmTestResult)
 end;
 
 
@@ -397,6 +418,8 @@ end;
 
 procedure TfrmTestResult.FormResize(Sender: TObject);
 begin
+    pnlOptions.Left := (pnlTools.Width div 2) - (pnlOptions.Width div 2);
+
     createNewBmp();
 end;
 
