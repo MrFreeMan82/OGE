@@ -247,11 +247,10 @@ begin
      bmp.Height := trunc(rect.Height);
 
      graphic := TGPGraphics.Create(bmp.Canvas.Handle);
+     graphic.InterpolationMode := InterpolationModeHighQualityBicubic;
      graphic.DrawImage(gdiBmp, rect);
 
-     img.SetBounds((pnlTask.Width - bmp.Width) div 2,
-                    (pnlTask.Height - bmp.Height) div 2,
-                    bmp.Width, bmp.Height);
+     img.SetBounds(0, 0, bmp.Width, bmp.Height);
      img.Picture.Assign(bmp)
    finally
         mem.Free;

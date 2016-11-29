@@ -214,8 +214,9 @@ begin
        // gdBmp.GetPixel(gdBmp.Width - 1, gdBmp.Height - 1);
 
         source.InitializeFromLTRB(0, 0, gdiBmp.Width, gdiBmp.Height);
-        dest.InitializeFromLTRB(0, 0, 1000, source.Height);
-        streach(source, dest.Width, dest.Height, dest);        
+        dest.InitializeFromLTRB(0, 0, 900, source.Height);
+
+        streach(source, dest.Width, dest.Height, dest);
 
         bmp.Width := trunc(dest.Width);
         bmp.Height := trunc(dest.Height);
@@ -225,6 +226,7 @@ begin
         graphic.DrawImage(gdiBmp, dest);
 
         marginLeft := (ScrollBox.ClientWidth - bmp.Width) div 2;
+        if marginLeft < 0 then marginLeft := 0;
         img.SetBounds(marginLeft, 5, bmp.Width, bmp.Height);
         img.Picture.Bitmap.Assign(bmp);
         
