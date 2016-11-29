@@ -47,7 +47,7 @@ type
   end;
 
 implementation
-uses jpeg, FWZipReader, uOGE;
+uses FWZipReader, uOGE, GdiPlus, GdiPlusHelpers, ActiveX;
 
 {$R *.dfm}
 
@@ -80,30 +80,6 @@ begin
     end;
     createTopicLinks();
     show;
-end;
-
-procedure Streach(sourceBMP: TBitmap; destBMP: TBitmap; DestWidth, DestHeight: integer);
-const e = 0.0001;
-var x_ratio, y_ratio, ratio: double;
-    w,h:integer;
-    w_or, h_or:integer;
-    use_x_ratio: boolean;
-begin
-     w := DestWidth;
-     h := DestHeight ;
-     w_or := sourceBMP.Width;
-     h_or := sourceBMP.Height;
-
-     x_ratio := w / w_or;
-     y_ratio := h / h_or;
-
-     if x_ratio < (y_ratio - e) then ratio := x_ratio else ratio := y_ratio;
-
-     use_x_ratio := abs(x_ratio - e) < ratio;
-     if use_x_ratio then destBMP.Width := w else destBMP.Width := trunc(w_or * ratio);
-     if not use_x_ratio then destBMP.Height := h  else destBMP.Height := trunc(h_or * ratio);
-
-     destBMP.Canvas.StretchDraw(Rect(0, 0, destBMP.Width, destBMP.Height), sourceBMP);
 end;
 
 procedure TfrmTopics.btNextPageClick(Sender: TObject);
@@ -192,12 +168,35 @@ begin
     loadPage(page);
 end;
 
+procedure Streach(source: TGPRectF; destWidth, destHeight: single; out dest: TGPrectF);
+const e = 0.0001;
+var x_ratio, y_ratio, ratio, w_or, h_or, w, h: single;
+    use_x_ratio: boolean;
+begin
+     w := DestWidth;
+     h := DestHeight ;
+     w_or := source.Width;
+     h_or := source.Height;
+
+     x_ratio := w / w_or;
+     y_ratio := h / h_or;
+
+     if x_ratio < (y_ratio - e) then ratio := x_ratio else ratio := y_ratio;
+
+     use_x_ratio := abs(x_ratio - e) < ratio;
+     if use_x_ratio then dest.Width := w else dest.Width := trunc(w_or * ratio);
+     if not use_x_ratio then dest.Height := h  else dest.Height := trunc(h_or * ratio);
+end;
+
 procedure TfrmTopics.loadPage(pageNo: integer);
 var fileName: string;
-    jpg: TJpegImage;
-    bmp, bmpDest : TBitmap;
     mem: TMemoryStream;
     marginLeft: integer;
+    adptr: IStream;
+    graphic: IGPGraphics;
+    source, dest: TGPRectF;
+    gdiBmp: IGPBitmap;
+    bmp: TBitmap;
 begin
      clear;
      isSetCurrentTopic();
@@ -208,28 +207,32 @@ begin
      mem := TMemoryStream(FindData(dm.DataFile, fileName, tMemory));
      if mem = nil then exit;
 
-     jpg := TJpegImage.Create;
      bmp := TBitMap.Create;
-     bmpDest := TBitMap.Create;
+     adptr  := TStreamAdapter.Create(mem);
+     try                        
+        gdiBmp := TGPBitmap.Create(adptr);
+       // gdBmp.GetPixel(gdBmp.Width - 1, gdBmp.Height - 1);
 
-     try
-        jpg.LoadFromStream(mem);
-        bmp.Assign(jpg);
-        bmpDest.Width := 1000;
-        bmpDest.Height := jpg.Height;
-        Streach(bmp, bmpDest, bmpDest.Width, bmpDest.Height);
+        source.InitializeFromLTRB(0, 0, gdiBmp.Width, gdiBmp.Height);
+        dest.InitializeFromLTRB(0, 0, 1000, source.Height);
+        streach(source, dest.Width, dest.Height, dest);        
 
-        marginLeft := (ScrollBox.ClientWidth - bmpDest.Width) div 2;
-        img.SetBounds(marginLeft, 5, bmpDest.Width, bmpDest.Height);
-        img.Picture.Bitmap.Assign(bmpDest);
- 
+        bmp.Width := trunc(dest.Width);
+        bmp.Height := trunc(dest.Height);
+        
+        graphic := TGPGraphics.Create(bmp.Canvas.Handle);
+        graphic.InterpolationMode := InterpolationModeHighQualityBicubic;
+        graphic.DrawImage(gdiBmp, dest);
+
+        marginLeft := (ScrollBox.ClientWidth - bmp.Width) div 2;
+        img.SetBounds(marginLeft, 5, bmp.Width, bmp.Height);
+        img.Picture.Bitmap.Assign(bmp);
+        
         ScrollBox.HorzScrollBar.Range := img.Picture.Width;
-        ScrollBox.VertScrollBar.Range := img.Picture.Height;
+        ScrollBox.VertScrollBar.Range := img.Picture.Height;        
      finally
-         jpg.Free;
-         mem.Free;
-         bmp.Free;
-         bmpDest.Free;
+       bmp.Free;
+       mem.Free;
      end;
 end;
 

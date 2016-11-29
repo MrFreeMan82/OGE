@@ -54,7 +54,7 @@ type
 
 implementation
 
-uses uOGE, jpeg, uTestResult;
+uses uOGE, uTestResult, GdiPlus, GdiPlusHelpers, ActiveX;
 
 {$R *.dfm}
 
@@ -215,8 +215,12 @@ end;
 
 procedure TfrmTests.loadTest(test: TTestInfo; testVariant, taskNo: integer);
 var fileName, answearName: string;
-    jpg: TJpegImage;
     mem: TMemoryStream;
+    adptr: IStream;
+    gdiBmp: IGPBitmap;
+    graphic: IGPGraphics;
+    bmp: TBitmap;
+    rect: TGPRectF;
 begin
    clear;
 
@@ -231,24 +235,33 @@ begin
        abort;
    end;
 
-   jpg := TJpegImage.Create;
+   fTask := taskNo;
+   bmp := TBitMap.Create;
    try
-     fTask := taskNo;
-     if answears = nil then
-     begin
+     adptr  := TStreamAdapter.Create(mem);
+     gdiBmp := TGPBitmap.Create(adptr);
+
+     rect.InitializeFromLTRB(0, 0, gdiBMP.Width, gdiBmp.Height);
+
+     bmp.Width := trunc(rect.Width);
+     bmp.Height := trunc(rect.Height);
+
+     graphic := TGPGraphics.Create(bmp.Canvas.Handle);
+     graphic.DrawImage(gdiBmp, rect);
+
+     img.SetBounds((pnlTask.Width - bmp.Width) div 2,
+                    (pnlTask.Height - bmp.Height) div 2,
+                    bmp.Width, bmp.Height);
+     img.Picture.Assign(bmp)
+   finally
+        mem.Free;
+        bmp.Free;
+   end;
+
+   if answears = nil then
+   begin
         answearName := format('%s/%s/answ.xml', [TEST_DIR, currentTest.dir]);
         answears := dm.loadAnswears(answearName, testVariant);
-     end;
-
-     jpg.LoadFromStream(mem);
-     img.Top   := 10;
-     img.Left  := 10;
-     img.Width := jpg.Width;
-     img.Height := jpg.Height;
-     img.Picture.Bitmap.Assign(jpg);
-   finally
-        jpg.Free;
-        mem.Free;
    end;
 
    rgVariants.OnClick := nil;

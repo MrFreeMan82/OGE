@@ -74,10 +74,6 @@ object frmTopics: TfrmTopics
       DoubleBuffered = True
       ParentDoubleBuffered = False
       TabOrder = 0
-      ExplicitLeft = 20
-      ExplicitTop = 29
-      ExplicitWidth = 262
-      ExplicitHeight = 249
       object img: TImage
         Left = 3
         Top = 3
