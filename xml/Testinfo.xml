@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<TESTS>
+	<TEST>
+		<ID>1</ID>
+		<TOPIC>1</TOPIC>
+		<DIR>Numbers</DIR>
+		<DISPLAY_LABEL>Числа и выражения</DISPLAY_LABEL>
+	</TEST>
+	<TEST>
+		<ID>2</ID>
+		<TOPIC>2</TOPIC>
+		<DIR>Algebraic</DIR>
+		<DISPLAY_LABEL>Алгебраические выражения</DISPLAY_LABEL>
+	</TEST>
+	<TEST>
+		<ID>3</ID>
+		<TOPIC>3</TOPIC>
+		<DIR>Equation</DIR>
+		<DISPLAY_LABEL>Уравнения и неравенства</DISPLAY_LABEL>
+	</TEST>
+	<TEST>
+		<ID>4</ID>
+		<TOPIC>4</TOPIC>
+		<DIR>Sequence</DIR>
+		<DISPLAY_LABEL>Числовые последовательности</DISPLAY_LABEL>
+	</TEST>
+	<TEST>
+		<ID>5</ID>
+		<TOPIC>5</TOPIC>
+		<DIR>Function</DIR>
+		<DISPLAY_LABEL>Функции</DISPLAY_LABEL>
+	</TEST>
+	<TEST>
+		<ID>6</ID>
+		<TOPIC>6</TOPIC>
+		<DIR>Coordinate</DIR>
+		<DISPLAY_LABEL>Координаты на прямой и плоскости</DISPLAY_LABEL>
+	</TEST>	
+	<TEST>
+		<ID>7</ID>
+		<TOPIC>7</TOPIC>
+		<DIR>Geometry</DIR>
+		<DISPLAY_LABEL>Геометрия</DISPLAY_LABEL>
+	</TEST>
+	<TEST>
+		<ID>8</ID>
+		<TOPIC>8</TOPIC>
+		<DIR>Statistic</DIR>
+		<DISPLAY_LABEL>Статистика и теория вероятностей</DISPLAY_LABEL>
+	</TEST>	
+</TESTS>
