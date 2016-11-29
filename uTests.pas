@@ -227,17 +227,18 @@ begin
    fileName := format('%s/%s/%d/%d.jpg',
         [TEST_DIR, test.dir, testVariant, taskNo]);
 
-   mem := TMemoryStream(FindData(dm.DataFile, fileName, tMemory));
-
-   if mem = nil then
-   begin
-       messageBox(self.Handle, 'По данной теме тесты не загружены', 'Ошибка', MB_OK or MB_ICONERROR);
-       abort;
-   end;
-
-   fTask := taskNo;
+   mem := TMemoryStream.Create;
    bmp := TBitMap.Create;
+
    try
+     if not FindData(dm.DataFile, fileName, mem) then
+     begin
+        messageBox(self.Handle,
+            'По данной теме тесты не загружены',
+                   'Ошибка', MB_OK or MB_ICONERROR);
+        abort;
+     end;
+
      adptr  := TStreamAdapter.Create(mem);
      gdiBmp := TGPBitmap.Create(adptr);
 
@@ -251,7 +252,9 @@ begin
      graphic.DrawImage(gdiBmp, rect);
 
      img.SetBounds(0, 0, bmp.Width, bmp.Height);
-     img.Picture.Assign(bmp)
+     img.Picture.Assign(bmp);
+
+     fTask := taskNo;
    finally
         mem.Free;
         bmp.Free;

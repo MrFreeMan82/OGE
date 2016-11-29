@@ -204,12 +204,12 @@ begin
      fileName := format('%s/%s/%d.jpg',
         [TOPIC_DIR, fcurrentTopic.dir, pageNo]);
 
-     mem := TMemoryStream(FindData(dm.DataFile, fileName, tMemory));
-     if mem = nil then exit;
-
+     mem := TMemoryStream.Create;
      bmp := TBitMap.Create;
-     adptr  := TStreamAdapter.Create(mem);
-     try                        
+     try
+        if not FindData(dm.DataFile, fileName, mem) then abort;
+
+        adptr  := TStreamAdapter.Create(mem);
         gdiBmp := TGPBitmap.Create(adptr);
        // gdBmp.GetPixel(gdBmp.Width - 1, gdBmp.Height - 1);
 

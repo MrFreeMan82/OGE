@@ -16,8 +16,6 @@ const TOPIC_DIR = 'Topics';
 
 
 type
-  TStreamType = (tString, tMemory);
-
   TTopicInfo = record
       id: integer;
       pageCount: integer;
@@ -64,8 +62,7 @@ function strToFloatEx(s: string): double;
 
 function exePath(): string;
 function getTestByTopic(topicID: integer; const tests: TTestList): PTestInfo;
-function FindData(const zipFile, name: string; dataType: TStreamType): TStream;
-function ModifyData(const zipFile, name: string; input:TStream; dataType: TStreamType): boolean;
+function FindData(const zipFile, name: string; outData: TStream): boolean;
 
 implementation
 uses FWZipModifier, FWZipReader;
@@ -113,9 +110,9 @@ begin
      lst := TStringList.Create;
      lst.StrictDelimiter := true;
      lst.Delimiter := ';';
-     s := TStringStream(FindData(dataFile, fileName, tString));
+     s := TStringStream.Create;
      try
-       if s = nil then abort;
+       if not FindData(dataFile, fileName, s) then abort;
        xmlDoc.LoadFromStream(s);
        node := xmlDoc.ChildNodes.FindNode('ANSWEARS');
        if node = nil then abort;
@@ -165,8 +162,9 @@ var info: string;
 begin
      result := nil;
      info := TEST_DIR + '/info.xml';
-     s := TStringStream(FindData(dataFile, info, tString));
+     s := TStringStream.Create;
      try
+          if not FindData(dataFile, info, s) then abort;
           xmlDoc.LoadFromStream(s);
           result := doLoadTests();
      finally
@@ -206,8 +204,9 @@ var info: string;
 begin
       result := nil;
       info := TOPIC_DIR + '/info.xml';
-      s := TStringStream(FindData(dataFile, info, tString));
+      s := TStringStream.Create;
       try
+          if not FindData(dataFile, info, s) then abort;
           xmlDoc.LoadFromStream(s);
           result := doLoadTopics();
       finally
@@ -215,56 +214,28 @@ begin
       end;
 end;
 
-function FindData(const zipFile, name: string; dataType: TStreamType): TStream;
+function FindData(const zipFile, name: string; outData: TStream): boolean;
 var Zip: TFWZipReader;
     i: integer;
 begin
-    result := nil;
+    result := false;
     Zip := TFWZipReader.Create;
     try
       zip.LoadFromFile(zipFile);
       for i := 0 to zip.Count - 1 do
       begin
-          if assigned(result) then break;
+          if result then break;
 
           if (zip.Item[i].FileName = name) then
           begin
-               case dataType of
-                 tString: result := TStringStream.Create('');
-                 tMemory: result := TMemoryStream.Create;
-                 else exit;
-               end;
-               zip[i].ExtractToStream(result, '');
-               result.Position := 0;
+               zip[i].ExtractToStream(outData, '');
+               outData.Position := 0;
+               result := true;
           end;
       end;
     finally
         zip.Free;
     end;
-end;
-
-function ModifyData(const zipFile, name: string; input:TStream; dataType: TStreamType): boolean;
-var zip: TFWZipModifier;
-    Index: TReaderIndex;
-    i: integer;
-begin
-    zip := TFWZipModifier.Create;
-    try
-       Index := zip.AddZipFile(zipFile);
-       zip.AddFromZip(index);
-       for i := 0 to zip.Count - 1 do
-           if (zip.Item[i].FileName = name) then zip.DeleteItem(i);
-
-       case dataType of
-        tString: zip.AddStream(extractFileName(name), TStringStream(input));
-        tMemory: zip.AddStream(extractFileName(name), TMemoryStream(input));
-       end;
-
-       zip.BuildZip(zipFile);
-    finally
-        zip.Free;
-    end;
-    result := false;
 end;
 
 end.
