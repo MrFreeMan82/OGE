@@ -53,6 +53,7 @@ type
     function loadAnswears(const fileName: string; aVariant: integer):TAnswears;
     function loadTests():TTestList;
     function LoadTopics(): TTopicList;
+    function readPwd(): string;
   end;
 
 var
@@ -213,6 +214,19 @@ begin
       finally
           s.Free;
       end;
+end;
+
+function Tdm.readPwd: string;
+var s: TStringStream;
+begin
+     result := '';
+     s := TStringStream.Create;
+     try
+       if not FindData(dm.DataFile,  '/pwd', s) then abort;
+       result := trim(s.ToString);
+     finally
+         s.Free;
+     end;
 end;
 
 function FindData(const zipFile, name: string; outData: TStream): boolean;

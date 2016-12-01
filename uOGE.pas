@@ -24,6 +24,7 @@ type
     frmTests: TfrmTests;
     frmTopics: TfrmTopics;
     path: string;
+    function Login(): TModalResult;
   public
     { Public declarations }
     property Tests: TfrmTests read frmTests;
@@ -36,14 +37,40 @@ var
 implementation
 
 {$R *.dfm}
+
+resourcestring password = '1';
+
 {$DEFINE TEST}
 
+function TfrmOGE.Login():TModalResult;
+var s: string;
+begin
+     s := '1';
+     repeat
+          if InputQuery('OГЭ', 'Введите паоль:', s)
+                then result := mrOK else result := mrCancel;
+
+          if (s = password) then break;
+
+          if result = mrOK then
+              messageBox(handle, 'Пароль не верен',
+                          'ОГЭ', MB_OK or MB_ICONWARNING);
+
+     until result = mrCancel;
+end;
 
 procedure TfrmOGE.FormCreate(Sender: TObject);
 begin
     {$IFDEF TEST}
     showMessage('Тестовый образец');
     {$ENDIF}
+
+    if Login() = mrCancel then
+    begin
+        Application.Terminate;
+        exit;
+    end;
+
     Path := exePath();
     WebBrowser1.Navigate('res://' + Application.ExeName + '/HTML/FIRST_PAGE');
     WebBrowser1.OleObject.Document.bgColor := '#E0FFFF';
