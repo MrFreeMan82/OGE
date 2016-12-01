@@ -110,6 +110,7 @@ begin
      lst := TStringList.Create;
      lst.StrictDelimiter := true;
      lst.Delimiter := ';';
+
      s := TStringStream.Create;
      try
        if not FindData(dataFile, fileName, s) then abort;
