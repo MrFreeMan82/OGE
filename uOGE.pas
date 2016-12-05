@@ -40,7 +40,7 @@ implementation
 
 resourcestring password = '1';
 
-{$DEFINE TEST}
+//{$DEFINE TEST}
 
 function TfrmOGE.Login():TModalResult;
 var s: string;
@@ -62,7 +62,7 @@ end;
 procedure TfrmOGE.FormCreate(Sender: TObject);
 begin
     {$IFDEF TEST}
-    showMessage('Тестовый образец');
+ //   showMessage('Тестовый образец');
     {$ENDIF}
 
     if Login() = mrCancel then

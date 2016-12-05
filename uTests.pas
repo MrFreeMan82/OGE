@@ -120,6 +120,15 @@ end;
 
 function TfrmTests.getNextFalseTask(fromBegin: boolean = false): integer;
 begin
+     if allComplete then
+     begin
+         mode := mNormal;   // All tasks complete
+         messageBox(handle, PWideChar('Поздравляем! Все задания варианта '+
+                                intToStr(rgVariants.ItemIndex + 1) +' решены'),
+                                                 'ОГЕ', MB_OK or MB_ICONINFORMATION);
+         exit(fTask)
+     end;
+
      if fromBegin then fTask := 1 else inc(fTask);
 
      while fTask <= TASK_COUNT do
@@ -131,13 +140,20 @@ begin
     if fTask > TASK_COUNT then
          fTask := getPrevFalseTask();
 
-    if allComplete then mode := mNormal;   // All tasks complete
-
     result := fTask;
 end;
 
 function TfrmTests.getPrevFalseTask: integer;
 begin
+     if allComplete then
+     begin
+         mode := mNormal;   // All tasks complete
+         messageBox(handle, PWideChar('Поздравляем! Все задания варианта '+
+                                  intToStr(rgVariants.ItemIndex + 1) +' решены'),
+                                                  'ОГЕ', MB_OK or MB_ICONINFORMATION);
+         exit(fTask)
+     end;
+
      dec(fTask);
      while (fTask >= 1) do
      begin
@@ -147,8 +163,6 @@ begin
 
      if fTask < 1 then
           fTask := getNextFalseTask();
-
-     if allComplete then mode := mNormal;   // All Tasks complete
 
      result := fTask;
 end;
@@ -327,5 +341,6 @@ begin
 
     show;
 end;
+
 
 end.

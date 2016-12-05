@@ -189,12 +189,12 @@ begin
     angle := axisAngle[i];
     with topicResultList[i] do
     begin
-        if angle in [0..89] then
+        if angle in [0..79] then
         begin
             labelRect.X := labelPoint.X;
             labelRect.Y := labelPoint.Y - txtH;
         end
-        else if angle in [90..179] then
+        else if angle in [80..179] then
         begin
             labelRect.X := labelPoint.X;
             labelRect.Y := labelPoint.Y;
@@ -231,7 +231,9 @@ begin
           topic := frmOGE.Topics.TopicList[i];
           test  := getTestByTopic(topic.id, frmOGE.Tests.Tests);
 
-          if chkRandom.Checked then pts := random(11) else pts := test.points;
+          if chkRandom.Checked then pts := random(11)
+          else if assigned(test) then pts := test.points
+          else pts := 0;
 
               // define result points
           l := (axis[i].len / MAX_GRADUATION) * pts;
@@ -307,14 +309,17 @@ begin
     c := 0;
     for i := 0 to length(topicResultList) - 1 do
     begin
-         ColorBrush := TGPSolidBrush.Create(colors[c]);
-         graphic.FillPath(ColorBrush, topicResultList[i].pie);
-
          graphic.DrawString(topicResultList[i].DisplayLabel,
                 font, topicResultList[i].labelRect, nil, SolidBrush);
 
-         inc(c);
-         if c > 3 then c := 0;
+         if assigned(topicResultList[i].pie) then
+         begin
+             ColorBrush := TGPSolidBrush.Create(colors[c]);
+             graphic.FillPath(ColorBrush, topicResultList[i].pie);
+
+             inc(c);
+             if c > 3 then c := 0;
+         end;
     end;
 
     for i := 0 to length(scale) - 1 do
