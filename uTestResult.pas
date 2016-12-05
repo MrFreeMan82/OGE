@@ -99,6 +99,7 @@ const
  // AXIS_ANGLE = 45;
 
 procedure TfrmTestResult.createCircle();
+const ADJUST_CIRCLE_HEIGHT = 25;
 var i, angle, rect_width: integer;
 begin
      if length(topicResultList) = 0 then abort;
@@ -110,7 +111,7 @@ begin
      rect_Width := bmp.Width div 2;
 
      CircleRect.X := (bmp.Width - RECT_WIDTH) / 2;
-     CircleRect.Y  := (bmp.Height - RECT_WIDTH) / 2;
+     CircleRect.Y  := ((bmp.Height - RECT_WIDTH) / 2) - ADJUST_CIRCLE_HEIGHT;
      CircleRect.Width := RECT_WIDTH;
      CircleRect.Height := RECT_WIDTH;
 
