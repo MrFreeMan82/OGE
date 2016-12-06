@@ -12,6 +12,7 @@ object frmTests: TfrmTests
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  OnMouseWheel = FormMouseWheel
   PixelsPerInch = 96
   TextHeight = 13
   object Panel1: TPanel
@@ -235,19 +236,24 @@ object frmTests: TfrmTests
       OnClick = rgVariantsClick
     end
   end
-  object pnlTask: TPanel
+  object ScrollBox: TScrollBox
     Left = 0
     Top = 35
     Width = 657
     Height = 213
     Align = alClient
+    BevelInner = bvNone
     BevelOuter = bvNone
+    BorderStyle = bsNone
+    DoubleBuffered = True
     Color = clWhite
-    ParentBackground = False
+    ParentColor = False
+    ParentDoubleBuffered = False
     TabOrder = 2
+    ExplicitTop = 0
     object img: TImage
-      Left = 42
-      Top = 24
+      Left = 26
+      Top = 20
       Width = 591
       Height = 169
       Align = alCustom

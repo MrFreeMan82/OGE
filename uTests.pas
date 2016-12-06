@@ -19,16 +19,18 @@ type
     rgVariants: TRadioGroup;
     btAnswear: TSpeedButton;
     btResults: TSpeedButton;
-    pnlTask: TPanel;
     img: TImage;
     btPrevTask: TSpeedButton;
     btNextTask: TSpeedButton;
+    ScrollBox: TScrollBox;
     procedure rgVariantsClick(Sender: TObject);
     procedure btNextTaskClick(Sender: TObject);
     procedure btPrevTaskClick(Sender: TObject);
     procedure cboTopicsChange(Sender: TObject);
     procedure btAnswearClick(Sender: TObject);
     procedure btResultsClick(Sender: TObject);
+    procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
   private
     { Private declarations }
      mode: Tmode;
@@ -215,6 +217,9 @@ begin
     txtAnswer.Text := '';
 
     rgVariants.ItemIndex := -1;
+
+    ScrollBox.HorzScrollBar.Range := 0;
+    ScrollBox.VertScrollBar.Range := 0
 end;
 
 procedure TfrmTests.clearUserResults;
@@ -268,6 +273,9 @@ begin
      img.SetBounds(0, 0, bmp.Width, bmp.Height);
      img.Picture.Assign(bmp);
 
+     ScrollBox.HorzScrollBar.Range := img.Picture.Width;
+     ScrollBox.VertScrollBar.Range := img.Picture.Height;
+
      fTask := taskNo;
    finally
         mem.Free;
@@ -320,6 +328,17 @@ begin
               exit;
           end;
      end;
+end;
+
+procedure TfrmTests.FormMouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+begin
+    with scrollBox.VertScrollBar do
+    begin
+        if (wheelDelta < 0) and (position < range)
+        then position := position + increment
+        else if (position > 0) then position := position - increment
+    end;
 end;
 
 procedure TfrmTests.ShowTests;
