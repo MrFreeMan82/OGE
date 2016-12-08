@@ -65,6 +65,9 @@
 			<DCCReference Include="uTestResult.pas">
 				<Form>frmTestResult</Form>
 			</DCCReference>
+			<DCCReference Include="uUTT.pas">
+				<Form>frmUTT</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

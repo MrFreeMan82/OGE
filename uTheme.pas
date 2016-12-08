@@ -9,7 +9,7 @@ uses
 type
   TfrmTopics = class(TForm)
     pnlLinks: TPanel;
-    lkNums: TLinkLabel;
+    lkUTT: TLinkLabel;
     pnlTopic: TPanel;
     ScrollBox: TScrollBox;
     img: TImage;
@@ -124,6 +124,7 @@ begin
 
      frmOGE.Tests.setNewTopic(fcurrentTopic.id);
      frmOGE.Tests.SelectVariant(1);
+
      frmOGE.pgPages.ActivePage := frmOGE.tabTests;
 end;
 

@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, OleCtrls, SHDocVw, ComCtrls, StdCtrls, ExtCtrls, ExtDlgs, Grids,
   ToolWin, Buttons, PlatformDefaultStyleActnCtrls, ActnList, ActnMan,
-  AppEvnts, uTests, uTheme, uData;
+  AppEvnts, uTests, uTheme, uData, uUTT;
 
 type
   TfrmOGE = class(TForm)
@@ -15,6 +15,7 @@ type
     tabThemes: TTabSheet;
     tabTests: TTabSheet;
     WebBrowser1: TWebBrowser;
+    tabUTT: TTabSheet;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure WebBrowser1DocumentComplete(ASender: TObject;
@@ -23,12 +24,15 @@ type
     { Private declarations }
     frmTests: TfrmTests;
     frmTopics: TfrmTopics;
+    frmUTT: TfrmUTT;
     path: string;
     function Login(): TModalResult;
   public
     { Public declarations }
+
     property Tests: TfrmTests read frmTests;
     property Topics: TfrmTopics read frmTopics;
+    property UTT:TfrmUTT read frmUTT;
   end;
 
 var
@@ -84,6 +88,10 @@ begin
     frmTests.Dock(tabTests, tabTests.ClientRect);
     frmTests.ShowTests();
 
+    if not assigned(frmUTT) then frmUTT := TfrmUTT.Create(self);
+    frmUTT.Dock(tabUTT, tabUTT.ClientRect);
+    frmUTT.ShowUTT();
+
   //  TestResults.showResults;   // DELETE AFTER TESTT
   //  Application.Terminate;
 end;
@@ -92,6 +100,7 @@ procedure TfrmOGE.FormDestroy(Sender: TObject);
 begin
     freeAndNil(frmTests);
     freeAndNil(frmTopics);
+    freeAndNil(frmUTT);
 end;
 
 procedure TfrmOGE.WebBrowser1DocumentComplete(ASender: TObject;

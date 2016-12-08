@@ -4,11 +4,10 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, uData, OleCtrls, SHDocVw, Menus,
+  Dialogs, StdCtrls, ExtCtrls, OleCtrls, SHDocVw, Menus, uData,
   Buttons;
 
 type
-  TMode = (mNormal, mReTest);
 
   TfrmTests = class(TForm)
     Panel1: TPanel;
@@ -31,6 +30,8 @@ type
     procedure btResultsClick(Sender: TObject);
     procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure txtAnswerKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   private
     { Private declarations }
      mode: Tmode;
@@ -41,9 +42,8 @@ type
    //  usrResults: TUserResultList;  // Результаты по данной теме
      procedure clear;
      procedure loadTest(test:TTestInfo; testVariant, taskNo: integer);
-     function getNextFalseTask(fromBegin: boolean = false): integer;
-     function getPrevFalseTask(): integer;
-     function AllComplete(): boolean;
+  //   function getNextFalseTask(fromBegin: boolean = false): integer;
+  //   function getPrevFalseTask(): integer;
    //  function nextFalseTask(): integer;
   public
     { Public declarations }
@@ -65,15 +65,6 @@ const pointsByTask: array[0..9] of double = (0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1, 2,
       e = 0.001;
 
 { TfrmTests }
-function TfrmTests.AllComplete: boolean;
-var i: integer;
-begin
-     if currentTest = nil then exit(false);
-
-     result := true;
-     for i := 0 to length(currentTest.taskResultMask) - 1 do
-           if currentTest.taskResultMask[i] = false then exit(false)
-end;
 
 procedure TfrmTests.btAnswearClick(Sender: TObject);
 var usrAnswear: double;
@@ -104,7 +95,7 @@ begin
                      //exit;
               end;
           end;
-          btNextTaskClick(Sender);
+          if fTask = TASK_COUNT then btResultsClick(Sender) else btNextTaskClick(Sender);
      end
      else begin
         if trueAnswear then
@@ -120,66 +111,47 @@ begin
      end;
 end;
 
-function TfrmTests.getNextFalseTask(fromBegin: boolean = false): integer;
+procedure TfrmTests.btNextTaskClick(Sender: TObject);
+var oldTask: integer;
 begin
-     if allComplete then
-     begin
-         mode := mNormal;   // All tasks complete
-         messageBox(handle, PWideChar('Поздравляем! Все задания варианта '+
+    if mode = mReTest then
+    begin
+       oldTask := fTask;
+       fTask := getNextFalseTask(fTask, currentTest.taskResultMask);
+       if fTask = ALL_TASK_COMPLETE then
+       begin
+            mode := mNormal;   // All tasks complete
+            messageBox(handle, PWideChar('Поздравляем! Все задания варианта '+
                                 intToStr(rgVariants.ItemIndex + 1) +' решены'),
                                                  'ОГЕ', MB_OK or MB_ICONINFORMATION);
-         exit(fTask)
-     end;
+            fTask := oldTask;
+       end;
+    end
+    else inc(fTask);
 
-     if fromBegin then fTask := 1 else inc(fTask);
-
-     while fTask <= TASK_COUNT do
-     begin
-         if currentTest.taskResultMask[fTask - 1] = false then break;;
-         inc(fTask);
-     end;
-
-    if fTask > TASK_COUNT then
-         fTask := getPrevFalseTask();
-
-    result := fTask;
-end;
-
-function TfrmTests.getPrevFalseTask: integer;
-begin
-     if allComplete then
-     begin
-         mode := mNormal;   // All tasks complete
-         messageBox(handle, PWideChar('Поздравляем! Все задания варианта '+
-                                  intToStr(rgVariants.ItemIndex + 1) +' решены'),
-                                                  'ОГЕ', MB_OK or MB_ICONINFORMATION);
-         exit(fTask)
-     end;
-
-     dec(fTask);
-     while (fTask >= 1) do
-     begin
-         if currentTest.taskResultMask[fTask - 1] = false then break;
-         dec(fTask);
-     end;
-
-     if fTask < 1 then
-          fTask := getNextFalseTask();
-
-     result := fTask;
-end;
-
-procedure TfrmTests.btNextTaskClick(Sender: TObject);
-begin
-    if mode = mReTest then fTask := getNextFalseTask() else inc(fTask);
     if fTask > TASK_COUNT then fTask := TASK_COUNT;
 
     loadTest(currentTest^, rgVariants.ItemIndex + 1, fTask);
 end;
 
 procedure TfrmTests.btPrevTaskClick(Sender: TObject);
+var oldTask: integer;
 begin
-    if mode = mRetest then fTask := getPrevFalseTask() else dec(fTask);
+    if mode = mRetest then
+    begin
+         oldTask := fTask;
+         fTask := getPrevFalseTask(fTask, currentTest.taskResultMask);
+         if fTask = ALL_TASK_COMPLETE then
+         begin
+              mode := mNormal;   // All tasks complete
+              messageBox(handle, PWideChar('Поздравляем! Все задания варианта '+
+                                intToStr(rgVariants.ItemIndex + 1) +' решены'),
+                                                 'ОГЕ', MB_OK or MB_ICONINFORMATION);
+              fTask := oldTask;
+         end;
+    end
+    else dec(fTask);
+
     if fTask < 1 then fTask := 1;
 
     loadTest(currentTest^, rgVariants.ItemIndex + 1, fTask);
@@ -199,7 +171,7 @@ begin
           // Найдем первый не пройденый тест
               mode := mReTest;
 
-              ftask := getNextFalseTask(true);
+              ftask := getNextFalseTask(fTask, currentTest.taskResultMask, true);
               loadTest(currentTest^, rgVariants.ItemIndex + 1, fTask);
         end;
     end;
@@ -223,12 +195,13 @@ begin
 end;
 
 procedure TfrmTests.clearUserResults;
+var i: integer;
 begin
      if assigned(currentTest) then
      begin
           currentTest^.points := 0;
-          fillchar(currentTest^.taskResultMask,
-                sizeOf(currentTest^.taskResultMask), 0);
+          for i := 0 to TASK_COUNT - 1 do
+              currentTest.taskResultMask[i] := false;
      end;
 end;
 
@@ -306,6 +279,8 @@ begin
         );
     if currentTest = nil then exit;
 
+    if currentTest.taskResultMask = nil then setLength(currentTest.taskResultMask, TASK_COUNT);
+
     clearUserResults();
 
     fTask := 1;
@@ -361,5 +336,11 @@ begin
     show;
 end;
 
+
+procedure TfrmTests.txtAnswerKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+    if key = VK_RETURN then btAnswearClick(Sender);
+end;
 
 end.

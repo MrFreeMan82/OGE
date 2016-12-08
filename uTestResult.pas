@@ -53,6 +53,7 @@ TfrmTestResult = class(TForm)
     procedure btYesClick(Sender: TObject);
   private
     { Private declarations }
+    UTTDiagram: boolean;
     Graphic: IGPGraphics;
     Pen: IGPPen;
     FontFamily: IGPFontFamily;
@@ -70,6 +71,7 @@ TfrmTestResult = class(TForm)
     scale : array of TLineGraduation;
     topicResultList: TTopicResultList;
 
+    procedure createNewUTTBmp();
     procedure createNewBmp();
     procedure createCircle();
     procedure createScale();
@@ -84,6 +86,7 @@ TfrmTestResult = class(TForm)
   public
     { Public declarations }
     class function showResults(): TModalResult;
+    class function showUTTResults(): TModalResult;
   end;
 
 implementation
@@ -389,6 +392,11 @@ begin
     Render();
 end;
 
+procedure TfrmTestResult.createNewUTTBmp;
+begin
+//
+end;
+
 procedure TfrmTestResult.btExitClick(Sender: TObject);
 begin
     modalResult := mrCancel
@@ -417,6 +425,14 @@ begin
 end;
 
 
+class function TfrmTestResult.showUTTResults: TModalResult;
+begin
+    if not Assigned(frmTestResult) then frmTestResult := TFrmTestResult.Create(frmOGE);
+    frmTestResult.UTTDiagram := true;
+    result := frmTestResult.showModal;
+    freeAndNil(frmTestResult)
+end;
+
 procedure TfrmTestResult.FormDestroy(Sender: TObject);
 begin
     freeAndNil(bmp)
@@ -426,7 +442,7 @@ procedure TfrmTestResult.FormResize(Sender: TObject);
 begin
     pnlOptions.Left := (pnlTools.Width div 2) - (pnlOptions.Width div 2);
 
-    createNewBmp();
+    if UTTDiagram then createNewUTTBmp() else createNewBmp();
 end;
 
 end.

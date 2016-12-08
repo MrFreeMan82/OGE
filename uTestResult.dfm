@@ -126,8 +126,8 @@ object frmTestResult: TfrmTestResult
       object Label1: TLabel
         Left = 2
         Top = 6
-        Width = 190
-        Height = 18
+        Width = 182
+        Height = 16
         Caption = #1044#1086#1074#1086#1083#1100#1085#1099' '#1083#1080' '#1074#1099' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1086#1084'?'
         Layout = tlCenter
       end

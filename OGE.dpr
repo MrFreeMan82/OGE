@@ -8,7 +8,8 @@ uses
   uData in 'uData.pas' {dm: TDataModule},
   uTests in 'uTests.pas' {frmTests},
   uTheme in 'uTheme.pas' {frmTopics},
-  uTestResult in 'uTestResult.pas' {frmTestResult};
+  uTestResult in 'uTestResult.pas' {frmTestResult},
+  uUTT in 'uUTT.pas' {frmUTT};
 
 {$R *.res}
 

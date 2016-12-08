@@ -34,12 +34,16 @@ object frmTopics: TfrmTopics
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 0
-    object lkNums: TLinkLabel
-      Left = 5
-      Top = 51
-      Width = 129
+    DesignSize = (
+      201
+      281)
+    object lkUTT: TLinkLabel
+      Left = 1
+      Top = 255
+      Width = 185
       Height = 20
-      Caption = '<a href="#"> '#1063#1080#1089#1083#1072' '#1080' '#1074#1099#1095#1080#1089#1083#1077#1085#1080#1103'</a>'
+      Anchors = [akLeft, akBottom]
+      Caption = '<a href="#"> '#1059#1095#1077#1073#1085#1086'-'#1090#1088#1077#1085#1080#1088#1086#1074#1086#1095#1085#1099#1077' '#1090#1077#1089#1090#1099'</a>'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clBlue
       Font.Height = -13

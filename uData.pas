@@ -6,16 +6,32 @@ uses
   SysUtils, Classes, Forms, xmldom, XMLIntf, msxmldom, XMLDoc, dialogs;
 
 
-const VARIANT_COUNT = 10;
+const
+      ALL_TASK_COMPLETE = 0;
+
+      VARIANT_COUNT = 10;
       TASK_COUNT = 10;
+
+      UTT_1_ALG_TASK_COUNT = 8;
+      UTT_1_GEO_TASK_COUNT = 5;
+      UTT_1_REAL_MATH_TASK_COUNT = 7;
+
+      UTT_2_ALG_TASK_COUNT = 3;
+      UTT_2_GEO_TASK_COUNT = 3;
+
+      UTT_TASK_COUNT = UTT_1_ALG_TASK_COUNT + UTT_1_GEO_TASK_COUNT +
+        UTT_1_REAL_MATH_TASK_COUNT + UTT_2_ALG_TASK_COUNT + UTT_2_GEO_TASK_COUNT;
 
 const CALC_POINTS_FROM_V = 6;
 
 const TOPIC_DIR = 'Topics';
       TEST_DIR = 'Tests';
+      UTT_DIR = 'UTT';
 
 
 type
+  TMode = (mNormal, mReTest);
+
   TTopicInfo = record
       id: integer;
       pageCount: integer;
@@ -24,6 +40,7 @@ type
   end;
 
   TTopicList = array of TTopicInfo;
+  TResultMask = array of boolean;
 
   PtestInfo = ^TTestinfo;
   TTestInfo = record
@@ -31,7 +48,7 @@ type
       topicID: integer;
       dir: string;
       displayLabel: string;
-      taskResultMask: array[0..TASK_COUNT - 1] of boolean;
+      taskResultMask: TResultMask;
       points: double;
   end;
 
@@ -65,12 +82,54 @@ function exePath(): string;
 function getTestByTopic(topicID: integer; const tests: TTestList): PTestInfo;
 function FindData(const zipFile, name: string; outData: TStream): boolean;
 
+function getNextFalseTask(currentTask: integer; taskResultMask:TResultMask; fromBegin: boolean = false): integer;
+function getPrevFalseTask(currentTask: integer; taskResultMask:TResultMask): integer;
+
 implementation
 uses FWZipModifier, FWZipReader;
 
 {$R *.dfm}
 
 { Tdm }
+
+function allComplete(taskResultMask:TResultMask): boolean;
+var i: integer;
+begin
+     result := true;
+     for i := 0 to length(taskResultMask) - 1 do
+           if taskResultMask[i] = false then exit(false)
+end;
+
+function getPrevFalseTask(currentTask: integer; taskResultMask:TResultMask): integer;
+begin
+     if allComplete(taskResultMask) then exit(ALL_TASK_COMPLETE);
+
+     result := currentTask - 1;
+
+     while (result >= 1) do
+     begin
+         if taskResultMask[result - 1] = false then break;
+         dec(result);
+     end;
+
+     if result < 1 then
+          result := getNextFalseTask(result, taskResultMask);
+end;
+
+function getNextFalseTask(currentTask: integer; taskResultMask:TResultMask; fromBegin: boolean = false): integer;
+begin
+     if allComplete(taskResultMask) then exit(ALL_TASK_COMPLETE);
+
+     if fromBegin then result := 1 else result := currentTask + 1;
+
+     while result <= length(taskResultMask) do
+     begin
+         if taskResultMask[result - 1] = false then break;
+         inc(result);
+     end;
+
+    if result > length(taskResultMask) then result := getPrevFalseTask(result, taskResultMask);
+end;
 
 procedure Tdm.DataModuleCreate(Sender: TObject);
 begin

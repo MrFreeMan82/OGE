@@ -117,6 +117,7 @@ object frmTests: TfrmTests
       Height = 21
       Anchors = [akLeft, akBottom]
       TabOrder = 0
+      OnKeyDown = txtAnswerKeyDown
     end
   end
   object Panel3: TPanel
@@ -250,7 +251,6 @@ object frmTests: TfrmTests
     ParentColor = False
     ParentDoubleBuffered = False
     TabOrder = 2
-    ExplicitTop = 0
     object img: TImage
       Left = 26
       Top = 20
