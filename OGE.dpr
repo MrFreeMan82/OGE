@@ -9,7 +9,9 @@ uses
   uTests in 'uTests.pas' {frmTests},
   uTheme in 'uTheme.pas' {frmTopics},
   uTestResult in 'uTestResult.pas' {frmTestResult},
-  uUTT in 'uUTT.pas' {frmUTT};
+  uUTT in 'uUTT.pas' {frmUTT},
+  uTestDiagram in 'uTestDiagram.pas' {frmTestDiagram},
+  uUTTDiagram in 'uUTTDiagram.pas' {frmUTTDiagram};
 
 {$R *.res}
 

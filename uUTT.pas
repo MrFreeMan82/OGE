@@ -29,13 +29,15 @@ type
     { Private declarations }
     mode: Tmode;
     fTask: integer;
+    fUTTTest: TUTTInfo;
     answears: TAnswears;
-    currentTest: TTestInfo;
     procedure loadTask(aVariant, aTask: integer);
     procedure clear;
     procedure clearUserResults();
   public
     { Public declarations }
+    property UTTTest: TUTTInfo read fUTTTest;
+    function VisibleModuleCount(): integer;
     procedure ShowUTT();
   end;
 
@@ -45,9 +47,37 @@ uses uOGE, uTestResult, GdiPlus, GdiPlusHelpers, ActiveX;
 
 { TfrmUTT }
 
+const e = 0.001;
+
 procedure TfrmUTT.btAnswearClick(Sender: TObject);
+var usrAnswear: double;
+    TrueAnswear: boolean;
 begin
-//
+     if (answears = nil) or
+              not (fTask in [1..UTT_TASK_COUNT]) or
+                    (trim(txtAnswer.Text) = '') then exit;
+
+    usrAnswear := strToFloatEx(trim(txtAnswer.Text));
+
+    trueAnswear := abs(usrAnswear - self.answears[fTask - 1]) < e;
+
+    if trueAnswear then
+    begin
+         if self.fUTTTest.taskResultMask[fTask - 1] = false then
+         begin
+              fUTTTest.points := fUTTTest.points + 1;
+              fUTTTest.taskResultMask[fTask - 1] := true;
+         end
+         else begin
+                messageBox(self.Handle,
+                   'Верно! Баллы за это задание уже были засчитаны.',
+                                       'ОГЕ', MB_OK or MB_ICONINFORMATION);
+         end;
+         if fTask = UTT_TASK_COUNT then btResultsClick(Sender) else btNextTaskClick(Sender);
+    end
+    else begin
+         btNextTaskClick(Sender);
+    end;
 end;
 
 procedure TfrmUTT.btNextTaskClick(Sender: TObject);
@@ -56,7 +86,7 @@ begin
     if mode = mReTest then
     begin
        oldTask := fTask;
-       fTask := getNextFalseTask(fTask, currentTest.taskResultMask);
+       fTask := getNextFalseTask(fTask, fUTTTest.taskResultMask);
        if fTask = ALL_TASK_COMPLETE then
        begin
             mode := mNormal;   // All tasks complete
@@ -78,7 +108,7 @@ begin
     if mode = mRetest then
     begin
          oldTask := fTask;
-         fTask := getPrevFalseTask(fTask, currentTest.taskResultMask);
+         fTask := getPrevFalseTask(fTask, fUTTTest.taskResultMask);
          if fTask = ALL_TASK_COMPLETE then
          begin
               mode := mNormal;   // All tasks complete
@@ -96,7 +126,7 @@ end;
 procedure TfrmUTT.btResultsClick(Sender: TObject);
 var mr: TmodalResult;
 begin
-    mr := TfrmTestResult.showResults;
+    mr := TfrmTestResult.showUTTResults;
     case mr of
       mrYes: mode := mNormal;
       mrNo:
@@ -105,7 +135,7 @@ begin
           // Найдем первый не пройденый тест
               mode := mReTest;
 
-              ftask := getNextFalseTask(fTask, currentTest.taskResultMask, true);
+              ftask := getNextFalseTask(fTask, fUTTTest.taskResultMask, true);
               loadTask(rgVariants.ItemIndex + 1, fTask);
         end;
     end;
@@ -177,16 +207,16 @@ end;
 procedure TfrmUTT.clearUserResults;
 var i: integer;
 begin
-     currentTest.points := 0;
+     fUTTTest.points := 0;
      for i := 0 to UTT_TASK_COUNT - 1 do
-           currentTest.taskResultMask[i] := false;
+           fUTTTest.taskResultMask[i] := false;
 end;
 
 procedure TfrmUTT.rgVariantsClick(Sender: TObject);
 begin
      if rgVariants.ItemIndex < 0 then exit;
      answears := nil;
-     if currentTest.taskResultMask = nil then setLength(currentTest.taskResultMask, UTT_TASK_COUNT);
+     if fUTTTest.taskResultMask = nil then setLength(fUTTTest.taskResultMask, UTT_TASK_COUNT);
      clearUserResults();
      fTask := 1;
      loadTask(rgVariants.ItemIndex + 1, fTask);
@@ -195,13 +225,31 @@ end;
 procedure TfrmUTT.ShowUTT;
 begin
     mode := mNormal;
+    fUTTTest := dm.loadUTTTests();
+    if (fUTTTest.modules = nil) then
+    begin
+      messageBox(self.Handle, 'Не удалось загузить тесты', 'Ошибка', MB_OK or MB_ICONERROR);
+      abort;
+    end;
+
     show;
+
+    btResultsClick(self);            // DELETE THIS AFTER TEST
+    Application.Terminate;
 end;
 
 procedure TfrmUTT.txtAnswerKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
     if key = VK_RETURN then btAnswearClick(Sender);
+end;
+
+function TfrmUTT.VisibleModuleCount: integer;
+var i: integer;
+begin
+     result := 0;
+     for i:= 0 to length(self.UTTTest.modules) - 1 do
+          if self.UTTTest.modules[i].visible then inc(result);
 end;
 
 end.

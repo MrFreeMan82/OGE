@@ -93,7 +93,7 @@ begin
     frmUTT.ShowUTT();
 
   //  TestResults.showResults;   // DELETE AFTER TESTT
-  //  Application.Terminate;
+  //  Application.Terminate;    str
 end;
 
 procedure TfrmOGE.FormDestroy(Sender: TObject);

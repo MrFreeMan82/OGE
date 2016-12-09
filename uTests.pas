@@ -42,9 +42,6 @@ type
    //  usrResults: TUserResultList;  // Результаты по данной теме
      procedure clear;
      procedure loadTest(test:TTestInfo; testVariant, taskNo: integer);
-  //   function getNextFalseTask(fromBegin: boolean = false): integer;
-  //   function getPrevFalseTask(): integer;
-   //  function nextFalseTask(): integer;
   public
     { Public declarations }
     property Tests: TTEstList read fTests;

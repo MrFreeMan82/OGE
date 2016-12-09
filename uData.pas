@@ -3,8 +3,7 @@ unit uData;
 interface
 
 uses
-  SysUtils, Classes, Forms, xmldom, XMLIntf, msxmldom, XMLDoc, dialogs;
-
+  SysUtils, Classes, Forms, xmldom, XMLIntf, msxmldom, XMLDoc, dialogs, GdiPlus, GdiPlusHelpers;
 
 const
       ALL_TASK_COMPLETE = 0;
@@ -30,6 +29,8 @@ const TOPIC_DIR = 'Topics';
 
 
 type
+  TUTTLevel = (lvlLow, lvlHigh);
+
   TMode = (mNormal, mReTest);
 
   TTopicInfo = record
@@ -56,6 +57,24 @@ type
 
   TAnswears = array of double;
 
+  TUTTModule = record
+       level: TUTTLevel;
+       lable: string;
+       task_from, task_to: integer;
+       visible: boolean;
+  end;
+
+  TUTTInfo = record
+     modules : array of TUTTModule;
+     taskResultMask: TResultMask;
+     points: double;
+  end;
+
+  TLine = record
+      p1, p2: TGPPointF;
+      len: double;
+  end;
+
   Tdm = class(TDataModule)
     xmlDoc: TXMLDocument;
     procedure DataModuleCreate(Sender: TObject);
@@ -64,12 +83,14 @@ type
     fDataFile: string;
     function doLoadTests():TTEstList;
     function doLoadTopics(): TTopicList;
+    function doLoadUTT(): TUTTInfo;
   public
     { Public declarations }
     property  DataFile: string read fDataFile;
     function loadAnswears(const fileName: string; aVariant: integer):TAnswears;
     function loadTests():TTestList;
     function LoadTopics(): TTopicList;
+    function loadUTTTests(): TUTTInfo;
     function readPwd(): string;
   end;
 
@@ -85,12 +106,41 @@ function FindData(const zipFile, name: string; outData: TStream): boolean;
 function getNextFalseTask(currentTask: integer; taskResultMask:TResultMask; fromBegin: boolean = false): integer;
 function getPrevFalseTask(currentTask: integer; taskResultMask:TResultMask): integer;
 
+function lineLen(line:TLine):double;
+function rotatePoint(angle:double; center, p: TGPpointF): TGPPointF;
+function rotateLine(angle: double; line: Tline; center: TGPPointF): Tline;
+
 implementation
-uses FWZipModifier, FWZipReader;
+uses FWZipModifier, FWZipReader, math;
 
 {$R *.dfm}
 
 { Tdm }
+
+function lineLen(line: TLine): double;
+begin
+    result := sqrt(sqr(line.p1.X - line.p2.X) + sqr(line.p1.Y - line.p2.Y));
+end;
+
+function rotateLine(angle: double; line: Tline; center: TGPPointF): TLine;
+begin
+     result.p1 := rotatePoint(angle, center, line.p1);
+     result.p2 := rotatePoint(angle, center, line.p2);
+     result.len := line.len;
+end;
+
+function rotatePoint(angle: double; center, p: TGPpointF): TGPPointF;
+var radAngle, at, len, s, c: extended;
+begin
+    radAngle := angle * pi / 180;
+    len := Sqrt(sqr(p.X - center.X) + sqr(p.Y - center.Y));
+    at  := ArcTan2(p.Y - center.Y, p.X - center.X);
+    sinCos(radAngle + at, s, c);
+    result.X := center.X + len * c;
+    result.Y := center.Y + len * s;
+   { result.X := centerX + (p.X - centerX) * c - (p.Y - centerY) * s;
+    result.Y := centerY + (p.X - centerX) * s - (p.Y - centerY) * c; }
+end;
 
 function allComplete(taskResultMask:TResultMask): boolean;
 var i: integer;
@@ -273,6 +323,51 @@ begin
       finally
           s.Free;
       end;
+end;
+
+function Tdm.doLoadUTT: TUTTInfo;
+var i, cnt: integer;
+    root, node: IXMLNode;
+begin
+     result.modules := nil;
+     result.points := 0;
+     if not xmlDoc.Active then exit;
+
+     root := xmlDoc.ChildNodes.FindNode('UTT');
+     if root = nil then exit;
+
+     cnt := root.ChildNodes.Count;
+     setLength(result.modules, cnt);
+
+     for i := 0 to cnt - 1 do
+     begin
+         node := root.ChildNodes.Get(i);
+         with node.ChildNodes do
+         begin
+            result.modules[i].level := TUTTLevel(strToInt(FindNode('LEVEL').Text));
+            result.modules[i].lable := FindNode('DISPLAY_LABEL').Text;
+            result.modules[i].task_from := strToInt(FindNode('TASK_FROM').Text);
+            result.modules[i].task_to := strToInt(FindNode('TASK_TO').Text);
+            result.modules[i].visible := boolean(strToInt(FindNode('VISIBLE').Text));
+         end;
+     end;
+end;
+
+function Tdm.loadUTTTests: TUTTInfo;
+var info: string;
+    s: TStringStream;
+begin
+     result.modules := nil;
+     result.points := 0;
+     info := UTT_DIR + '/info.xml';
+     s := TStringStream.Create;
+     try
+         if not FindData(dataFile, info, s) then abort;
+         xmlDoc.LoadFromStream(s);
+         result := doLoadUTT();
+     finally
+         s.Free;
+     end;
 end;
 
 function Tdm.readPwd: string;

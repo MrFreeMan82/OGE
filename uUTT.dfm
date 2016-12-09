@@ -25,8 +25,6 @@ object frmUTT: TfrmUTT
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
-    ExplicitTop = 385
-    ExplicitWidth = 763
     DesignSize = (
       779
       29)
@@ -212,10 +210,6 @@ object frmUTT: TfrmUTT
     ParentColor = False
     ParentDoubleBuffered = False
     TabOrder = 1
-    ExplicitLeft = 145
-    ExplicitTop = 41
-    ExplicitWidth = 618
-    ExplicitHeight = 344
     object img: TImage
       Left = 21
       Top = 76

@@ -68,6 +68,12 @@
 			<DCCReference Include="uUTT.pas">
 				<Form>frmUTT</Form>
 			</DCCReference>
+			<DCCReference Include="uTestDiagram.pas">
+				<Form>frmTestDiagram</Form>
+			</DCCReference>
+			<DCCReference Include="uUTTDiagram.pas">
+				<Form>frmUTTDiagram</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

@@ -2,9 +2,11 @@ object frmTestResult: TfrmTestResult
   Left = 0
   Top = 0
   Caption = #1050#1086#1083#1077#1089#1086' '#1076#1086#1089#1090#1080#1078#1077#1085#1080#1071' '#1091#1089#1087#1077#1093#1072
-  ClientHeight = 568
-  ClientWidth = 792
+  ClientHeight = 562
+  ClientWidth = 784
   Color = clBtnFace
+  Constraints.MinHeight = 600
+  Constraints.MinWidth = 800
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -13
@@ -12,34 +14,33 @@ object frmTestResult: TfrmTestResult
   Font.Style = []
   OldCreateOrder = False
   Position = poMainFormCenter
-  OnDestroy = FormDestroy
   OnResize = FormResize
   PixelsPerInch = 96
   TextHeight = 16
   object img: TImage
     Left = 0
     Top = 30
-    Width = 792
-    Height = 538
-    Align = alClient
-    ExplicitWidth = 500
-    ExplicitHeight = 400
+    Width = 105
+    Height = 67
+    Align = alCustom
+    Visible = False
   end
   object pnlTools: TPanel
     Left = 0
     Top = 0
-    Width = 792
+    Width = 784
     Height = 30
     Align = alTop
     BevelOuter = bvNone
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
+    ExplicitWidth = 792
     DesignSize = (
-      792
+      784
       30)
     object btExit: TSpeedButton
-      Left = 757
+      Left = 749
       Top = 0
       Width = 35
       Height = 30
@@ -114,7 +115,7 @@ object frmTestResult: TfrmTestResult
       ExplicitHeight = 27
     end
     object pnlOptions: TPanel
-      Left = 256
+      Left = 252
       Top = 0
       Width = 270
       Height = 30
@@ -123,6 +124,7 @@ object frmTestResult: TfrmTestResult
       BevelOuter = bvNone
       Constraints.MaxWidth = 270
       TabOrder = 0
+      ExplicitLeft = 256
       object Label1: TLabel
         Left = 2
         Top = 6
@@ -202,7 +204,7 @@ object frmTestResult: TfrmTestResult
       end
     end
     object chkRandom: TCheckBox
-      Left = 619
+      Left = 611
       Top = 7
       Width = 129
       Height = 17
@@ -211,6 +213,20 @@ object frmTestResult: TfrmTestResult
       TabOrder = 1
       Visible = False
       OnClick = chkRandomClick
+      ExplicitLeft = 619
     end
+  end
+  object pnlDiagram: TPanel
+    Left = 0
+    Top = 30
+    Width = 784
+    Height = 532
+    Align = alClient
+    BevelOuter = bvNone
+    TabOrder = 1
+    ExplicitLeft = 152
+    ExplicitTop = 208
+    ExplicitWidth = 185
+    ExplicitHeight = 41
   end
 end
