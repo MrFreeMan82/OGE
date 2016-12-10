@@ -57,7 +57,6 @@ TfrmTestDiagram = class(TForm)
     procedure createDisplayLabel(pts: double; i: integer);
     procedure createCurvePoints(i: integer);
     procedure Render();
-    procedure measureDisplayStringWidthAndHeight(text: string; var width, height: double);
   public
     { Public declarations }
     procedure createNewBmp(useRandom: boolean);
@@ -83,7 +82,7 @@ begin
 
      setLength(axis, axisCount);
      setLength(axisAngle, length(axis));
-     AXIS_ANGLE := 365 div length(axis);
+     AXIS_ANGLE := 360 div length(axis);
 
      rect_Width := trunc(bmp.height / 1.2);
 
@@ -139,7 +138,7 @@ begin
     with topicResultList[i] do
         s := format('%s - %f', [topic.displayLabel, pts]);
 
-    MeasureDisplayStringWidthAndHeight(s, txtW, txtH);
+    MeasureDisplayStringWidthAndHeight(Graphic, Font, s, txtW, txtH);
     topicResultList[i].DisplayLabel := s;
 
     txtH := txtH * 2;
@@ -157,12 +156,12 @@ begin
             labelRect.X := labelPoint.X;
             labelRect.Y := labelPoint.Y;
         end
-        else if (angle >= 180) and (axisAngle[i] < 270) then
+        else if (angle >= 180) and (angle < 270) then
         begin
             labelRect.X := labelPoint.X - txtW;
             labelRect.Y := labelPoint.Y;
         end
-        else if (angle >= 270) and (axisAngle[i] < 360) then
+        else if (angle >= 270) and (angle < 360) then
         begin
             labelRect.X := labelPoint.X - txtW;
             labelRect.Y := labelPoint.Y - txtH;
@@ -203,8 +202,8 @@ begin
 end;
 
 procedure TfrmTestDiagram.createResultList;
-var i, angle: integer;
-    k, l, pts: double;
+var i: integer;
+    k, l, pts, angle: double;
 begin
      for i := 0 to length(topicResultList) - 1 do
      begin
@@ -229,7 +228,7 @@ begin
           ResultP2 := rotatePoint(AXIS_ANGLE, center, ResultP1);
 
           // define labelPoint
-          angle := trunc(axisAngle[i] + (AXIS_ANGLE / 2));
+          angle := axisAngle[i] + (AXIS_ANGLE / 2);
           labelPoint := rotatePoint(angle, center, topicResultList[0].MaxP1);
 
           // create labels
@@ -312,25 +311,6 @@ end;
 procedure TfrmTestDiagram.showTestDiagram();
 begin
     show;
-end;
-
-procedure TfrmTestDiagram.measureDisplayStringWidthAndHeight(text: string; var width, height: double);
-var StringFormat: IGPStringFormat;
-    R: TGPRectF;
-    CharRanges: IGPCharacterRanges;
-    CharRange: TGPCharacterRange;
-    Regions: IGPRegions;
-begin
-    R.Initialize(0, 0, 1000, 1000);
-    CharRanges := TGPArray<TGPCharacterRange>.Create(1);
-    CharRange.Initialize(0, Length(Text));
-    CharRanges[0] := CharRange;
-    StringFormat:= TGPStringFormat.Create;
-    StringFormat.SetMeasurableCharacterRanges(CharRanges);
-    Regions := Graphic.MeasureCharacterRanges(Text, Font, R, StringFormat);
-    Regions[0].GetBounds(R, Graphic);
-    Width:=R.Right; //ширина без отступов, если нужно с отступами R.Right
-    Height:=R.Height; //можно так же получить из IGPFont
 end;
 
 end.

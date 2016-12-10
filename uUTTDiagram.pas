@@ -17,12 +17,13 @@ type
   end;
 
   TModule = record
+      id: integer;
       tasks: array of TTask;
       display_label: string;
       labelRect:TGPRectF;
       pie: IGPGraphicsPath;
       color: TGPColor;
-
+      labelPoint: TGPPointF;
       axis: array of TLine;
       axisAngle: array of TaxisAngle;
   end;
@@ -37,8 +38,8 @@ type
     BoldPen: IGPPen;
     FontFamily: IGPFontFamily;
     Font: IGPFont;
-    SolidBrush: IGPBrush;
-    ColorBrush: IGPBrush;
+    TaskNoFont: IGPFont;
+    WhiteBrush, ColorBrush, BlackBrush: IGPBrush;
     bmp: TBitmap;
 
     AXIS_ANGLE: double;
@@ -55,7 +56,7 @@ type
     procedure Render();
     procedure createCircle(axisCount: integer);
     procedure fillModuleList();
-    procedure fillTasks(var module: TModule; i, taskNo:integer);
+    procedure fillTasks(var module: TModule; UTTModule: PUTTModule; i:integer);
   public
     { Public declarations }
     procedure createNewBMP(useRandom: boolean);
@@ -64,11 +65,9 @@ type
 
 implementation
 
-uses uOGE;
+uses uOGE, math;
 
 {$R *.dfm}
-
-const colors: array[0..2] of cardinal = (TGPColor.Green, TGPColor.Blue, TGPColor.Orange);
 
 { TfrmUTTDiagram }
 
@@ -79,7 +78,7 @@ begin
      if axisCount = 0 then abort;
 
      rect_Width := bmp.height;
-     module_Rect_width := trunc(rect_width / 2.5);
+     module_Rect_width := trunc(rect_width / 5);
 
      CircleRect.X := (bmp.Width - RECT_WIDTH) / 2;
      CircleRect.Y  := ((bmp.Height - RECT_WIDTH) / 2) ;
@@ -118,55 +117,64 @@ end;
 
 
 procedure TfrmUTTDiagram.fillModuleList;
-var i, taskNo: integer;
+var i,j, cnt: integer;
+    txtW, txtH, angle, r :double;
 begin
-     taskNo := 1;
+     j := 0;
      for i := 0 to high(frmOGE.UTT.UTTTest.modules) do
      begin
            if not frmOGE.UTT.UTTTest.modules[i].visible then continue;
 
-           modules[i].pie := TGPGraphicsPath.Create();
-           modules[i].pie.AddPie(moduleRect, axisAngle[i], AXIS_ANGLE);
-           modules[i].display_label := frmOGE.UTT.UTTTest.modules[i].lable;
+           modules[j].id := frmOGE.UTT.UTTTest.modules[i].id;
+           modules[j].pie := TGPGraphicsPath.Create();
+           modules[j].pie.AddPie(moduleRect, axisAngle[j], AXIS_ANGLE);
+           modules[j].display_label := frmOGE.UTT.UTTTest.modules[i].lable;
 
-           case frmOGE.UTT.UTTTest.modules[i].task_to of
-             UTT_1_ALG_TASK_COUNT :
-                                    begin
-                                         setlength(modules[i].axis, UTT_1_ALG_TASK_COUNT);
-                                         setLength(modules[i].axisAngle, UTT_1_ALG_TASK_COUNT);
-                                         setlength(modules[i].tasks, UTT_1_ALG_TASK_COUNT);
-                                         modules[i].color := colors[0];
-                                    end;
+           cnt := frmOGE.UTT.UTTTest.modules[i].task_to -
+                   frmOGE.UTT.UTTTest.modules[i].task_from + 1;
 
-             UTT_1_ALG_TASK_COUNT +
-             UTT_1_GEO_TASK_COUNT:
-                                    begin
-                                        setLength(modules[i].axis, UTT_1_GEO_TASK_COUNT);
-                                        setLength(modules[i].axisAngle, UTT_1_GEO_TASK_COUNT);
-                                        setLength(modules[i].tasks, UTT_1_GEO_TASK_COUNT);
-                                        modules[i].color := colors[1];
-                                    end;
+           setlength(modules[j].axis, cnt);
+           setLength(modules[j].axisAngle, cnt);
+           setlength(modules[j].tasks, cnt);
+           modules[j].color := frmOGE.UTT.UTTTest.modules[i].color;
 
-             UTT_1_ALG_TASK_COUNT +
-             UTT_1_GEO_TASK_COUNT +
-             UTT_1_REAL_MATH_TASK_COUNT:
-                                       begin
-                                            setLength(modules[i].axis, UTT_1_REAL_MATH_TASK_COUNT);
-                                            setLength(modules[i].axisAngle, UTT_1_REAL_MATH_TASK_COUNT);
-                                            setLength(modules[i].tasks, UTT_1_REAL_MATH_TASK_COUNT);
-                                            modules[i].color := colors[2];
-                                       end;
+           angle := axisAngle[i] + (AXIS_ANGLE / 2);
+           modules[j].labelPoint := rotatePoint(angle, center, axis[j].p2);
+
+           MeasureDisplayStringWidthAndHeight(Graphic, Font, modules[j].display_label, txtW, txtH);
+
+           txtH := txtH * 2;
+           txtW := txtW + 10;
+
+           r := (CircleRect.Width / 2);
+           angle := angle * 2 * pi  / 360;
+           modules[j].labelRect.X := center.X + (r * cos(angle));
+           modules[j].labelRect.Y := center.Y + (r * sin(angle));
+
+           modules[j].labelRect.Width := txtW;
+           modules[j].labelRect.Height := txtH;
+
+           angle := angle * 360 / pi / 2;
+           if (angle >= 90) and (angle <= 270) then
+           begin
+                modules[j].labelRect.X := modules[j].labelRect.X - txtW;
+           end
+           else if (angle > 270) and (angle <= 360)then
+           begin
+                modules[j].labelRect.Y := modules[j].labelRect.Y - (txtH / 2)
            end;
-           fillTasks(modules[i], i, taskNo);
-           inc(taskNo)
-         //  break
+
+           fillTasks(modules[j], @frmOGE.UTT.UTTTest.modules[i], j);
+           inc(j);
+          // break
      end;
 end;
 
-procedure TfrmUTTDiagram.fillTasks(var module: TModule; i, taskNo: integer);
-var j: integer;
-    angle, delta: double;
+procedure TfrmUTTDiagram.fillTasks(var module: TModule; UTTModule: PUTTModule; i: integer);
+var j, taskNo: integer;
+    angle, angle2, delta, txtW, txtH, r: double;
 begin
+    taskNo := UTTModule^.task_from;
     delta := AXIS_ANGLE / length(module.tasks);
     angle := axisAngle[i] +  delta;
 
@@ -177,14 +185,25 @@ begin
          module.axisAngle[j] := angle;
          angle := angle + delta;
 
-         if j = 2 then continue;      // if false answear
          module.tasks[j].pie := TGPGraphicsPath.Create();
          module.tasks[j].pie.AddPie(CircleRect, module.axisAngle[j] - delta, delta);
+
+         MeasureDisplayStringWidthAndHeight(Graphic, Font, intToStr(module.tasks[j].taskNo), txtW, txtH);
+
+         angle2 := module.axisAngle[j] - (delta / 2);
+         r := (CircleRect.Width / 2) - 20;
+         angle2 := angle2 * 2 * pi / 360;
+         module.tasks[j].labelRect.X := (center.X - 5) + (r * cos(angle2));
+         module.tasks[j].labelRect.Y := (center.Y - 5) + (r * sin(angle2));
+
+         module.tasks[j].labelRect.Width := txtW;
+         module.tasks[j].labelRect.Height := txtH;
+         inc(taskNo);
     end;
 end;
 
 procedure TfrmUTTDiagram.Render;
-var i, j: integer;
+var i, j, taskNo: integer;
 begin
     graphic.DrawEllipse(Pen, CircleRect);
 
@@ -192,14 +211,24 @@ begin
     begin
          for j := 0 to length(modules[i].tasks) - 1 do
          begin
-             if not assigned(modules[i].tasks[j].pie) then continue;
+             taskNo := modules[i].tasks[j].taskNo;
 
-             ColorBrush := TGPSolidBrush.Create(modules[i].color);
-             graphic.FillPath(ColorBrush, modules[i].tasks[j].pie);
-            // graphic.DrawLine(Pen, modules[i].axis[j].p1, modules[i].axis[j].p2);
+             if frmOGE.UTT.UTTTest.taskResultMask[taskNo - 1] then
+             begin
+                  ColorBrush := TGPSolidBrush.Create(modules[i].color);
+                  graphic.FillPath(ColorBrush, modules[i].tasks[j].pie);
+             end;
+             graphic.DrawPath(pen, modules[i].tasks[j].pie);
+
+            // graphic.DrawLine(pen, center, modules[i].tasks[j].labelPoint);
+           // graphic.DrawRectangle(pen, modules[i].tasks[j].labelRect);
+            graphic.DrawString(intToStr(taskNo), taskNoFont, modules[i].tasks[j].labelRect, nil, BlackBrush);
          end;
-         ColorBrush := TGPSolidBrush.Create(TGPColor.White);
-         graphic.FillPath(ColorBrush, modules[i].pie);
+         graphic.FillPath(WhiteBrush, modules[i].pie);
+
+         graphic.DrawString(modules[i].display_label, font, modules[i].labelRect, nil, BlackBrush);
+       // graphic.DrawRectangle(pen, modules[i].labelRect);
+        // graphic.DrawLine(Pen, center, modules[i].mp);
        //  break
     end;
 
@@ -226,15 +255,16 @@ begin
     Pen := TGPPen.Create(TGPColor.Black, 1);
     BoldPen := TGPPen.Create(TGPColor.Black, 3);
     FontFamily := TGPFontFamily.Create('Tahoma');
-    Font := TGPFont.Create(FontFamily, 10, FontStyleRegular, UnitPoint);
+    Font := TGPFont.Create(FontFamily, 14, FontStyleRegular, UnitPixel);
+    TaskNoFont := TGPFont.Create(FontFamily, 10, FontStyleRegular, UnitPixel);
     Graphic.TextRenderingHint := TextRenderingHintAntiAlias;
-    SolidBrush := TGPSolidBrush.Create(TGPColor.Black);
+    WhiteBrush := TGPSolidBrush.Create(TGPColor.White);
+    BlackBrush := TGPSolidBrush.Create(TGPColor.Black);
 
     setLength(modules, frmOGE.UTT.VisibleModuleCount());
     createCircle(length(modules));
     fillModuleList();
-  //  createScale();
-  //  createResultList();
+
     Render();
 end;
 

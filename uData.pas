@@ -10,16 +10,7 @@ const
 
       VARIANT_COUNT = 10;
       TASK_COUNT = 10;
-
-      UTT_1_ALG_TASK_COUNT = 8;
-      UTT_1_GEO_TASK_COUNT = 5;
-      UTT_1_REAL_MATH_TASK_COUNT = 7;
-
-      UTT_2_ALG_TASK_COUNT = 3;
-      UTT_2_GEO_TASK_COUNT = 3;
-
-      UTT_TASK_COUNT = UTT_1_ALG_TASK_COUNT + UTT_1_GEO_TASK_COUNT +
-        UTT_1_REAL_MATH_TASK_COUNT + UTT_2_ALG_TASK_COUNT + UTT_2_GEO_TASK_COUNT;
+      UTT_TASK_COUNT = 26;
 
 const CALC_POINTS_FROM_V = 6;
 
@@ -57,15 +48,20 @@ type
 
   TAnswears = array of double;
 
+  PUTTModule = ^TUTTModule;
   TUTTModule = record
+       id:integer;
        level: TUTTLevel;
        lable: string;
        task_from, task_to: integer;
        visible: boolean;
+       color: TGPColor;
   end;
 
+  TUTTModulesList = array of TUTTModule;
+
   TUTTInfo = record
-     modules : array of TUTTModule;
+     modules : TUTTModulesList;
      taskResultMask: TResultMask;
      points: double;
   end;
@@ -109,13 +105,22 @@ function getPrevFalseTask(currentTask: integer; taskResultMask:TResultMask): int
 function lineLen(line:TLine):double;
 function rotatePoint(angle:double; center, p: TGPpointF): TGPPointF;
 function rotateLine(angle: double; line: Tline; center: TGPPointF): Tline;
+procedure measureDisplayStringWidthAndHeight(Graphic: IGPGraphics; Font:IGPFont; text: string; var width, height: double);
 
 implementation
-uses FWZipModifier, FWZipReader, math;
+uses FWZipModifier, FWZipReader, math, windows;
 
 {$R *.dfm}
 
 { Tdm }
+
+function HexToColor(sColor: string): TGPColor;
+begin
+   result.A := $FF;
+   result.R := strToInt('$' + copy(sColor, 1, 2));
+   result.G := strToInt('$' + copy(sColor, 3, 2));
+   result.B := strToInt('$' + copy(sColor, 5, 2));
+end;
 
 function lineLen(line: TLine): double;
 begin
@@ -140,6 +145,25 @@ begin
     result.Y := center.Y + len * s;
    { result.X := centerX + (p.X - centerX) * c - (p.Y - centerY) * s;
     result.Y := centerY + (p.X - centerX) * s - (p.Y - centerY) * c; }
+end;
+
+procedure measureDisplayStringWidthAndHeight(Graphic: IGPGraphics; Font:IGPFont; text: string; var width, height: double);
+var StringFormat: IGPStringFormat;
+    R: TGPRectF;
+    CharRanges: IGPCharacterRanges;
+    CharRange: TGPCharacterRange;
+    Regions: IGPRegions;
+begin
+    R.Initialize(0, 0, 1000, 1000);
+    CharRanges := TGPArray<TGPCharacterRange>.Create(1);
+    CharRange.Initialize(0, Length(Text));
+    CharRanges[0] := CharRange;
+    StringFormat:= TGPStringFormat.Create;
+    StringFormat.SetMeasurableCharacterRanges(CharRanges);
+    Regions := Graphic.MeasureCharacterRanges(Text, Font, R, StringFormat);
+    Regions[0].GetBounds(R, Graphic);
+    Width:=R.Right; //ширина без отступов, если нужно с отступами R.Right
+    Height:=R.Height; //можно так же получить из IGPFont
 end;
 
 function allComplete(taskResultMask:TResultMask): boolean;
@@ -326,9 +350,10 @@ begin
 end;
 
 function Tdm.doLoadUTT: TUTTInfo;
-var i, cnt: integer;
+var i, id, cnt: integer;
     root, node: IXMLNode;
 begin
+     id := 1;
      result.modules := nil;
      result.points := 0;
      if not xmlDoc.Active then exit;
@@ -344,11 +369,14 @@ begin
          node := root.ChildNodes.Get(i);
          with node.ChildNodes do
          begin
+            result.modules[i].id := id;
             result.modules[i].level := TUTTLevel(strToInt(FindNode('LEVEL').Text));
             result.modules[i].lable := FindNode('DISPLAY_LABEL').Text;
             result.modules[i].task_from := strToInt(FindNode('TASK_FROM').Text);
             result.modules[i].task_to := strToInt(FindNode('TASK_TO').Text);
             result.modules[i].visible := boolean(strToInt(FindNode('VISIBLE').Text));
+            result.modules[i].color := hexToColor(FindNode('COLOR').Text);
+            inc(id);
          end;
      end;
 end;

@@ -33,9 +33,10 @@ type
     answears: TAnswears;
     procedure loadTask(aVariant, aTask: integer);
     procedure clear;
-    procedure clearUserResults();
+    procedure fiilMask();
   public
     { Public declarations }
+    procedure clearUserResults();
     property UTTTest: TUTTInfo read fUTTTest;
     function VisibleModuleCount(): integer;
     procedure ShowUTT();
@@ -78,6 +79,7 @@ begin
     else begin
          btNextTaskClick(Sender);
     end;
+    txtAnswer.Text := '';
 end;
 
 procedure TfrmUTT.btNextTaskClick(Sender: TObject);
@@ -126,6 +128,8 @@ end;
 procedure TfrmUTT.btResultsClick(Sender: TObject);
 var mr: TmodalResult;
 begin
+    if rgVariants.ItemIndex < 0 then rgVariants.ItemIndex := 0;
+
     mr := TfrmTestResult.showUTTResults;
     case mr of
       mrYes: mode := mNormal;
@@ -212,12 +216,22 @@ begin
            fUTTTest.taskResultMask[i] := false;
 end;
 
+procedure TfrmUTT.fiilMask;
+var i: integer;
+begin
+     for i := 1 to length(self.UTTTest.taskResultMask) - 1 do
+     begin
+          self.UTTTest.taskResultMask[i] := true;
+     end;
+end;
+
 procedure TfrmUTT.rgVariantsClick(Sender: TObject);
 begin
      if rgVariants.ItemIndex < 0 then exit;
      answears := nil;
-     if fUTTTest.taskResultMask = nil then setLength(fUTTTest.taskResultMask, UTT_TASK_COUNT);
+     setLength(fUTTTest.taskResultMask, UTT_TASK_COUNT);
      clearUserResults();
+   //  fiilMask();
      fTask := 1;
      loadTask(rgVariants.ItemIndex + 1, fTask);
 end;
@@ -233,9 +247,6 @@ begin
     end;
 
     show;
-
-    btResultsClick(self);            // DELETE THIS AFTER TEST
-    Application.Terminate;
 end;
 
 procedure TfrmUTT.txtAnswerKeyDown(Sender: TObject; var Key: Word;

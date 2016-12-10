@@ -58,6 +58,7 @@ begin
          end
          else if Assigned(frmUTTDiagram) then
          begin
+             frmOGE.UTT.clearUserResults();
              frmUTTDiagram.createNewBMP(chkRandom.Checked);
          end;
     end;

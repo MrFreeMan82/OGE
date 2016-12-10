@@ -35,7 +35,6 @@ object frmTestResult: TfrmTestResult
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
-    ExplicitWidth = 792
     DesignSize = (
       784
       30)
@@ -124,7 +123,6 @@ object frmTestResult: TfrmTestResult
       BevelOuter = bvNone
       Constraints.MaxWidth = 270
       TabOrder = 0
-      ExplicitLeft = 256
       object Label1: TLabel
         Left = 2
         Top = 6
@@ -213,7 +211,6 @@ object frmTestResult: TfrmTestResult
       TabOrder = 1
       Visible = False
       OnClick = chkRandomClick
-      ExplicitLeft = 619
     end
   end
   object pnlDiagram: TPanel
@@ -224,9 +221,5 @@ object frmTestResult: TfrmTestResult
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitLeft = 152
-    ExplicitTop = 208
-    ExplicitWidth = 185
-    ExplicitHeight = 41
   end
 end
