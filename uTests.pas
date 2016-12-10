@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, OleCtrls, SHDocVw, Menus, uData,
+  Dialogs, StdCtrls, ExtCtrls, OleCtrls, SHDocVw, Menus, uGlobals,
   Buttons;
 
 type
@@ -42,6 +42,7 @@ type
    //  usrResults: TUserResultList;  // Результаты по данной теме
      procedure clear;
      procedure loadTest(test:TTestInfo; testVariant, taskNo: integer);
+     procedure AllTaskCompleate;
   public
     { Public declarations }
     property Tests: TTEstList read fTests;
@@ -53,7 +54,7 @@ type
 
 implementation
 
-uses uOGE, uTestResult, GdiPlus, GdiPlusHelpers, ActiveX;
+uses uOGE, uTestResult, GdiPlus, GdiPlusHelpers, ActiveX, uData;
 
 {$R *.dfm}
 
@@ -62,6 +63,19 @@ const pointsByTask: array[0..9] of double = (0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1, 2,
       e = 0.001;
 
 { TfrmTests }
+
+procedure TfrmTests.AllTaskCompleate;
+begin
+     mode := mNormal;   // All tasks complete
+     if messageBox(handle, PWideChar(
+          'Поздравляем! Все задания варианта ' +
+                intToStr(rgVariants.ItemIndex + 1) +
+                        ' решены, Показать результаты?'),
+                              'ОГЕ', MB_YESNO or MB_ICONINFORMATION) = mrYes then
+     begin
+         btResultsClick(self);
+     end;
+end;
 
 procedure TfrmTests.btAnswearClick(Sender: TObject);
 var usrAnswear: double;
@@ -92,7 +106,15 @@ begin
                      //exit;
               end;
           end;
-          if fTask = TASK_COUNT then btResultsClick(Sender) else btNextTaskClick(Sender);
+          if fTask = TASK_COUNT then
+          begin
+              if getNextFalseTask(fTask,
+                  currentTest.taskResultMask, true) =
+                    ALL_TASK_COMPLETE then
+                            AllTaskCompleate()
+                                else btResultsClick(self)
+          end
+          else btNextTaskClick(Sender);
      end
      else begin
         if trueAnswear then
@@ -109,19 +131,14 @@ begin
 end;
 
 procedure TfrmTests.btNextTaskClick(Sender: TObject);
-var oldTask: integer;
 begin
     if mode = mReTest then
     begin
-       oldTask := fTask;
        fTask := getNextFalseTask(fTask, currentTest.taskResultMask);
        if fTask = ALL_TASK_COMPLETE then
        begin
-            mode := mNormal;   // All tasks complete
-            messageBox(handle, PWideChar('Поздравляем! Все задания варианта '+
-                                intToStr(rgVariants.ItemIndex + 1) +' решены'),
-                                                 'ОГЕ', MB_OK or MB_ICONINFORMATION);
-            fTask := oldTask;
+            AllTaskCompleate();
+            exit;
        end;
     end
     else inc(fTask);
@@ -132,19 +149,14 @@ begin
 end;
 
 procedure TfrmTests.btPrevTaskClick(Sender: TObject);
-var oldTask: integer;
 begin
     if mode = mRetest then
     begin
-         oldTask := fTask;
          fTask := getPrevFalseTask(fTask, currentTest.taskResultMask);
          if fTask = ALL_TASK_COMPLETE then
          begin
-              mode := mNormal;   // All tasks complete
-              messageBox(handle, PWideChar('Поздравляем! Все задания варианта '+
-                                intToStr(rgVariants.ItemIndex + 1) +' решены'),
-                                                 'ОГЕ', MB_OK or MB_ICONINFORMATION);
-              fTask := oldTask;
+              AllTaskCompleate();
+              exit
          end;
     end
     else dec(fTask);
@@ -167,10 +179,16 @@ begin
           // Перейдем в режим прохода теста заново
           // Найдем первый не пройденый тест
               mode := mReTest;
-
               ftask := getNextFalseTask(fTask, currentTest.taskResultMask, true);
+
+              if fTask = ALL_TASK_COMPLETE then
+              begin
+                  mode := mNormal;   // All tasks complete
+                  exit
+              end;
+
               loadTest(currentTest^, rgVariants.ItemIndex + 1, fTask);
-        end;
+         end;
     end;
 end;
 

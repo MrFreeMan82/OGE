@@ -59,7 +59,7 @@ begin
          else if Assigned(frmUTTDiagram) then
          begin
              frmOGE.UTT.clearUserResults();
-             frmUTTDiagram.createNewBMP(chkRandom.Checked);
+             frmUTTDiagram.refresh(chkRandom.Checked);
          end;
     end;
 end;
@@ -87,7 +87,7 @@ begin
      end
      else if Assigned(frmUTTDiagram) then
      begin
-         frmUTTDiagram.createNewBMP(chkRandom.Checked);
+         frmUTTDiagram.refresh(chkRandom.Checked);
      end;
 end;
 
@@ -129,7 +129,7 @@ begin
    end
    else if Assigned(frmUTTDiagram) then
    begin
-       frmUTTDiagram.createNewBMP(chkRandom.Checked);
+       frmUTTDiagram.refresh(chkRandom.Checked);
    end;
 end;
 

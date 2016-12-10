@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, OleCtrls, SHDocVw, ComCtrls, StdCtrls, ExtCtrls, ExtDlgs, Grids,
   ToolWin, Buttons, PlatformDefaultStyleActnCtrls, ActnList, ActnMan,
-  AppEvnts, uTests, uTheme, uData, uUTT;
+  AppEvnts, uTests, uTheme, uUTT;
 
 type
   TfrmOGE = class(TForm)
@@ -39,7 +39,7 @@ var
   frmOGE: TfrmOGE;
 
 implementation
-
+uses uGlobals;
 {$R *.dfm}
 
 resourcestring password = '1';

@@ -11,7 +11,8 @@ uses
   uTestResult in 'uTestResult.pas' {frmTestResult},
   uUTT in 'uUTT.pas' {frmUTT},
   uTestDiagram in 'uTestDiagram.pas' {frmTestDiagram},
-  uUTTDiagram in 'uUTTDiagram.pas' {frmUTTDiagram};
+  uUTTDiagram in 'uUTTDiagram.pas' {frmUTTDiagram},
+  uGlobals in 'uGlobals.pas';
 
 {$R *.res}
 

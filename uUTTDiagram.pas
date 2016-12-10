@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, uData, GdiPlus, GdiPlusHelpers;
+  Dialogs, ExtCtrls, uGlobals, GdiPlus, GdiPlusHelpers;
 
 type
 
@@ -14,6 +14,7 @@ type
       pie: IGPGraphicsPath;
       taskNo: integer;
       labelRect: TGPRectF;
+      compleate: boolean;
   end;
 
   TModule = record
@@ -23,7 +24,6 @@ type
       labelRect:TGPRectF;
       pie: IGPGraphicsPath;
       color: TGPColor;
-      labelPoint: TGPPointF;
       axis: array of TLine;
       axisAngle: array of TaxisAngle;
   end;
@@ -54,18 +54,19 @@ type
 
     isRandom: boolean;
     procedure Render();
+    procedure initModules();
     procedure createCircle(axisCount: integer);
     procedure fillModuleList();
-    procedure fillTasks(var module: TModule; UTTModule: PUTTModule; i:integer);
+    procedure fillTasks(var module: TModule; i, taskNo:integer);
   public
     { Public declarations }
-    procedure createNewBMP(useRandom: boolean);
+    procedure refresh(useRandom: boolean);
     procedure showUTTDiagram();
   end;
 
 implementation
 
-uses uOGE, math;
+uses uOGE, math, uData;
 
 {$R *.dfm}
 
@@ -126,8 +127,7 @@ begin
            if not frmOGE.UTT.UTTTest.modules[i].visible then continue;
 
            modules[j].id := frmOGE.UTT.UTTTest.modules[i].id;
-           modules[j].pie := TGPGraphicsPath.Create();
-           modules[j].pie.AddPie(moduleRect, axisAngle[j], AXIS_ANGLE);
+           modules[j].color := frmOGE.UTT.UTTTest.modules[i].color;
            modules[j].display_label := frmOGE.UTT.UTTTest.modules[i].lable;
 
            cnt := frmOGE.UTT.UTTTest.modules[i].task_to -
@@ -136,10 +136,11 @@ begin
            setlength(modules[j].axis, cnt);
            setLength(modules[j].axisAngle, cnt);
            setlength(modules[j].tasks, cnt);
-           modules[j].color := frmOGE.UTT.UTTTest.modules[i].color;
+
+           modules[j].pie := TGPGraphicsPath.Create();
+           modules[j].pie.AddPie(moduleRect, axisAngle[j], AXIS_ANGLE);
 
            angle := axisAngle[i] + (AXIS_ANGLE / 2);
-           modules[j].labelPoint := rotatePoint(angle, center, axis[j].p2);
 
            MeasureDisplayStringWidthAndHeight(Graphic, Font, modules[j].display_label, txtW, txtH);
 
@@ -164,17 +165,16 @@ begin
                 modules[j].labelRect.Y := modules[j].labelRect.Y - (txtH / 2)
            end;
 
-           fillTasks(modules[j], @frmOGE.UTT.UTTTest.modules[i], j);
+           fillTasks(modules[j], j, frmOGE.UTT.UTTTest.modules[i].task_from);
            inc(j);
           // break
      end;
 end;
 
-procedure TfrmUTTDiagram.fillTasks(var module: TModule; UTTModule: PUTTModule; i: integer);
-var j, taskNo: integer;
+procedure TfrmUTTDiagram.fillTasks(var module: TModule; i, taskNo: integer);
+var j: integer;
     angle, angle2, delta, txtW, txtH, r: double;
 begin
-    taskNo := UTTModule^.task_from;
     delta := AXIS_ANGLE / length(module.tasks);
     angle := axisAngle[i] +  delta;
 
@@ -241,7 +241,14 @@ begin
     img.Picture.Bitmap.Assign(bmp);
 end;
 
-procedure TfrmUTTDiagram.createNewBMP(useRandom: boolean);
+procedure TfrmUTTDiagram.initModules;
+begin
+    setLength(modules, frmOGE.UTT.VisibleModuleCount());
+    createCircle(length(modules));
+    fillModuleList();
+end;
+
+procedure TfrmUTTDiagram.refresh(useRandom: boolean);
 begin
     if Assigned(bmp) then freeAndNil(bmp);
 
@@ -261,10 +268,7 @@ begin
     WhiteBrush := TGPSolidBrush.Create(TGPColor.White);
     BlackBrush := TGPSolidBrush.Create(TGPColor.Black);
 
-    setLength(modules, frmOGE.UTT.VisibleModuleCount());
-    createCircle(length(modules));
-    fillModuleList();
-
+    initModules();
     Render();
 end;
 

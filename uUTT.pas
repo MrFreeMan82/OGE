@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, Buttons, uData;
+  Dialogs, StdCtrls, ExtCtrls, Buttons, uGlobals;
 
 type
   TfrmUTT = class(TForm)
@@ -33,7 +33,7 @@ type
     answears: TAnswears;
     procedure loadTask(aVariant, aTask: integer);
     procedure clear;
-    procedure fiilMask();
+    procedure AllTaskCompleate();
   public
     { Public declarations }
     procedure clearUserResults();
@@ -43,12 +43,25 @@ type
   end;
 
 implementation
-uses uOGE, uTestResult, GdiPlus, GdiPlusHelpers, ActiveX;
+uses uOGE, uTestResult, GdiPlus, GdiPlusHelpers, ActiveX, uData;
 {$R *.dfm}
 
 { TfrmUTT }
 
 const e = 0.001;
+
+procedure TfrmUTT.AllTaskCompleate;
+begin
+     mode := mNormal;   // All tasks complete
+     if messageBox(handle, PWideChar(
+          'Поздравляем! Все задания варианта ' +
+                intToStr(rgVariants.ItemIndex + 1) +
+                        ' решены, Показать результаты?'),
+                              'ОГЕ', MB_YESNO or MB_ICONINFORMATION) = mrYes then
+     begin
+         btResultsClick(self);
+     end;
+end;
 
 procedure TfrmUTT.btAnswearClick(Sender: TObject);
 var usrAnswear: double;
@@ -74,7 +87,15 @@ begin
                    'Верно! Баллы за это задание уже были засчитаны.',
                                        'ОГЕ', MB_OK or MB_ICONINFORMATION);
          end;
-         if fTask = UTT_TASK_COUNT then btResultsClick(Sender) else btNextTaskClick(Sender);
+         if fTask = UTT_TASK_COUNT then
+         begin
+             if getNextFalseTask(fTask,
+                  fUTTTest.taskResultMask, true) =
+                      ALL_TASK_COMPLETE then
+                            AllTaskCompleate()
+                                else btResultsClick(self)
+         end
+         else btNextTaskClick(Sender);
     end
     else begin
          btNextTaskClick(Sender);
@@ -83,19 +104,14 @@ begin
 end;
 
 procedure TfrmUTT.btNextTaskClick(Sender: TObject);
-var oldtask: integer;
 begin
     if mode = mReTest then
     begin
-       oldTask := fTask;
        fTask := getNextFalseTask(fTask, fUTTTest.taskResultMask);
        if fTask = ALL_TASK_COMPLETE then
        begin
-            mode := mNormal;   // All tasks complete
-            messageBox(handle, PWideChar('Поздравляем! Все задания варианта '+
-                                intToStr(rgVariants.ItemIndex + 1) +' решены'),
-                                                 'ОГЕ', MB_OK or MB_ICONINFORMATION);
-            fTask := oldTask;
+            AllTaskCompleate();
+            exit;
        end;
     end
     else inc(fTask);
@@ -105,19 +121,14 @@ begin
 end;
 
 procedure TfrmUTT.btPrevTaskClick(Sender: TObject);
-var oldTask: integer;
 begin
     if mode = mRetest then
     begin
-         oldTask := fTask;
          fTask := getPrevFalseTask(fTask, fUTTTest.taskResultMask);
          if fTask = ALL_TASK_COMPLETE then
          begin
-              mode := mNormal;   // All tasks complete
-              messageBox(handle, PWideChar('Поздравляем! Все задания варианта '+
-                                intToStr(rgVariants.ItemIndex + 1) +' решены'),
-                                                 'ОГЕ', MB_OK or MB_ICONINFORMATION);
-              fTask := oldTask;
+              AllTaskCompleate();
+              exit
          end;
     end
     else dec(fTask);
@@ -138,8 +149,13 @@ begin
           // Перейдем в режим прохода теста заново
           // Найдем первый не пройденый тест
               mode := mReTest;
-
               ftask := getNextFalseTask(fTask, fUTTTest.taskResultMask, true);
+
+              if fTask = ALL_TASK_COMPLETE then
+              begin
+                  mode := mNormal;   // All tasks complete
+                  exit
+              end;
               loadTask(rgVariants.ItemIndex + 1, fTask);
         end;
     end;
@@ -215,7 +231,7 @@ begin
      for i := 0 to UTT_TASK_COUNT - 1 do
            fUTTTest.taskResultMask[i] := false;
 end;
-
+{
 procedure TfrmUTT.fiilMask;
 var i: integer;
 begin
@@ -224,7 +240,7 @@ begin
           self.UTTTest.taskResultMask[i] := true;
      end;
 end;
-
+}
 procedure TfrmUTT.rgVariantsClick(Sender: TObject);
 begin
      if rgVariants.ItemIndex < 0 then exit;

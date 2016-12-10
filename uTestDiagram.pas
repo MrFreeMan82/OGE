@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, GdiPlus, GdiPlusHelpers, uData;
+  Dialogs, ExtCtrls, GdiPlus, GdiPlusHelpers, uGlobals;
 
 const
   MAX_GRADUATION = TASK_COUNT;
@@ -65,7 +65,7 @@ TfrmTestDiagram = class(TForm)
 
 implementation
 
-uses uOGE;
+uses uOGE, uData;
 
 {$R *.dfm}
 

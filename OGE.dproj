@@ -74,6 +74,7 @@
 			<DCCReference Include="uUTTDiagram.pas">
 				<Form>frmUTTDiagram</Form>
 			</DCCReference>
+			<DCCReference Include="uGlobals.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

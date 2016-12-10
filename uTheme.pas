@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, Buttons, ExtCtrls, uData, ActnList;
+  Dialogs, Buttons, ExtCtrls, uGlobals, ActnList;
 
 type
   TfrmTopics = class(TForm)
@@ -47,7 +47,7 @@ type
   end;
 
 implementation
-uses FWZipReader, uOGE, GdiPlus, GdiPlusHelpers, ActiveX;
+uses FWZipReader, uOGE, GdiPlus, GdiPlusHelpers, ActiveX, uData;
 
 {$R *.dfm}
 
