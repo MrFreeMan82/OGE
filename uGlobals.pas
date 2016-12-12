@@ -52,7 +52,7 @@ type
        lable: string;
        task_from, task_to: integer;
        visible: boolean;
-       points: double;
+       points: integer;
        color: TGPColor;
   end;
 

@@ -145,7 +145,7 @@ begin
            modules[j].pie := TGPGraphicsPath.Create();
            modules[j].pie.AddPie(moduleRect, axisAngle[j], AXIS_ANGLE);
 
-           s := format('%s - %f', [frmOGE.UTT.UTTTest.modules[i].lable,
+           s := format('%s - %d', [frmOGE.UTT.UTTTest.modules[i].lable,
                                       frmOGE.UTT.UTTTest.modules[i].points]);
            modules[j].display_label :=  s;
            MeasureDisplayStringWidthAndHeight(Graphic, Font, modules[j].display_label, txtW, txtH);
@@ -258,8 +258,8 @@ begin
     for i := 0 to length(axis) - 1 do
       graphic.DrawLine(Boldpen, axis[i].p1, axis[i].p2);
 
-//    graphic.FillEllipse(WhiteBrush, moduleRect);
-  //  graphic.DrawEllipse(pen, moduleRect);
+    graphic.FillEllipse(WhiteBrush, moduleRect);
+    graphic.DrawEllipse(pen, moduleRect);
 
 
     img.Picture.Bitmap.Assign(bmp);

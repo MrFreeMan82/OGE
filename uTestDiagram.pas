@@ -190,6 +190,7 @@ begin
     Graphic.SmoothingMode := SmoothingModeAntiAlias;
     Graphic.InterpolationMode := InterpolationModeHighQualityBicubic;
     Graphic.PixelOffsetMode := PixelOffsetModeHighQuality;
+  //  Graphic.CompositingQuality := CompositingQualityAssumeLinear;
     Pen := TGPPen.Create(TGPColor.Black, 1);
     FontFamily := TGPFontFamily.Create('Tahoma');
     Font := TGPFont.Create(FontFamily, 10, FontStyleRegular, UnitPoint);
@@ -207,6 +208,8 @@ procedure TfrmTestDiagram.createResultList;
 var i: integer;
     k, l, pts, angle: double;
 begin
+     //Graphic.Clear(TGPColor.Black);
+
      for i := 0 to length(topicResultList) - 1 do
      begin
         with topicResultList[i] do

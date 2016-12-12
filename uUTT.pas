@@ -34,7 +34,7 @@ type
     procedure loadTask(aVariant, aTask: integer);
     procedure clear;
     procedure AllTaskCompleate();
-    procedure setPoints(pts: double);
+    procedure setPoints(pts: integer);
   public
     { Public declarations }
     procedure clearUserResults();
@@ -64,7 +64,7 @@ begin
      end;
 end;
 
-procedure TfrmUTT.setPoints(pts: double);
+procedure TfrmUTT.setPoints(pts: integer);
 var i: integer;
 begin
     for i := 0 to length(fUTTTest.modules) - 1 do
