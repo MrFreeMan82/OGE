@@ -208,8 +208,6 @@ procedure TfrmTestDiagram.createResultList;
 var i: integer;
     k, l, pts, angle: double;
 begin
-     //Graphic.Clear(TGPColor.Black);
-
      for i := 0 to length(topicResultList) - 1 do
      begin
         with topicResultList[i] do
