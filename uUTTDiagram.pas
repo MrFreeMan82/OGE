@@ -82,7 +82,7 @@ begin
      if axisCount = 0 then abort;
 
      rect_Width := bmp.height - 50;
-     module_Rect_width := trunc(rect_width / 20);
+     module_Rect_width := trunc(rect_width / 30);
 
      CircleRect.X := (bmp.Width - RECT_WIDTH) / 2;
      CircleRect.Y  := ((bmp.Height - RECT_WIDTH) / 2) ;
@@ -123,6 +123,7 @@ end;
 procedure TfrmUTTDiagram.fillModuleList;
 var i,j, cnt: integer;
     txtW, txtH, angle, r :double;
+    s : string;
 begin
      j := 0;
      for i := 0 to high(frmOGE.UTT.UTTTest.modules) do
@@ -131,7 +132,6 @@ begin
 
            modules[j].id := frmOGE.UTT.UTTTest.modules[i].id;
            modules[j].color := frmOGE.UTT.UTTTest.modules[i].color;
-           modules[j].display_label := frmOGE.UTT.UTTTest.modules[i].lable;
 
            cnt := frmOGE.UTT.UTTTest.modules[i].task_to -
                    frmOGE.UTT.UTTTest.modules[i].task_from + 1;
@@ -140,18 +140,22 @@ begin
            setLength(modules[j].taskAxisAngle, cnt);
            setlength(modules[j].tasks, cnt);
 
+           fillTasks(modules[j], j, frmOGE.UTT.UTTTest.modules[i].task_from);
+
            modules[j].pie := TGPGraphicsPath.Create();
            modules[j].pie.AddPie(moduleRect, axisAngle[j], AXIS_ANGLE);
 
-           angle := axisAngle[i] + (AXIS_ANGLE / 2);
-
+           s := format('%s - %f', [frmOGE.UTT.UTTTest.modules[i].lable,
+                                      frmOGE.UTT.UTTTest.modules[i].points]);
+           modules[j].display_label :=  s;
            MeasureDisplayStringWidthAndHeight(Graphic, Font, modules[j].display_label, txtW, txtH);
 
            txtH := txtH * 2;
            txtW := txtW + 10;
 
-           r := (CircleRect.Width / 2);
+           angle := axisAngle[i] + (AXIS_ANGLE / 2);
            angle := angle * 2 * pi  / 360;
+           r := (CircleRect.Width / 2);
            modules[j].labelRect.X := center.X + (r * cos(angle));
            modules[j].labelRect.Y := center.Y + (r * sin(angle));
 
@@ -188,7 +192,6 @@ begin
            modules[j].axisLabelRect.Width := 20;
            modules[j].axisLabelRect.Height := 20;
 
-           fillTasks(modules[j], j, frmOGE.UTT.UTTTest.modules[i].task_from);
            inc(j);
           // break
      end;
@@ -252,11 +255,11 @@ begin
          graphic.DrawString(modules[i].axisLable, pointsFont, modules[i].axisLabelRect, nil, ColorBrush);
     end;
 
- //   graphic.FillEllipse(WhiteBrush, moduleRect);
- //   graphic.DrawEllipse(pen, moduleRect);
-
     for i := 0 to length(axis) - 1 do
       graphic.DrawLine(Boldpen, axis[i].p1, axis[i].p2);
+
+//    graphic.FillEllipse(WhiteBrush, moduleRect);
+  //  graphic.DrawEllipse(pen, moduleRect);
 
 
     img.Picture.Bitmap.Assign(bmp);

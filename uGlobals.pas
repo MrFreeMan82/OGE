@@ -52,6 +52,7 @@ type
        lable: string;
        task_from, task_to: integer;
        visible: boolean;
+       points: double;
        color: TGPColor;
   end;
 
@@ -60,7 +61,6 @@ type
   TUTTInfo = record
      modules : TUTTModulesList;
      taskResultMask: TResultMask;
-     points: double;
   end;
 
   TLine = record

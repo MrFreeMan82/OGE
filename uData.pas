@@ -165,7 +165,6 @@ var i, id, cnt: integer;
 begin
      id := 1;
      result.modules := nil;
-     result.points := 0;
      if not xmlDoc.Active then exit;
 
      root := xmlDoc.ChildNodes.FindNode('UTT');
@@ -196,7 +195,6 @@ var info: string;
     s: TStringStream;
 begin
      result.modules := nil;
-     result.points := 0;
      info := UTT_DIR + '/info.xml';
      s := TStringStream.Create;
      try
