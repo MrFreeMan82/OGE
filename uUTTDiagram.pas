@@ -24,8 +24,10 @@ type
       labelRect:TGPRectF;
       pie: IGPGraphicsPath;
       color: TGPColor;
-      axis: array of TLine;
-      axisAngle: array of TaxisAngle;
+      axisLable: string;
+      axisLabelRect: TGPRectF;
+      taskAxis: array of TLine;
+      taskAxisAngle: array of TaxisAngle;
   end;
 
   TModuleList = array of TModule;
@@ -39,6 +41,7 @@ type
     FontFamily: IGPFontFamily;
     Font: IGPFont;
     TaskNoFont: IGPFont;
+    pointsFont: IGPFont;
     WhiteBrush, ColorBrush, BlackBrush: IGPBrush;
     bmp: TBitmap;
 
@@ -78,8 +81,8 @@ var i, rect_width, module_Rect_width: integer;
 begin
      if axisCount = 0 then abort;
 
-     rect_Width := bmp.height;
-     module_Rect_width := trunc(rect_width / 5);
+     rect_Width := bmp.height - 50;
+     module_Rect_width := trunc(rect_width / 20);
 
      CircleRect.X := (bmp.Width - RECT_WIDTH) / 2;
      CircleRect.Y  := ((bmp.Height - RECT_WIDTH) / 2) ;
@@ -133,8 +136,8 @@ begin
            cnt := frmOGE.UTT.UTTTest.modules[i].task_to -
                    frmOGE.UTT.UTTTest.modules[i].task_from + 1;
 
-           setlength(modules[j].axis, cnt);
-           setLength(modules[j].axisAngle, cnt);
+           setlength(modules[j].taskAxis, cnt);
+           setLength(modules[j].taskAxisAngle, cnt);
            setlength(modules[j].tasks, cnt);
 
            modules[j].pie := TGPGraphicsPath.Create();
@@ -159,11 +162,31 @@ begin
            if (angle >= 90) and (angle <= 270) then
            begin
                 modules[j].labelRect.X := modules[j].labelRect.X - txtW;
+                if (modules[j].labelRect.X <= 0) then
+                begin
+                     modules[j].labelRect.Width :=
+                          modules[j].labelRect.Width +
+                                      modules[j].labelRect.X;
+
+                     modules[j].labelRect.X := 5;
+                end;
+
+                modules[j].axisLabelRect.X := axis[j].p2.X -
+                                    modules[j].axisLabelRect.Width;
            end
            else if (angle > 270) and (angle <= 360)then
            begin
                 modules[j].labelRect.Y := modules[j].labelRect.Y - (txtH / 2)
            end;
+
+           r := (CircleRect.Width / 2) + 15;
+           angle := axisAngle[j] * 2 * pi / 360;
+           modules[j].axisLabelRect.X := (center.X - 10) + (r * cos(angle));
+           modules[j].axisLabelRect.Y := (center.Y - 10) + (r * sin(angle));
+
+           modules[j].axisLable := '1';
+           modules[j].axisLabelRect.Width := 20;
+           modules[j].axisLabelRect.Height := 20;
 
            fillTasks(modules[j], j, frmOGE.UTT.UTTTest.modules[i].task_from);
            inc(j);
@@ -181,16 +204,16 @@ begin
     for j := 0 to length(module.tasks) -  1 do
     begin
          module.tasks[j].taskNo := taskNo;
-         module.axis[j] := rotateLine(angle, axis[i], center);
-         module.axisAngle[j] := angle;
+         module.taskAxis[j] := rotateLine(angle, axis[i], center);
+         module.taskAxisAngle[j] := angle;
          angle := angle + delta;
 
          module.tasks[j].pie := TGPGraphicsPath.Create();
-         module.tasks[j].pie.AddPie(CircleRect, module.axisAngle[j] - delta, delta);
+         module.tasks[j].pie.AddPie(CircleRect, module.taskAxisAngle[j] - delta, delta);
 
          MeasureDisplayStringWidthAndHeight(Graphic, Font, intToStr(module.tasks[j].taskNo), txtW, txtH);
 
-         angle2 := module.axisAngle[j] - (delta / 2);
+         angle2 := module.taskAxisAngle[j] - (delta / 2);
          r := (CircleRect.Width / 2) - 20;
          angle2 := angle2 * 2 * pi / 360;
          module.tasks[j].labelRect.X := (center.X - 5) + (r * cos(angle2));
@@ -220,19 +243,17 @@ begin
              end;
              graphic.DrawPath(pen, modules[i].tasks[j].pie);
 
-            // graphic.DrawLine(pen, center, modules[i].tasks[j].labelPoint);
-           // graphic.DrawRectangle(pen, modules[i].tasks[j].labelRect);
-            graphic.DrawString(intToStr(taskNo), taskNoFont, modules[i].tasks[j].labelRect, nil, BlackBrush);
+             graphic.DrawString(intToStr(taskNo), taskNoFont, modules[i].tasks[j].labelRect, nil, BlackBrush);
          end;
-         graphic.FillPath(WhiteBrush, modules[i].pie);
+        // graphic.FillPath(WhiteBrush, modules[i].pie);
 
          graphic.DrawString(modules[i].display_label, font, modules[i].labelRect, nil, BlackBrush);
-       // graphic.DrawRectangle(pen, modules[i].labelRect);
-        // graphic.DrawLine(Pen, center, modules[i].mp);
-       //  break
+         ColorBrush := TGPSolidBrush.Create(TGPColor.Red);
+         graphic.DrawString(modules[i].axisLable, pointsFont, modules[i].axisLabelRect, nil, ColorBrush);
     end;
 
-    graphic.DrawEllipse(pen, moduleRect);
+ //   graphic.FillEllipse(WhiteBrush, moduleRect);
+ //   graphic.DrawEllipse(pen, moduleRect);
 
     for i := 0 to length(axis) - 1 do
       graphic.DrawLine(Boldpen, axis[i].p1, axis[i].p2);
@@ -259,10 +280,14 @@ begin
 
     Graphic := TGPGraphics.Create(bmp.Canvas.Handle);
     Graphic.SmoothingMode := SmoothingModeAntiAlias;
+    Graphic.InterpolationMode := InterpolationModeHighQualityBicubic;
+    Graphic.PixelOffsetMode := PixelOffsetModeHighQuality;
+  //  Graphic.CompositingQuality := CompositingQualityHighQuality;
     Pen := TGPPen.Create(TGPColor.Black, 1);
     BoldPen := TGPPen.Create(TGPColor.Black, 3);
     FontFamily := TGPFontFamily.Create('Tahoma');
     Font := TGPFont.Create(FontFamily, 14, FontStyleRegular, UnitPixel);
+    pointsFont := TGPFont.Create(FontFamily, 16, FontStyleRegular, UnitPixel);
     TaskNoFont := TGPFont.Create(FontFamily, 10, FontStyleRegular, UnitPixel);
     Graphic.TextRenderingHint := TextRenderingHintAntiAlias;
     WhiteBrush := TGPSolidBrush.Create(TGPColor.White);

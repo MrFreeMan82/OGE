@@ -188,6 +188,8 @@ begin
 
     Graphic := TGPGraphics.Create(bmp.Canvas.Handle);
     Graphic.SmoothingMode := SmoothingModeAntiAlias;
+    Graphic.InterpolationMode := InterpolationModeHighQualityBicubic;
+    Graphic.PixelOffsetMode := PixelOffsetModeHighQuality;
     Pen := TGPPen.Create(TGPColor.Black, 1);
     FontFamily := TGPFontFamily.Create('Tahoma');
     Font := TGPFont.Create(FontFamily, 10, FontStyleRegular, UnitPoint);
