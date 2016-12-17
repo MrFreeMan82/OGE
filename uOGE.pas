@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, OleCtrls, SHDocVw, ComCtrls, StdCtrls, ExtCtrls, ExtDlgs, Grids,
   ToolWin, Buttons, PlatformDefaultStyleActnCtrls, ActnList, ActnMan,
-  AppEvnts, uTests, uTheme, uUTT;
+  AppEvnts, uTests, uTheme, uUTT, uTasks;
 
 type
   TfrmOGE = class(TForm)
@@ -16,20 +16,23 @@ type
     tabTests: TTabSheet;
     WebBrowser1: TWebBrowser;
     tabUTT: TTabSheet;
+    tabTasks: TTabSheet;
+    TabSheet1: TTabSheet;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure WebBrowser1DocumentComplete(ASender: TObject;
       const pDisp: IDispatch; var URL: OleVariant);
   private
     { Private declarations }
-    frmTests: TfrmTests;
+    frmTests: TfrmTests deprecated;
     frmTopics: TfrmTopics;
     frmUTT: TfrmUTT;
+    frmTasks: TfrmTasks;
     path: string;
     function Login(): TModalResult;
   public
     { Public declarations }
-
+    property TaskTests: TfrmTasks read frmTasks;
     property Tests: TfrmTests read frmTests;
     property Topics: TfrmTopics read frmTopics;
     property UTT:TfrmUTT read frmUTT;
@@ -84,13 +87,17 @@ begin
     frmTopics.Dock(tabThemes, tabThemes.ClientRect);
     frmTopics.showTopics();
 
-    if not Assigned(frmTests) then frmTests := TfrmTests.Create(self);
+   { if not Assigned(frmTests) then frmTests := TfrmTests.Create(self);
     frmTests.Dock(tabTests, tabTests.ClientRect);
-    frmTests.ShowTests();
+    frmTests.ShowTests(); }
 
     if not assigned(frmUTT) then frmUTT := TfrmUTT.Create(self);
     frmUTT.Dock(tabUTT, tabUTT.ClientRect);
     frmUTT.ShowUTT();
+
+    if not assigned(frmTasks) then frmTasks := TfrmTasks.Create(self);
+    frmTasks.Dock(tabTasks, tabTasks.ClientRect);
+    frmTasks.ShowTasks();
 
   //  TestResults.showResults;   // DELETE AFTER TESTT
   //  Application.Terminate;    str
@@ -98,9 +105,10 @@ end;
 
 procedure TfrmOGE.FormDestroy(Sender: TObject);
 begin
-    freeAndNil(frmTests);
+   // freeAndNil(frmTests);
     freeAndNil(frmTopics);
     freeAndNil(frmUTT);
+    freeAndNil(frmTasks);
 end;
 
 procedure TfrmOGE.WebBrowser1DocumentComplete(ASender: TObject;

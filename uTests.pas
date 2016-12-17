@@ -4,10 +4,20 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, OleCtrls, SHDocVw, Menus, uGlobals,
-  Buttons;
+  Dialogs, StdCtrls, ExtCtrls, OleCtrls, SHDocVw, Menus, uGlobals, Buttons;
 
 type
+  PtestInfo = ^TTestinfo;
+  TTestInfo = record
+      id: integer;
+      topicID: integer;
+      dir: string;
+      displayLabel: string;
+      taskResultMask: TResultMask;
+      points: double;
+  end;
+
+  TTestList = array of TTestInfo;
 
   TfrmTests = class(TForm)
     Panel1: TPanel;
@@ -52,6 +62,8 @@ type
     procedure ShowTests();
   end;
 
+function getTestByTopic(topicID: integer; const tests: TTestList): PTestInfo;
+
 implementation
 
 uses uOGE, uTestResult, GdiPlus, GdiPlusHelpers, ActiveX, uData;
@@ -60,9 +72,16 @@ uses uOGE, uTestResult, GdiPlus, GdiPlusHelpers, ActiveX, uData;
 
              // Если выбран вариант с 6 - 10 то насчитываем баллы по таблице
 const pointsByTask: array[0..9] of double = (0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1, 2, 2, 2);
-      e = 0.001;
-
 { TfrmTests }
+
+function getTestByTopic(topicID: integer; const tests: TTestList): PTestInfo;
+var i: integer;
+begin
+    result := nil;
+
+    for i := 0 to length(tests) - 1 do
+          if tests[i].topicID = topicID then result := @tests[i];
+end;
 
 procedure TfrmTests.AllTaskCompleate;
 begin
@@ -89,7 +108,7 @@ begin
      usrAnswear := strToFloatEx(trim(txtAnswer.Text));
 
      trueAnswear := abs(usrAnswear - self.answears[fTask - 1]) < e;
-     if (rgVariants.ItemIndex + 1) >= CALC_POINTS_FROM_V then
+    { if (rgVariants.ItemIndex + 1) >= CALC_POINTS_FROM_V then
      begin
           if trueAnswear then
           with currentTest^ do
@@ -116,7 +135,7 @@ begin
           end
           else btNextTaskClick(Sender);
      end
-     else begin
+     else begin }
         if trueAnswear then
         begin
            messageBox(Handle, 'Верно!', 'ОГЕ', MB_OK or MB_ICONINFORMATION);
@@ -127,7 +146,7 @@ begin
              messageBox(Handle, 'Подумай!', 'ОГЕ', MB_OK or MB_ICONINFORMATION);
              currentTest^.taskResultMask[fTask - 1] := false;
         end;
-     end;
+   //  end;
 end;
 
 procedure TfrmTests.btNextTaskClick(Sender: TObject);
@@ -273,7 +292,7 @@ begin
    if answears = nil then
    begin
         answearName := format('%s/%s/answ.xml', [TEST_DIR, currentTest.dir]);
-        answears := dm.loadAnswears(answearName, testVariant);
+        answears := dm.loadAnswears(dm.DataFile, answearName, testVariant);
    end;
 
    rgVariants.OnClick := nil;

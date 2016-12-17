@@ -13,8 +13,7 @@ object frmUTT: TfrmUTT
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  ExplicitWidth = 320
-  ExplicitHeight = 240
+  OnMouseWheel = FormMouseWheel
   PixelsPerInch = 96
   TextHeight = 16
   object Panel3: TPanel

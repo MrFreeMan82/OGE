@@ -7,14 +7,11 @@ uses
   Dialogs, ExtCtrls, uGlobals, GdiPlus, GdiPlusHelpers;
 
 type
-
-  TaxisAngle = double;
-
   TTask = record
       pie: IGPGraphicsPath;
       taskNo: integer;
       labelRect: TGPRectF;
-      compleate: boolean;
+    //  compleate: boolean;
   end;
 
   TModule = record
@@ -126,27 +123,27 @@ var i,j, cnt: integer;
     s : string;
 begin
      j := 0;
-     for i := 0 to high(frmOGE.UTT.UTTTest.modules) do
+     for i := 0 to high(frmOGE.UTT.UTTTModuleList) do
      begin
-           if not frmOGE.UTT.UTTTest.modules[i].visible then continue;
+           if not frmOGE.UTT.UTTTModuleList[i].visible then continue;
 
-           modules[j].id := frmOGE.UTT.UTTTest.modules[i].id;
-           modules[j].color := frmOGE.UTT.UTTTest.modules[i].color;
+           modules[j].id := frmOGE.UTT.UTTTModuleList[i].id;
+           modules[j].color := frmOGE.UTT.UTTTModuleList[i].color;
 
-           cnt := frmOGE.UTT.UTTTest.modules[i].task_to -
-                   frmOGE.UTT.UTTTest.modules[i].task_from + 1;
+           cnt := frmOGE.UTT.UTTTModuleList[i].task_to -
+                   frmOGE.UTT.UTTTModuleList[i].task_from + 1;
 
            setlength(modules[j].taskAxis, cnt);
            setLength(modules[j].taskAxisAngle, cnt);
            setlength(modules[j].tasks, cnt);
 
-           fillTasks(modules[j], j, frmOGE.UTT.UTTTest.modules[i].task_from);
+           fillTasks(modules[j], j, frmOGE.UTT.UTTTModuleList[i].task_from);
 
            modules[j].pie := TGPGraphicsPath.Create();
            modules[j].pie.AddPie(moduleRect, axisAngle[j], AXIS_ANGLE);
 
-           s := format('%s - %d', [frmOGE.UTT.UTTTest.modules[i].lable,
-                                      frmOGE.UTT.UTTTest.modules[i].points]);
+           s := format('%s - %d', [frmOGE.UTT.UTTTModuleList[i].lable,
+                                      frmOGE.UTT.UTTTModuleList[i].points]);
            modules[j].display_label :=  s;
            MeasureDisplayStringWidthAndHeight(Graphic, Font, modules[j].display_label, txtW, txtH);
 
@@ -239,7 +236,7 @@ begin
          begin
              taskNo := modules[i].tasks[j].taskNo;
 
-             if frmOGE.UTT.UTTTest.taskResultMask[taskNo - 1] then
+             if frmOGE.UTT.ResultMask[taskNo - 1] then
              begin
                   ColorBrush := TGPSolidBrush.Create(modules[i].color);
                   graphic.FillPath(ColorBrush, modules[i].tasks[j].pie);

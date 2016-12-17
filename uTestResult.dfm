@@ -3,7 +3,7 @@ object frmTestResult: TfrmTestResult
   Top = 0
   Caption = #1050#1086#1083#1077#1089#1086' '#1076#1086#1089#1090#1080#1078#1077#1085#1080#1071' '#1091#1089#1087#1077#1093#1072
   ClientHeight = 562
-  ClientWidth = 784
+  ClientWidth = 834
   Color = clBtnFace
   Constraints.MinHeight = 600
   Constraints.MinWidth = 800
@@ -17,18 +17,10 @@ object frmTestResult: TfrmTestResult
   OnResize = FormResize
   PixelsPerInch = 96
   TextHeight = 16
-  object img: TImage
-    Left = 0
-    Top = 30
-    Width = 105
-    Height = 67
-    Align = alCustom
-    Visible = False
-  end
   object pnlTools: TPanel
     Left = 0
     Top = 0
-    Width = 784
+    Width = 834
     Height = 30
     Align = alTop
     BevelOuter = bvNone
@@ -36,10 +28,10 @@ object frmTestResult: TfrmTestResult
     ShowHint = True
     TabOrder = 0
     DesignSize = (
-      784
+      834
       30)
     object btExit: TSpeedButton
-      Left = 749
+      Left = 799
       Top = 0
       Width = 35
       Height = 30
@@ -114,7 +106,7 @@ object frmTestResult: TfrmTestResult
       ExplicitHeight = 27
     end
     object pnlOptions: TPanel
-      Left = 252
+      Left = 277
       Top = 0
       Width = 270
       Height = 30
@@ -202,7 +194,7 @@ object frmTestResult: TfrmTestResult
       end
     end
     object chkRandom: TCheckBox
-      Left = 611
+      Left = 661
       Top = 7
       Width = 129
       Height = 17
@@ -216,7 +208,7 @@ object frmTestResult: TfrmTestResult
   object pnlDiagram: TPanel
     Left = 0
     Top = 30
-    Width = 784
+    Width = 834
     Height = 532
     Align = alClient
     BevelOuter = bvNone

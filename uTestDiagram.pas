@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, GdiPlus, GdiPlusHelpers, uGlobals;
+  Dialogs, ExtCtrls, GdiPlus, GdiPlusHelpers, uGlobals, uTheme, uTests;
 
 const
   MAX_GRADUATION = TASK_COUNT;

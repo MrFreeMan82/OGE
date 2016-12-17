@@ -75,6 +75,12 @@
 				<Form>frmUTTDiagram</Form>
 			</DCCReference>
 			<DCCReference Include="uGlobals.pas"/>
+			<DCCReference Include="uTasks.pas">
+				<Form>frmTasks</Form>
+			</DCCReference>
+			<DCCReference Include="uTaskDiagram.pas">
+				<Form>frmTaskDiagram</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

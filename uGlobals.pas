@@ -4,64 +4,29 @@ interface
 uses GdiPlus, GdiPlusHelpers, Classes;
 
 const
+      e = 0.001;
       ALL_TASK_COMPLETE = 0;
 
       VARIANT_COUNT = 10;
       TASK_COUNT = 10;
       UTT_TASK_COUNT = 26;
+      MODULE_TASK_COUNT = 120;
 
 const CALC_POINTS_FROM_V = 6;
 
 const TOPIC_DIR = 'Topics';
       TEST_DIR = 'Tests';
       UTT_DIR = 'UTT';
+      TASK_DIR = 'Task';
 
 type
-  TUTTLevel = (lvlLow, lvlHigh);
+  TaxisAngle = double;
 
   TMode = (mNormal, mReTest);
 
-  TTopicInfo = record
-      id: integer;
-      pageCount: integer;
-      dir: string;
-      displayLabel: string;
-  end;
-
-  TTopicList = array of TTopicInfo;
   TResultMask = array of boolean;
 
-  PtestInfo = ^TTestinfo;
-  TTestInfo = record
-      id: integer;
-      topicID: integer;
-      dir: string;
-      displayLabel: string;
-      taskResultMask: TResultMask;
-      points: double;
-  end;
-
-  TTestList = array of TTestInfo;
-
   TAnswears = array of double;
-
-  PUTTModule = ^TUTTModule;
-  TUTTModule = record
-       id:integer;
-       level: TUTTLevel;
-       lable: string;
-       task_from, task_to: integer;
-       visible: boolean;
-       points: integer;
-       color: TGPColor;
-  end;
-
-  TUTTModulesList = array of TUTTModule;
-
-  TUTTInfo = record
-     modules : TUTTModulesList;
-     taskResultMask: TResultMask;
-  end;
 
   TLine = record
       p1, p2: TGPPointF;
@@ -72,7 +37,6 @@ function HexToColor(sColor: string): TGPColor;
 function strToFloatEx(s: string): double;
 
 function exePath(): string;
-function getTestByTopic(topicID: integer; const tests: TTestList): PTestInfo;
 
 function getNextFalseTask(currentTask: integer; taskResultMask:TResultMask; fromBegin: boolean = false): integer;
 function getPrevFalseTask(currentTask: integer; taskResultMask:TResultMask): integer;
@@ -88,15 +52,6 @@ uses SysUtils, math, Forms;
 function exePath: string;
 begin
      result := ExtractFilePath(Application.ExeName);
-end;
-
-function getTestByTopic(topicID: integer; const tests: TTestList): PTestInfo;
-var i: integer;
-begin
-    result := nil;
-
-    for i := 0 to length(tests) - 1 do
-          if tests[i].topicID = topicID then result := @tests[i];
 end;
 
 function HexToColor(sColor: string): TGPColor;

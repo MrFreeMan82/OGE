@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Buttons, ExtCtrls, StdCtrls, GdiPlus, GdiPlusHelpers, uData,
-  uTestDiagram, uUTTDiagram;
+  uTestDiagram, uUTTDiagram, uTaskDiagram;
 
 type
 
@@ -13,7 +13,6 @@ TfrmTestResult = class(TForm)
     pnlTools: TPanel;
     btExit: TSpeedButton;
     btClearResults: TSpeedButton;
-    img: TImage;
     pnlOptions: TPanel;
     Label1: TLabel;
     btYes: TSpeedButton;
@@ -31,10 +30,12 @@ TfrmTestResult = class(TForm)
 
     frmTestDiagram: TfrmTestDiagram;
     frmUTTDiagram: TfrmUTTDiagram;
+    frmTaskDiagram: TfrmTaskDiagram;
   public
     { Public declarations }
     class function showResults(): TModalResult;
     class function showUTTResults(): TModalResult;
+    class function showTaskResults(): TModalResult;
   end;
 
 implementation
@@ -60,6 +61,11 @@ begin
          begin
              frmOGE.UTT.clearUserResults();
              frmUTTDiagram.refresh(chkRandom.Checked);
+         end
+         else if assigned(frmTaskDiagram) then
+         begin
+              frmOGE.TaskTests.clearUserResults;
+              frmTaskDiagram.refresh(chkRandom.Checked);
          end;
     end;
 end;
@@ -105,6 +111,20 @@ begin
     end;
 end;
 
+class function TfrmTestResult.showTaskResults: TModalResult;
+begin
+    if not assigned(frmTestResult) then frmTestResult := TFrmTestResult.Create(frmOGE);
+    frmTestResult.frmTaskDiagram := TfrmTaskDiagram.Create(frmTestResult);
+    try
+      frmTestResult.frmTaskDiagram.Dock(frmTestResult.pnlDiagram, frmTestResult.pnlDiagram.ClientRect);
+      frmTestResult.frmTaskDiagram.showDiagram();
+      result := frmTestResult.ShowModal;
+    finally
+        freeAndNil(frmTestResult.frmTaskDiagram);
+        freeAndNil(frmTestResult);
+    end;
+end;
+
 class function TfrmTestResult.showUTTResults: TModalResult;
 begin
     if not Assigned(frmTestResult) then frmTestResult := TFrmTestResult.Create(frmOGE);
@@ -130,6 +150,10 @@ begin
    else if Assigned(frmUTTDiagram) then
    begin
        frmUTTDiagram.refresh(chkRandom.Checked);
+   end
+   else if assigned(frmTaskDiagram) then
+   begin
+       frmTaskDiagram.refresh(chkRandom.Checked);
    end;
 end;
 

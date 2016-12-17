@@ -4,9 +4,29 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, Buttons, uGlobals;
+  Dialogs, StdCtrls, ExtCtrls, Buttons, uGlobals, GdiPlus, GdiPlusHelpers;
 
 type
+  TUTTLevel = (lvlLow, lvlHigh);
+
+  PUTTModule = ^TUTTModule;
+  TUTTModule = record
+       id:integer;
+       level: TUTTLevel;
+       lable: string;
+       task_from, task_to: integer;
+       visible: boolean;
+       points: integer;
+       color: TGPColor;
+  end;
+
+  TUTTModulesList = array of TUTTModule;
+
+ { TUTTInfo = record
+     modules : TUTTModulesList;
+
+  end; }
+
   TfrmUTT = class(TForm)
     rgVariants: TRadioGroup;
     Panel3: TPanel;
@@ -25,31 +45,32 @@ type
       Shift: TShiftState);
     procedure btAnswearClick(Sender: TObject);
     procedure btResultsClick(Sender: TObject);
+    procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
   private
     { Private declarations }
     mode: Tmode;
     fTask: integer;
-    fUTTTest: TUTTInfo;
+    fUTTTest: TUTTModulesList;
     answears: TAnswears;
+    taskResultMask: TResultMask;
     procedure loadTask(aVariant, aTask: integer);
-    procedure clear;
     procedure AllTaskCompleate();
     procedure setPoints(pts: integer);
   public
     { Public declarations }
+    property ResultMask: TResultMask read taskResultMask;
     procedure clearUserResults();
-    property UTTTest: TUTTInfo read fUTTTest;
+    property UTTTModuleList: TUTTModulesList read fUTTTest;
     function VisibleModuleCount(): integer;
     procedure ShowUTT();
   end;
 
 implementation
-uses uOGE, uTestResult, GdiPlus, GdiPlusHelpers, ActiveX, uData;
+uses uOGE, uTestResult, ActiveX, uData;
 {$R *.dfm}
 
 { TfrmUTT }
-
-const e = 0.001;
 
 procedure TfrmUTT.AllTaskCompleate;
 begin
@@ -67,10 +88,10 @@ end;
 procedure TfrmUTT.setPoints(pts: integer);
 var i: integer;
 begin
-    for i := 0 to length(fUTTTest.modules) - 1 do
-       if (fTask >= fUTTTest.modules[i].task_from) and
-                 (fTask <= fUTTTest.modules[i].task_to) then
-                   fUTTTest.modules[i].points := fUTTTest.modules[i].points + pts;
+    for i := 0 to length(fUTTTest) - 1 do
+       if (fTask >= fUTTTest[i].task_from) and
+                 (fTask <= fUTTTest[i].task_to) then
+                   fUTTTest[i].points := fUTTTest[i].points + pts;
 end;
 
 procedure TfrmUTT.btAnswearClick(Sender: TObject);
@@ -87,10 +108,10 @@ begin
 
     if trueAnswear then
     begin
-         if self.fUTTTest.taskResultMask[fTask - 1] = false then
+         if taskResultMask[fTask - 1] = false then
          begin
               setPoints(1);
-              fUTTTest.taskResultMask[fTask - 1] := true;
+              taskResultMask[fTask - 1] := true;
          end
          else begin
                 messageBox(self.Handle,
@@ -100,7 +121,7 @@ begin
          if fTask = UTT_TASK_COUNT then
          begin
              if getNextFalseTask(fTask,
-                  fUTTTest.taskResultMask, true) =
+                  taskResultMask, true) =
                       ALL_TASK_COMPLETE then
                             AllTaskCompleate()
                                 else btResultsClick(self)
@@ -117,7 +138,7 @@ procedure TfrmUTT.btNextTaskClick(Sender: TObject);
 begin
     if mode = mReTest then
     begin
-       fTask := getNextFalseTask(fTask, fUTTTest.taskResultMask);
+       fTask := getNextFalseTask(fTask, taskResultMask);
        if fTask = ALL_TASK_COMPLETE then
        begin
             AllTaskCompleate();
@@ -134,7 +155,7 @@ procedure TfrmUTT.btPrevTaskClick(Sender: TObject);
 begin
     if mode = mRetest then
     begin
-         fTask := getPrevFalseTask(fTask, fUTTTest.taskResultMask);
+         fTask := getPrevFalseTask(fTask, taskResultMask);
          if fTask = ALL_TASK_COMPLETE then
          begin
               AllTaskCompleate();
@@ -159,7 +180,7 @@ begin
           // Перейдем в режим прохода теста заново
           // Найдем первый не пройденый тест
               mode := mReTest;
-              ftask := getNextFalseTask(fTask, fUTTTest.taskResultMask, true);
+              ftask := getNextFalseTask(fTask, taskResultMask, true);
 
               if fTask = ALL_TASK_COMPLETE then
               begin
@@ -171,15 +192,6 @@ begin
     end;
 end;
 
-procedure TfrmUTT.clear;
-begin
-    img.Canvas.Brush.Color:=ClWhite;
-    img.Canvas.FillRect(img.Canvas.ClipRect);
-
-    ScrollBox.HorzScrollBar.Range := 0;
-    ScrollBox.VertScrollBar.Range := 0
-end;
-
 procedure TfrmUTT.loadTask(aVariant, aTask: integer);
 var fileName, answearName: string;
     mem: TMemoryStream;
@@ -189,7 +201,11 @@ var fileName, answearName: string;
     bmp: TBitmap;
     rect: TGPRectF;
 begin
-     clear;
+     img.Canvas.Brush.Color:=ClWhite;
+     img.Canvas.FillRect(img.Canvas.ClipRect);
+
+     ScrollBox.HorzScrollBar.Range := 0;
+     ScrollBox.VertScrollBar.Range := 0;
 
      filename := format('%s/%d/%d.jpg', [UTT_DIR, aVariant, aTask]);
 
@@ -197,7 +213,7 @@ begin
      bmp := TBitMap.Create;
 
      try
-         if not FindData(dm.DataFile, fileName, mem) then
+         if not FindData(dm.UTTDataFile, fileName, mem) then
          begin
               messageBox(self.Handle,
                   'По данному варианту тесты не загружены',
@@ -230,24 +246,34 @@ begin
      if answears = nil then
      begin
         answearName := format('%s/answ.xml', [UTT_DIR]);
-        answears := dm.loadAnswears(answearName, aVariant);
+        answears := dm.loadAnswears(dm.UTTDataFile, answearName, aVariant);
      end;
 end;
 
 procedure TfrmUTT.clearUserResults;
 var i: integer;
 begin
-     for i := 0 to UTT_TASK_COUNT - 1 do
-           fUTTTest.taskResultMask[i] := false;
+     for i := 0 to UTT_TASK_COUNT - 1 do taskResultMask[i] := false;
 
-     for i := 0 to length(fUTTTest.modules) - 1 do fUTTTest.modules[i].points := 0;
+     for i := 0 to length(fUTTTest) - 1 do fUTTTest[i].points := 0;
+end;
+
+procedure TfrmUTT.FormMouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+begin
+    with scrollBox.VertScrollBar do
+    begin
+        if (wheelDelta < 0) and (position < range)
+        then position := position + increment
+        else if (position > 0) then position := position - increment
+    end;
 end;
 
 procedure TfrmUTT.rgVariantsClick(Sender: TObject);
 begin
      if rgVariants.ItemIndex < 0 then exit;
      answears := nil;
-     setLength(fUTTTest.taskResultMask, UTT_TASK_COUNT);
+     setLength(taskResultMask, UTT_TASK_COUNT);
      clearUserResults();
    //  fiilMask();
      fTask := 1;
@@ -258,7 +284,7 @@ procedure TfrmUTT.ShowUTT;
 begin
     mode := mNormal;
     fUTTTest := dm.loadUTTTests();
-    if (fUTTTest.modules = nil) then
+    if (fUTTTest = nil) then
     begin
       messageBox(self.Handle, 'Не удалось загузить тесты', 'Ошибка', MB_OK or MB_ICONERROR);
       abort;
@@ -277,8 +303,8 @@ function TfrmUTT.VisibleModuleCount: integer;
 var i: integer;
 begin
      result := 0;
-     for i:= 0 to length(self.UTTTest.modules) - 1 do
-          if self.UTTTest.modules[i].visible then inc(result);
+     for i:= 0 to length(fUTTTest) - 1 do
+          if fUTTTest[i].visible then inc(result);
 end;
 
 end.

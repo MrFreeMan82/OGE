@@ -12,7 +12,9 @@ uses
   uUTT in 'uUTT.pas' {frmUTT},
   uTestDiagram in 'uTestDiagram.pas' {frmTestDiagram},
   uUTTDiagram in 'uUTTDiagram.pas' {frmUTTDiagram},
-  uGlobals in 'uGlobals.pas';
+  uGlobals in 'uGlobals.pas',
+  uTasks in 'uTasks.pas' {frmTasks},
+  uTaskDiagram in 'uTaskDiagram.pas' {frmTaskDiagram};
 
 {$R *.res}
 

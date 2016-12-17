@@ -4,9 +4,18 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, Buttons, ExtCtrls, uGlobals, ActnList;
+  Dialogs, Buttons, ExtCtrls;
 
 type
+  TTopicInfo = record
+      id: integer;
+      pageCount: integer;
+      dir: string;
+      displayLabel: string;
+  end;
+
+  TTopicList = array of TTopicInfo;
+
   TfrmTopics = class(TForm)
     pnlLinks: TPanel;
     lkUTT: TLinkLabel;
@@ -47,7 +56,7 @@ type
   end;
 
 implementation
-uses FWZipReader, uOGE, GdiPlus, GdiPlusHelpers, ActiveX, uData;
+uses uGlobals, uOGE, GdiPlus, GdiPlusHelpers, ActiveX, uData, uTests;
 
 {$R *.dfm}
 
