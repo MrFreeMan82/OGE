@@ -8,6 +8,7 @@ uses
 
 type
   TSection = record
+    topic_id: integer;
     dir: string;
     display_lable: string;
     points: double;
@@ -36,6 +37,7 @@ type
     btPrevTask: TSpeedButton;
     btNextTask: TSpeedButton;
     txtAnswer: TEdit;
+    btHelp: TSpeedButton;
     procedure FormDestroy(Sender: TObject);
     procedure linkClick(Sender: TObject);
     procedure btAnswearClick(Sender: TObject);
@@ -46,10 +48,11 @@ type
       Shift: TShiftState);
     procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure btHelpClick(Sender: TObject);
   private
     mode: Tmode;
     fModule, fSection, fTask: integer;
-    moduleList: TModuleList;
+    fmoduleList: TModuleList;
     answears: TAnswears;
     taskResultMask: TResultMask;
     links: array of TLinkLabel;
@@ -59,6 +62,7 @@ type
     { Private declarations }
   public
     { Public declarations }
+    property ModuleList : TModuleList read fModuleList;
     property ResultMask: TResultMask read taskResultMask;
     procedure clearUserResults;
     procedure ShowTasks();
@@ -66,7 +70,7 @@ type
 
 implementation
 
-uses uData, ActiveX, GdiPlus, GdiPlusHelpers, strUtils, uTestResult;
+uses uData, ActiveX, GdiPlus, GdiPlusHelpers, strUtils, uTestResult, uOGE;
 
 {$R *.dfm}
 
@@ -123,6 +127,12 @@ begin
          btNextTaskClick(Sender);
     end;
     txtAnswer.Text := '';
+end;
+
+procedure TfrmTasks.btHelpClick(Sender: TObject);
+begin
+    frmOGE.Topics.HelpWithTopic(
+      moduleList[fModule - 1].sections[fSection - 1].topic_id, self);
 end;
 
 procedure TfrmTasks.btNextTaskClick(Sender: TObject);
@@ -247,7 +257,7 @@ end;
 procedure TfrmTasks.ShowTasks;
 begin
     mode := mNormal;
-    moduleList := dm.loadTaskModuleList();
+    fmoduleList := dm.loadTaskModuleList();
     if (moduleList = nil) then
     begin
       messageBox(self.Handle, 'Не удалось загузить тесты', 'Ошибка', MB_OK or MB_ICONERROR);
@@ -256,17 +266,6 @@ begin
 
     createLinks();
     show;
-                 // Delet after test
-
-    setLength(taskResultMask, MODULE_TASK_COUNT);
-   // taskResultMask[0] := true;
-    taskResultMask[119] := true;
-  //  taskResultMask[20] := true;
-  // taskResultMask[40] := true;
-   // taskResultMask[10] := true;
-   // taskResultMask[30] := true;
-    btResultsClick(self);
-    Application.Terminate;
 end;
 
 procedure TfrmTasks.clearUserResults;

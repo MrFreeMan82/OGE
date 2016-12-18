@@ -42,6 +42,8 @@ type
     links: array of TLinkLabel;
     fCurrentTopic: TTopicInfo;
 
+    indigent: TObject;
+
     procedure clear;
     procedure createTopicLinks();
    // procedure loadPage(pageNo, topicNo: integer);overload;
@@ -50,13 +52,14 @@ type
     function getItem(topicID: integer): TTopicInfo;
   public
     { Public declarations }
+    procedure HelpWithTopic(topic_id: integer; Sender: TObject);
     procedure showTopics();
     property TopicList: TTopicList read topics;
     property Item[topicID: integer]: TTopicInfo read getItem;
   end;
 
 implementation
-uses uGlobals, uOGE, GdiPlus, GdiPlusHelpers, ActiveX, uData, uTests;
+uses uGlobals, uOGE, GdiPlus, GdiPlusHelpers, ActiveX, uData, uTests, uTasks;
 
 {$R *.dfm}
 
@@ -120,9 +123,15 @@ begin
 end;
 
 procedure TfrmTopics.btTestClick(Sender: TObject);
-var test: PTestInfo;
 begin
-     isSetCurrentTopic;
+     btTest.Visible := false;
+     if (indigent = nil) then exit;
+
+     if (indigent is TfrmTasks) then
+     begin
+        frmOGE.pgPages.ActivePage := frmOGE.tabTasks;
+     end;
+{     isSetCurrentTopic;
 
      test := getTestByTopic(fcurrentTopic.id, frmOGE.Tests.Tests);
      if test = nil then
@@ -134,7 +143,7 @@ begin
      frmOGE.Tests.setNewTopic(fcurrentTopic.id);
      frmOGE.Tests.SelectVariant(1);
 
-     frmOGE.pgPages.ActivePage := frmOGE.tabTests;
+     frmOGE.pgPages.ActivePage := frmOGE.tabTests; }
 end;
 
 procedure TfrmTopics.clear;
@@ -245,6 +254,24 @@ begin
      finally
        bmp.Free;
        mem.Free;
+     end;
+end;
+
+procedure TfrmTopics.HelpWithTopic(topic_id: integer; Sender: TObject);
+var i: integer;
+begin
+     for i := 0 to length(self.topics) - 1 do
+     begin
+          if(topics[i].id = topic_id) then
+          begin
+                page := 1;
+                fCurrentTopic := topics[i];
+                if not btTest.Visible then btTest.Visible := true;
+                loadPage(page);
+                indigent := sender;
+                frmOGE.pgPages.ActivePage := frmOGE.tabThemes;
+                exit;
+          end;
      end;
 end;
 

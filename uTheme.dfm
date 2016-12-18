@@ -173,7 +173,7 @@ object frmTopics: TfrmTopics
         Top = 0
         Width = 40
         Height = 26
-        Hint = #1055#1088#1086#1081#1090#1080' '#1090#1077#1089#1090
+        Hint = #1055#1088#1086#1076#1086#1083#1078#1080#1090#1100' '#1079#1072#1076#1072#1085#1080#1077
         Align = alLeft
         Glyph.Data = {
           36030000424D3603000000000000360000002800000010000000100000000100
@@ -204,6 +204,7 @@ object frmTopics: TfrmTopics
           FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
         ParentShowHint = False
         ShowHint = True
+        Visible = False
         OnClick = btTestClick
       end
     end

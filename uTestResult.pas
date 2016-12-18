@@ -28,8 +28,8 @@ TfrmTestResult = class(TForm)
   private
     { Private declarations }
 
-    frmTestDiagram: TfrmTestDiagram;
-    frmUTTDiagram: TfrmUTTDiagram;
+    frmTestDiagram: TfrmTestDiagram deprecated;
+    frmUTTDiagram: TfrmUTTDiagram deprecated;
     frmTaskDiagram: TfrmTaskDiagram;
   public
     { Public declarations }

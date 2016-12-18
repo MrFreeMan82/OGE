@@ -81,6 +81,9 @@
 			<DCCReference Include="uTaskDiagram.pas">
 				<Form>frmTaskDiagram</Form>
 			</DCCReference>
+			<DCCReference Include="uWorkPlan.pas">
+				<Form>frmWorkPlan</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, OleCtrls, SHDocVw, ComCtrls, StdCtrls, ExtCtrls, ExtDlgs, Grids,
   ToolWin, Buttons, PlatformDefaultStyleActnCtrls, ActnList, ActnMan,
-  AppEvnts, uTests, uTheme, uUTT, uTasks;
+  AppEvnts, uTests, uTheme, uUTT, uTasks, uWorkPlan;
 
 type
   TfrmOGE = class(TForm)
@@ -18,6 +18,7 @@ type
     tabUTT: TTabSheet;
     tabTasks: TTabSheet;
     TabSheet1: TTabSheet;
+    tabPlan: TTabSheet;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure WebBrowser1DocumentComplete(ASender: TObject;
@@ -28,6 +29,7 @@ type
     frmTopics: TfrmTopics;
     frmUTT: TfrmUTT;
     frmTasks: TfrmTasks;
+    frmWorkPlan: TfrmWorkPlan;
     path: string;
     function Login(): TModalResult;
   public
@@ -99,6 +101,10 @@ begin
     frmTasks.Dock(tabTasks, tabTasks.ClientRect);
     frmTasks.ShowTasks();
 
+    if not assigned(frmWorkPlan) then frmWorkPlan := TfrmWorkPlan.Create(self);
+    frmWorkPlan.Dock(tabPlan, tabPlan.ClientRect);
+    frmWorkPlan.ShowWorkPlan();
+
   //  TestResults.showResults;   // DELETE AFTER TESTT
   //  Application.Terminate;    str
 end;
@@ -109,6 +115,7 @@ begin
     freeAndNil(frmTopics);
     freeAndNil(frmUTT);
     freeAndNil(frmTasks);
+    freeAndNil(frmWorkPlan)
 end;
 
 procedure TfrmOGE.WebBrowser1DocumentComplete(ASender: TObject;

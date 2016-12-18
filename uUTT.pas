@@ -22,11 +22,6 @@ type
 
   TUTTModulesList = array of TUTTModule;
 
- { TUTTInfo = record
-     modules : TUTTModulesList;
-
-  end; }
-
   TfrmUTT = class(TForm)
     rgVariants: TRadioGroup;
     Panel3: TPanel;
@@ -169,10 +164,30 @@ end;
 
 procedure TfrmUTT.btResultsClick(Sender: TObject);
 var mr: TmodalResult;
+    r, m: string;
+    i, j, pts: integer;
 begin
-    if rgVariants.ItemIndex < 0 then rgVariants.ItemIndex := 0;
+//    if rgVariants.ItemIndex < 0 then rgVariants.ItemIndex := 0;
+    r := ''; m := '';
+    for i := 0 to length(fUTTTest) - 1 do
+    begin
+         if not fUTTTest[i].visible then continue;
+         if (m <> fUTTTest[i].lable) then m := fUTTTest[i].lable;
+         pts := 0;
 
-    mr := TfrmTestResult.showUTTResults;
+         for j := 0 to length(taskResultMask) - 1 do
+                if ((j + 1) >= fUTTTest[i].task_from) and
+                        ((j + 1) <= fUTTTest[i].task_to) and
+                                   taskResultMask[j] then inc(pts);
+
+         r := r + m + ' = ' + intToStr(pts) + #13;
+    end;
+    r := r + #13;
+    mr := messageBox(handle,
+        PWideChar(r + 'Довольны вы результатом?'),
+                    'ОГЕ', MB_YESNO or MB_ICONQUESTION);
+
+  // mr := TfrmTestResult.showUTTResults;
     case mr of
       mrYes: mode := mNormal;
       mrNo:

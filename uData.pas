@@ -46,8 +46,8 @@ uses FWZipModifier, FWZipReader;
 procedure Tdm.DataModuleCreate(Sender: TObject);
 begin
     fDataFile := exePath() + 'OGE.dat';
-    fUTTDataFile := exePath() + 'UTT.dat';
-    fTaskDataFile := exePath() + 'Tasks.dat'
+    fUTTDataFile := exePath() + 'OGE.dat';
+    fTaskDataFile := exePath() + 'OGE.dat'
 end;
 
 function Tdm.loadAnswears(const DBFile, fileName: string; aVariant: integer): TAnswears;
@@ -152,6 +152,7 @@ begin
                node := sections.ChildNodes.Get(j);
                result[i].sections[j].dir := node.ChildNodes.FindNode('DIR').Text;
                result[i].sections[j].display_lable := node.ChildNodes.FindNode('DISPLAY_LABEL').Text;
+               result[i].sections[j].topic_id := strToInt(node.ChildNodes.FindNode('TOPIC_ID').Text);
                result[i].sections[j].points := 0;
           end;
      end;

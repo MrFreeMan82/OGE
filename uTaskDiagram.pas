@@ -15,13 +15,10 @@ type
     { Private declarations }
     Graphic: IGPGraphics;
     Pen: IGPPen;
-    colorPen: IGPPen;
     softPen: IGPPen;
     FontFamily: IGPFontFamily;
-    Font: IGPFont;
     gradFont: IGPFont;
-    pointsFont: IGPFont;
-    WhiteBrush, ColorBrush, BlackBrush: IGPBrush;
+    ColorBrush, BlackBrush: IGPBrush;
 
     bmp: TBitmap;
     AXIS_ANGLE: double;
@@ -41,7 +38,7 @@ type
     procedure createTasks();
     procedure createGradCircles();
     procedure createCircle(axisCount: integer);
-    procedure initModules;
+    procedure initialize();
     procedure Render();
   public
     { Public declarations }
@@ -57,6 +54,8 @@ uses uOGE;
 
 const MAX_GRADUATION = 10;
       GRAD_AXIS_COUNT = 4;
+
+      Colors: array [0..1] of cardinal = (TGPColor.Green, TGPColor.Orange);
 
 { TfrmTaskDiagram }
 
@@ -154,8 +153,8 @@ begin
           begin
                 tasks[i] := TGPGraphicsPath.Create();
 
-                j := length(axis) + (i div 10) + offset;                // define axis; offset - Так как координаты начинаються с оси Х
-                if j >= length(axis) then j := (i div 10) + offset;                // а нам нужно начинать с оси У то вводим смещение
+                j := length(axis) + (i div MAX_GRADUATION) + offset;                // define axis; offset - Так как координаты начинаються с оси Х
+                if j >= length(axis) then j := (i div MAX_GRADUATION) + offset;                // а нам нужно начинать с оси У то вводим смещение
                 k := MAX_GRADUATION - 1 - (i mod MAX_GRADUATION);      // define task
 
                 if (j + 1) < length(axis) then
@@ -196,32 +195,32 @@ begin
      end;
 end;
 
-procedure TfrmTaskDiagram.initModules;
+procedure TfrmTaskDiagram.initialize;
 begin
      setLength(tasks, MODULE_TASK_COUNT);
-     createCircle(length(tasks) div 10);
+     createCircle(length(tasks) div MAX_GRADUATION);
      createGradCircles();
      createTasks();
 end;
 
 procedure TfrmTaskDiagram.Render;
-var i, j, k: integer; rect: TGPRectF;
+var i, j, c: integer; rect: TGPRectF;
 begin
   //  graphic.DrawEllipse(Pen, CircleRect);
 
-    for i := 0 to MAX_GRADUATION - 1 do
-         graphic.DrawEllipse(softPen, gradCircles[i]);
-
     for i := 0 to length(tasks) - 1 do
     begin
+        if odd(i div MAX_GRADUATION) then c := 0 else c := 1;
         if assigned(tasks[i]) then
         begin
-            ColorBrush := TGPSolidBrush.Create(TGPColor.Red);
+            ColorBrush := TGPSolidBrush.Create(colors[c]);
             graphic.FillPath(ColorBrush, tasks[i]);
         end;
     end;
 
-   { k := 120;
+    for i := 0 to MAX_GRADUATION - 1 do
+         graphic.DrawEllipse(softPen, gradCircles[i]);
+
     for j := 0 to MAX_GRADUATION - 1 do
     begin
          for i := 0 to GRAD_AXIS_COUNT - 1 do
@@ -233,18 +232,7 @@ begin
 
               graphic.DrawString(intToStr(MAX_GRADUATION - j), gradFont, rect, nil, BlackBrush);
          end;
-
-         for i := 0 to length(axis) - 1 do
-         begin
-              rect.X := taskPoints[i, j].X;
-              rect.Y := taskPoints[i, j].Y;
-              rect.Width := 30;
-              rect.Height := 30;
-
-            //  graphic.DrawString(intToStr(k), gradFont, rect, nil, BlackBrush);
-              dec(k);
-         end;
-    end;  }
+    end;
 
    for i := 0 to length(axis) - 1 do graphic.DrawLine(pen, axis[i].p1, axis[i].p2);
 
@@ -266,17 +254,13 @@ begin
     Graphic.PixelOffsetMode := PixelOffsetModeHighQuality;
   //  Graphic.CompositingQuality := CompositingQualityHighQuality;
     Pen := TGPPen.Create(TGPColor.Black, 1.5);
-    colorPen := TGPPen.Create(TGPColor.Red, 2);
     softPen := TGPPen.Create(TGPColor.Black, 1);
     FontFamily := TGPFontFamily.Create('Tahoma');
-    Font := TGPFont.Create(FontFamily, 14, FontStyleRegular, UnitPixel);
-    pointsFont := TGPFont.Create(FontFamily, 16, FontStyleRegular, UnitPixel);
     gradFont := TGPFont.Create(FontFamily, 10, FontStyleRegular, UnitPixel);
     Graphic.TextRenderingHint := TextRenderingHintAntiAlias;
-    WhiteBrush := TGPSolidBrush.Create(TGPColor.White);
     BlackBrush := TGPSolidBrush.Create(TGPColor.Black);
 
-    initModules();
+    initialize();
     Render();
 end;
 

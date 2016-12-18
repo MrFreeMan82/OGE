@@ -14,7 +14,8 @@ uses
   uUTTDiagram in 'uUTTDiagram.pas' {frmUTTDiagram},
   uGlobals in 'uGlobals.pas',
   uTasks in 'uTasks.pas' {frmTasks},
-  uTaskDiagram in 'uTaskDiagram.pas' {frmTaskDiagram};
+  uTaskDiagram in 'uTaskDiagram.pas' {frmTaskDiagram},
+  uWorkPlan in 'uWorkPlan.pas' {frmWorkPlan};
 
 {$R *.res}
 
