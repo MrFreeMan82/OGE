@@ -56,9 +56,6 @@
 				<Form>dm</Form>
 				<DesignClass>TDataModule</DesignClass>
 			</DCCReference>
-			<DCCReference Include="uTests.pas">
-				<Form>frmTests</Form>
-			</DCCReference>
 			<DCCReference Include="uTheme.pas">
 				<Form>frmTopics</Form>
 			</DCCReference>
@@ -67,9 +64,6 @@
 			</DCCReference>
 			<DCCReference Include="uUTT.pas">
 				<Form>frmUTT</Form>
-			</DCCReference>
-			<DCCReference Include="uTestDiagram.pas">
-				<Form>frmTestDiagram</Form>
 			</DCCReference>
 			<DCCReference Include="uUTTDiagram.pas">
 				<Form>frmUTTDiagram</Form>
@@ -84,6 +78,7 @@
 			<DCCReference Include="uWorkPlan.pas">
 				<Form>frmWorkPlan</Form>
 			</DCCReference>
+			<DCCReference Include="uTopicModel.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

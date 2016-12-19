@@ -3,8 +3,8 @@ unit uData;
 interface
 
 uses
-  SysUtils, Classes, xmldom, XMLIntf, msxmldom, XMLDoc, uGlobals, uTheme, uTests,
-  uUTT, uTasks;
+  SysUtils, Classes, xmldom, XMLIntf, msxmldom, XMLDoc, uGlobals, uTheme,
+  uUTT, uTasks, Graphics, uTopicModel;
 
 type
 
@@ -14,10 +14,8 @@ type
   private
     { Private declarations }
     fDataFile, fUTTDataFile, fTaskDataFile: string;
-    function doLoadTests():TTEstList;
-    function doLoadTopics(): TTopicList;
     function doLoadUTT(): TUTTModulesList;
-    function doLoadTasks(): TModuleList;
+    function doLoadTopicList():TTopicList;
   public
     { Public declarations }
     property  DataFile: string read fDataFile;
@@ -25,10 +23,9 @@ type
     property TaskDataFile: string read fTaskDataFile;
 
     function loadAnswears(const DBFile, fileName: string; aVariant: integer):TAnswears;
-    function loadTests():TTestList;
-    function LoadTopics(): TTopicList;
+    function LoadPage(const path: string): TBitmap;
     function loadUTTTests(): TUTTModulesList;
-    function loadTaskModuleList():TModuleList;
+    function loadTopicList(): TTopicList;
   end;
 
 var
@@ -37,7 +34,7 @@ var
 function FindData(const zipFile, name: string; outData: TStream): boolean;
 
 implementation
-uses FWZipModifier, FWZipReader;
+uses FWZipModifier, FWZipReader, ActiveX, GdiPlus, GdiPlusHelpers;
 
 {$R *.dfm}
 
@@ -74,8 +71,13 @@ begin
        lst.DelimitedText := trim(node.Text);
        setLength(result, lst.Count);
 
+
        for j := 0 to lst.Count - 1 do
-            result[j] := strToFloatEx(lst.Strings[j]);
+       try
+        result[j] := strToFloatEx(lst.Strings[j]);
+       except
+           raise Exception.Create('Ошибка загрузки ответа № ' + intTOStr(j + 1));
+       end;
 
      finally
           lst.free;
@@ -83,50 +85,9 @@ begin
      end;
 end;
 
-function Tdm.doLoadTests: TTEstList;
-var i, cnt: integer;
-    root, node: IXMLNode;
-begin
-     result := nil;
-     if not xmlDoc.Active then exit;
-
-     root := xmlDoc.ChildNodes.FindNode('TESTS');
-
-     cnt := root.ChildNodes.Count;
-     setLength(result, cnt);
-
-     for i := 0 to cnt - 1 do
-     begin
-          node := root.ChildNodes.Get(i);
-          with node.ChildNodes do
-          begin
-              result[i].dir  := FindNode('DIR').Text;
-              result[i].displayLabel := FindNode('DISPLAY_LABEL').Text;
-              result[i].id := strToInt(FindNode('ID').Text);
-              result[i].topicID := strToint(FindNode('TOPIC').Text);
-          end;
-     end;
-end;
-
-function Tdm.loadTests(): TTestList;
-var info: string;
-    s: TStringStream;
-begin
-     result := nil;
-     info := TEST_DIR + '/info.xml';
-     s := TStringStream.Create;
-     try
-          if not FindData(dataFile, info, s) then abort;
-          xmlDoc.LoadFromStream(s);
-          result := doLoadTests();
-     finally
-          s.Free;
-     end;
-end;
-
-function Tdm.doLoadTasks: TModuleList;
+function Tdm.doLoadTopicList: TTopicList;
 var i, j, cnt, scnt: integer;
-    root, node, sections: IXMLNode;
+    root, node, link, link_page, sections: IXMLNode;
 begin
      result := nil;
      if not xmlDoc.Active then exit;
@@ -138,10 +99,12 @@ begin
 
      for i := 0 to cnt - 1 do
      begin
+          result[i] := TTopic.Create;
           node := root.ChildNodes.Get(i);
           result[i].id := strToInt(node.ChildNodes.FindNode('ID').Text);
-          result[i].dir := node.ChildNodes.FindNode('DIR').Text;
-          result[i].display_lable := node.ChildNodes.FindNode('DISPLAY_LABEL').Text;
+          result[i].name := node.ChildNodes.FindNode('DIR').Text;
+          result[i].Caption := node.ChildNodes.FindNode('DISPLAY_LABEL').Text;
+          result[i].section := nil;
 
           sections := node.ChildNodes.FindNode('SECTIONS');
           scnt := sections.ChildNodes.Count;
@@ -150,72 +113,74 @@ begin
           for j := 0 to scnt - 1 do
           begin
                node := sections.ChildNodes.Get(j);
-               result[i].sections[j].dir := node.ChildNodes.FindNode('DIR').Text;
+               result[i].sections[j].name := node.ChildNodes.FindNode('DIR').Text;
                result[i].sections[j].display_lable := node.ChildNodes.FindNode('DISPLAY_LABEL').Text;
                result[i].sections[j].topic_id := strToInt(node.ChildNodes.FindNode('TOPIC_ID').Text);
+               result[i].sections[j].task_count := strToInt(node.ChildNodes.FindNode('TASK_COUNT').Text);
+               result[i].sections[j].pages_count := strToInt(node.ChildNodes.FindNode('PAGES_COUNT').Text);
+               result[i].sections[j].visible := node.ChildNodes.FindNode('VISIBLE').Text = '0';
+               link := node.ChildNodes.FindNode('LINK');
+               link_page := node.ChildNodes.FindNode('LINK_PAGE');
+
+               if assigned(link) and assigned(link_page) then
+               begin
+                    result[i].sections[j].topic_link := strToInt(link.Text);
+                    result[i].sections[j].page_link := strToInt(link_page.Text);
+               end;
+
                result[i].sections[j].points := 0;
           end;
      end;
-
 end;
 
-function Tdm.loadTaskModuleList: TModuleList;
+function Tdm.loadTopicList: TTopicList;
 var info: string;
     s: TStringStream;
 begin
      result := nil;
-     info := TASK_DIR + '/info.xml';
+     info := TOPIC_DIR + '/info.xml';
      s := TStringStream.Create;
      try
         if not FindData(TaskDataFile, info, s) then abort;
         xmlDoc.LoadFromStream(s);
-        result := doLoadTasks();
-
+        result := doLoadTopicList();
      finally
-           s.Free;
+          s.Free;
      end;
 end;
 
-function Tdm.doLoadTopics():TTopicList;
-var i, cnt: integer;
-    root, node: IXMLNode;
+function TDm.LoadPage(const path: string): TBitmap;
+var mem: TMemoryStream;
+    adptr: IStream;
+    graphic: IGPGraphics;
+    source, dest: TGPRectF;
+    gdiBmp: IGPBitmap;
 begin
      result := nil;
-     if not xmlDoc.Active then exit;
+     mem := TMemoryStream.Create;
 
-     root := xmlDoc.ChildNodes.FindNode('TOPICS');
-     if root = nil then exit;
+     try
+        if FindData(dm.DataFile, path, mem) then
+        begin
+          adptr  := TStreamAdapter.Create(mem);
+          gdiBmp := TGPBitmap.Create(adptr);
 
-     cnt := root.ChildNodes.Count;
-     setLength(result, cnt);
+          source.InitializeFromLTRB(0, 0, gdiBmp.Width, gdiBmp.Height);
+          dest.InitializeFromLTRB(0, 0, 900, source.Height);
 
-     for i := 0 to cnt - 1 do
-     begin
-          node := root.ChildNodes.Get(i);
-          with node.ChildNodes do
-          begin
-              result[i].dir  := FindNode('DIR').Text;
-              result[i].displayLabel := FindNode('DISPLAY_LABEL').Text;
-              result[i].id := strToInt(FindNode('ID').Text);
-              result[i].pageCount := strToInt(FindNode('PAGE_CNT').Text);
-          end;
+          streach(source, dest.Width, dest.Height, dest);
+
+          result := TBitMap.Create;
+          result.Width := trunc(dest.Width);
+          result.Height := trunc(dest.Height);
+
+          graphic := TGPGraphics.Create(result.Canvas.Handle);
+          graphic.InterpolationMode := InterpolationModeHighQualityBicubic;
+          graphic.DrawImage(gdiBmp, dest);
+        end;
+     finally
+         mem.Free;
      end;
-end;
-
-function Tdm.loadTopics(): TTopicList;
-var info: string;
-    s: TStringStream;
-begin
-      result := nil;
-      info := TOPIC_DIR + '/info.xml';
-      s := TStringStream.Create;
-      try
-          if not FindData(dataFile, info, s) then abort;
-          xmlDoc.LoadFromStream(s);
-          result := doLoadTopics();
-      finally
-          s.Free;
-      end;
 end;
 
 function Tdm.doLoadUTT: TUTTModulesList;

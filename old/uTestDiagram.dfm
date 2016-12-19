@@ -1,10 +1,11 @@
-object frmTaskDiagram: TfrmTaskDiagram
+object frmTestDiagram: TfrmTestDiagram
   Left = 0
   Top = 0
+  Margins.Top = 20
   Align = alClient
   BorderStyle = bsNone
-  ClientHeight = 338
-  ClientWidth = 651
+  ClientHeight = 359
+  ClientWidth = 680
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -19,12 +20,10 @@ object frmTaskDiagram: TfrmTaskDiagram
   object img: TImage
     Left = 0
     Top = 0
-    Width = 651
-    Height = 338
+    Width = 680
+    Height = 359
     Align = alClient
-    ExplicitLeft = -29
-    ExplicitTop = -21
-    ExplicitWidth = 680
-    ExplicitHeight = 359
+    ExplicitWidth = 2000
+    ExplicitHeight = 2000
   end
 end

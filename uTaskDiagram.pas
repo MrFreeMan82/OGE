@@ -35,6 +35,8 @@ type
 
     tasks: TTasks;
 
+    taskCount: integer;
+
     procedure createTasks();
     procedure createGradCircles();
     procedure createCircle(axisCount: integer);
@@ -143,11 +145,11 @@ procedure TfrmTaskDiagram.createTasks;
 var i, j, k, offset: integer;
     points : array[0..2] of TGPPointF;
 begin
-     setLength(tasks, MODULE_TASK_COUNT);
+     setLength(tasks, TASK_COUNT);
 
      offset := -4;
 
-     for i := 0 to length(frmOGE.TaskTests.ResultMask) -  1 do
+     for i := 0 to taskCount -  1 do
      begin
           if frmOGE.TaskTests.ResultMask[i] = true then
           begin
@@ -197,7 +199,8 @@ end;
 
 procedure TfrmTaskDiagram.initialize;
 begin
-     setLength(tasks, MODULE_TASK_COUNT);
+     taskCount := length(frmOGE.TaskTests.ResultMask);
+     setLength(tasks, taskCount);
      createCircle(length(tasks) div MAX_GRADUATION);
      createGradCircles();
      createTasks();
@@ -264,7 +267,7 @@ begin
     Render();
 end;
 
-procedure TfrmTaskDiagram.showDiagram;
+procedure TfrmTaskDiagram.showDiagram();
 begin
     show;
 end;

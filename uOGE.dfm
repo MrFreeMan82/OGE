@@ -329,6 +329,7 @@ object frmOGE: TfrmOGE
     Align = alClient
     MultiLine = True
     TabOrder = 0
+    OnChange = pgPagesChange
     object tabInfo: TTabSheet
       Caption = #1048#1085#1092#1086#1088#1084#1072#1094#1080#1103
       ExplicitLeft = 0
@@ -357,10 +358,18 @@ object frmOGE: TfrmOGE
     object tabThemes: TTabSheet
       Caption = #1056#1072#1079#1076#1077#1083#1099
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
     object tabTasks: TTabSheet
       Caption = #1047#1072#1076#1072#1085#1080#1103' '#1076#1083#1103' '#1089#1072#1084#1086#1089#1090#1086#1103#1090#1077#1083#1100#1085#1086#1075#1086' '#1074#1099#1087#1086#1083#1085#1077#1085#1080#1103
       ImageIndex = 4
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
     object TabSheet1: TTabSheet
       Caption = #1057#1086#1074#1084#1077#1089#1090#1085#1072#1103' '#1088#1072#1073#1086#1090#1072
@@ -379,10 +388,18 @@ object frmOGE: TfrmOGE
       Enabled = False
       ImageIndex = 4
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
     object tabPlan: TTabSheet
       Caption = #1055#1083#1072#1085' '#1088#1072#1073#1086#1090
       ImageIndex = 6
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
   end
 end

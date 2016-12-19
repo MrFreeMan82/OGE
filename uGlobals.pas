@@ -10,20 +10,18 @@ const
       VARIANT_COUNT = 10;
       TASK_COUNT = 10;
       UTT_TASK_COUNT = 26;
-      MODULE_TASK_COUNT = 120;
 
 const CALC_POINTS_FROM_V = 6;
 
 const TOPIC_DIR = 'Topics';
-      TEST_DIR = 'Tests';
       UTT_DIR = 'UTT';
-      TASK_DIR = 'Task';
 
 type
   TaxisAngle = double;
 
   TMode = (mNormal, mReTest);
 
+  PResultMask = ^TResultMask;
   TResultMask = array of boolean;
 
   TAnswears = array of double;
@@ -32,6 +30,8 @@ type
       p1, p2: TGPPointF;
       len: double;
   end;
+
+procedure Streach(source: TGPRectF; destWidth, destHeight: single; out dest: TGPrectF);
 
 function HexToColor(sColor: string): TGPColor;
 function strToFloatEx(s: string): double;
@@ -46,12 +46,33 @@ function rotatePoint(angle:double; center, p: TGPpointF): TGPPointF;
 function rotateLine(angle: double; line: Tline; center: TGPPointF): Tline;
 procedure measureDisplayStringWidthAndHeight(Graphic: IGPGraphics; Font:IGPFont; text: string; var width, height: double);
 
+
 implementation
 uses SysUtils, math, Forms;
 
 function exePath: string;
 begin
      result := ExtractFilePath(Application.ExeName);
+end;
+
+procedure Streach(source: TGPRectF; destWidth, destHeight: single; out dest: TGPrectF);
+const e = 0.0001;
+var x_ratio, y_ratio, ratio, w_or, h_or, w, h: single;
+    use_x_ratio: boolean;
+begin
+     w := DestWidth;
+     h := DestHeight ;
+     w_or := source.Width;
+     h_or := source.Height;
+
+     x_ratio := w / w_or;
+     y_ratio := h / h_or;
+
+     if x_ratio < (y_ratio - e) then ratio := x_ratio else ratio := y_ratio;
+
+     use_x_ratio := abs(x_ratio - e) < ratio;
+     if use_x_ratio then dest.Width := w else dest.Width := trunc(w_or * ratio);
+     if not use_x_ratio then dest.Height := h  else dest.Height := trunc(h_or * ratio);
 end;
 
 function HexToColor(sColor: string): TGPColor;

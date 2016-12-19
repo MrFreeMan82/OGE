@@ -63,6 +63,7 @@ type
 
 implementation
 uses uOGE, uTestResult, ActiveX, uData;
+
 {$R *.dfm}
 
 { TfrmUTT }
@@ -189,7 +190,12 @@ begin
 
   // mr := TfrmTestResult.showUTTResults;
     case mr of
-      mrYes: mode := mNormal;
+      mrYes:
+          begin
+               mode := mNormal;
+               if messageBox(handle, 'Хотите сбросить результаты?',
+                    'ОГЕ', MB_YESNO or MB_ICONQUESTION) = mrYes then clearUserResults;
+          end;
       mrNo:
         begin
           // Перейдем в режим прохода теста заново

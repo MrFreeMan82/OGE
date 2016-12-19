@@ -3,8 +3,8 @@ object frmTopics: TfrmTopics
   Top = 0
   Align = alClient
   BorderStyle = bsNone
-  ClientHeight = 281
-  ClientWidth = 491
+  ClientHeight = 370
+  ClientWidth = 672
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,32 +14,32 @@ object frmTopics: TfrmTopics
   OldCreateOrder = False
   OnDestroy = FormDestroy
   OnMouseWheel = FormMouseWheel
-  OnResize = FormResize
   PixelsPerInch = 96
   TextHeight = 16
   object Splitter1: TSplitter
-    Left = 201
+    Left = 257
     Top = 0
     Width = 5
-    Height = 281
+    Height = 370
     Color = clGray
     ParentColor = False
     ExplicitLeft = 169
+    ExplicitHeight = 281
   end
   object pnlLinks: TPanel
     Left = 0
     Top = 0
-    Width = 201
-    Height = 281
+    Width = 257
+    Height = 370
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 0
     DesignSize = (
-      201
-      281)
+      257
+      370)
     object lkUTT: TLinkLabel
       Left = 1
-      Top = 255
+      Top = 344
       Width = 185
       Height = 20
       Anchors = [akLeft, akBottom]
@@ -52,21 +52,25 @@ object frmTopics: TfrmTopics
       ParentFont = False
       TabOrder = 0
       Visible = False
+      ExplicitTop = 255
     end
   end
   object pnlTopic: TPanel
-    Left = 206
+    Left = 262
     Top = 0
-    Width = 285
-    Height = 281
+    Width = 410
+    Height = 370
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitLeft = 206
+    ExplicitWidth = 285
+    ExplicitHeight = 281
     object ScrollBox: TScrollBox
       Left = 0
       Top = 26
-      Width = 285
-      Height = 255
+      Width = 410
+      Height = 344
       Margins.Left = 20
       VertScrollBar.Increment = 2
       Align = alClient
@@ -78,26 +82,29 @@ object frmTopics: TfrmTopics
       DoubleBuffered = True
       ParentDoubleBuffered = False
       TabOrder = 0
+      ExplicitWidth = 285
+      ExplicitHeight = 255
       object img: TImage
         Left = 3
         Top = 3
-        Width = 230
-        Height = 230
+        Width = 430
+        Height = 294
         Align = alCustom
       end
     end
     object Panel4: TPanel
       Left = 0
       Top = 0
-      Width = 285
+      Width = 410
       Height = 26
       Align = alTop
       BevelOuter = bvNone
       DoubleBuffered = True
       ParentDoubleBuffered = False
       TabOrder = 1
+      ExplicitWidth = 285
       object btPrevPage: TSpeedButton
-        Left = 205
+        Left = 330
         Top = 0
         Width = 40
         Height = 26
@@ -133,7 +140,7 @@ object frmTopics: TfrmTopics
         ExplicitLeft = 211
       end
       object btNextPage: TSpeedButton
-        Left = 245
+        Left = 370
         Top = 0
         Width = 40
         Height = 26

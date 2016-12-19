@@ -4,27 +4,9 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, ExtCtrls, uGlobals;
+  Dialogs, StdCtrls, Buttons, ExtCtrls, uGlobals, uTopicModel;
 
 type
-  TSection = record
-    topic_id: integer;
-    dir: string;
-    display_lable: string;
-    points: double;
-  end;
-
-  TSectionList = array of TSection;
-
-  TModule = record
-      id: integer;
-      dir: string;
-      display_lable: string;
-      sections: TSectionList;
-  end;
-
-  TModuleList = array of TModule;
-
   TfrmTasks = class(TForm)
     pnlLinks: TPanel;
     Splitter1: TSplitter;
@@ -50,27 +32,23 @@ type
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure btHelpClick(Sender: TObject);
   private
-    mode: Tmode;
-    fModule, fSection, fTask: integer;
-    fmoduleList: TModuleList;
-    answears: TAnswears;
-    taskResultMask: TResultMask;
+    mTask: TTopic;
     links: array of TLinkLabel;
     procedure createLinks();
     procedure AllTaskCompleate;
-    procedure loadTask(aCurrentModule, aCurrentSection, atask: integer);
+    procedure viewTask(aTopic: TTopic);
+    function gettaskResultMask: TResultMask;
     { Private declarations }
   public
     { Public declarations }
-    property ModuleList : TModuleList read fModuleList;
-    property ResultMask: TResultMask read taskResultMask;
+    property ResultMask: TResultMask read gettaskResultMask;
     procedure clearUserResults;
     procedure ShowTasks();
   end;
 
 implementation
 
-uses uData, ActiveX, GdiPlus, GdiPlusHelpers, strUtils, uTestResult, uOGE;
+uses uData, uTestResult, uOGE;
 
 {$R *.dfm}
 
@@ -78,7 +56,6 @@ uses uData, ActiveX, GdiPlus, GdiPlusHelpers, strUtils, uTestResult, uOGE;
 
 procedure TfrmTasks.AllTaskCompleate;
 begin
-     mode := mNormal;   // All tasks complete
      if messageBox(handle, PWideChar(
           'Поздравляем! Все задания решены, Показать результаты?'),
                         'ОГЕ', MB_YESNO or MB_ICONINFORMATION) = mrYes then
@@ -90,36 +67,35 @@ end;
 procedure TfrmTasks.btAnswearClick(Sender: TObject);
 var usrAnswear: double;
     TrueAnswear: boolean;
+    task: integer;
 begin
-     if (answears = nil) or
-              not (fTask in [1..MODULE_TASK_COUNT]) or
-                    (trim(txtAnswer.Text) = '') then exit;
+     if trim(txtAnswer.Text) = '' then exit;
 
+    task := mTask.CurrentTask;
     usrAnswear := strToFloatEx(trim(txtAnswer.Text));
 
-    trueAnswear := abs(usrAnswear - self.answears[fTask - 1]) < e;
+    trueAnswear := mTask.isTrueAnswear(usrAnswear);
 
     if trueAnswear then
     begin
-         if taskResultMask[fTask - 1] = false then
+         if mTask.ResultMaskValue[task - 1] = false then
          begin
-              moduleList[fModule - 1].sections[fSection - 1].points :=
-                  moduleList[fModule - 1].sections[fSection - 1].points + 1;
+              mTask.section.points := mTask.section.points + 1;
 
-              taskResultMask[fTask - 1] := true;
+              mTask.ResultMaskValue[task - 1] := true;
          end
          else begin
                 messageBox(self.Handle,
                    'Верно! Баллы за это задание уже были засчитаны.',
                                        'ОГЕ', MB_OK or MB_ICONINFORMATION);
          end;
-         if fTask = MODULE_TASK_COUNT then
+         if task = mTask.section.task_count then
          begin
-             if getNextFalseTask(fTask,
-                  taskResultMask, true) =
-                      ALL_TASK_COMPLETE then
-                            AllTaskCompleate()
-                                else btResultsClick(self)
+             if mTask.
+                  allTaskComplete()
+                       then AllTaskCompleate()
+                            else btResultsClick(self);
+
          end
          else btNextTaskClick(Sender);
     end
@@ -131,41 +107,19 @@ end;
 
 procedure TfrmTasks.btHelpClick(Sender: TObject);
 begin
-    frmOGE.Topics.HelpWithTopic(
-      moduleList[fModule - 1].sections[fSection - 1].topic_id, self);
+    frmOGE.Topics.HelpWithTopic(mTask.section.topic_id, self);
 end;
 
 procedure TfrmTasks.btNextTaskClick(Sender: TObject);
 begin
-    if mode = mReTest then
-    begin
-       fTask := getNextFalseTask(fTask, taskResultMask);
-       if fTask = ALL_TASK_COMPLETE then
-       begin
-            AllTaskCompleate();
-            exit;
-       end;
-    end
-    else inc(fTask);
-
-    if fTask > MODULE_TASK_COUNT then fTask := MODULE_TASK_COUNT;
-    loadTask(fModule, fSection, fTask);
+    mTask.NextTask;
+    viewTask(mTask);
 end;
 
 procedure TfrmTasks.btPrevTaskClick(Sender: TObject);
 begin
-    if mode = mRetest then
-    begin
-         fTask := getPrevFalseTask(fTask, taskResultMask);
-         if fTask = ALL_TASK_COMPLETE then
-         begin
-              AllTaskCompleate();
-              exit
-         end;
-    end
-    else dec(fTask);
-    if fTask < 1 then fTask := 1;
-    loadTask(fModule, fSection, fTask);
+    mTask.PrevTask;
+    viewTask(mTask);
 end;
 
 procedure TfrmTasks.btResultsClick(Sender: TObject);
@@ -173,32 +127,19 @@ var mr: TModalResult;
 begin
     mr := TfrmTestResult.showTaskResults;
     case mr of
-      mrYes: mode := mNormal;
+      mrYes: mTask.mode := mNormal;
       mrNo:
         begin
           // Перейдем в режим прохода теста заново
           // Найдем первый не пройденый тест
-              mode := mReTest;
-              ftask := getNextFalseTask(fTask, taskResultMask, true);
-
-              if fTask = ALL_TASK_COMPLETE then
-              begin
-                  mode := mNormal;   // All tasks complete
-                  exit
-              end;
-              loadTask(fModule, fSection, fTask);
+              mTask.mode := mReTest;
+              mTask.NextTask;
+              viewTask(mTask);
         end;
     end;
 end;
 
-procedure TfrmTasks.loadTask(aCurrentModule, aCurrentSection, atask: integer);
-var fileName, answearName: string;
-    mem: TMemoryStream;
-    adptr: IStream;
-    gdiBmp: IGPBitmap;
-    graphic: IGPGraphics;
-    bmp: TBitmap;
-    rect: TGPRectF;
+procedure TfrmTasks.viewTask(aTopic: TTopic);
 begin
      img.Canvas.Brush.Color:=ClWhite;
      img.Canvas.FillRect(img.Canvas.ClipRect);
@@ -206,59 +147,27 @@ begin
      ScrollBox.HorzScrollBar.Range := 0;
      ScrollBox.VertScrollBar.Range := 0;
 
-     filename := format('%s/%s/%s/%d.jpg',
-      [TASK_DIR, moduleList[aCurrentModule - 1].dir,
-            moduleList[aCurrentModule - 1].sections[aCurrentSection - 1].dir, aTask]);
-
-     mem := TMemoryStream.Create;
-     bmp := TBitMap.Create;
-
-     try
-         if not FindData(dm.TaskDataFile, fileName, mem) then
-         begin
-              messageBox(self.Handle,
-                  'По данному варианту тесты не загружены',
-                               'Ошибка', MB_OK or MB_ICONERROR);
-              abort;
-         end;
-
-         adptr  := TStreamAdapter.Create(mem);
-         gdiBmp := TGPBitmap.Create(adptr);
-
-         rect.InitializeFromLTRB(0, 0, gdiBMP.Width, gdiBmp.Height);
-
-         bmp.Width := trunc(rect.Width);
-         bmp.Height := trunc(rect.Height);
-
-         graphic := TGPGraphics.Create(bmp.Canvas.Handle);
-         graphic.InterpolationMode := InterpolationModeHighQualityBicubic;
-         graphic.DrawImage(gdiBmp, rect);
-
-         img.SetBounds(0, 0, bmp.Width, bmp.Height);
-         img.Picture.Assign(bmp);
-
-         ScrollBox.HorzScrollBar.Range := img.Picture.Width;
-         ScrollBox.VertScrollBar.Range := img.Picture.Height;
-     finally
-          mem.Free;
-          bmp.Free;
-     end;
-
-     if answears = nil then
+     if aTopic.task = nil then
      begin
-        answearName := format('%s/%s/%s/answ.xml',
-           [TASK_DIR, moduleList[aCurrentModule - 1].dir,
-                moduleList[aCurrentModule - 1].sections[aCurrentSection - 1].dir]);
-
-        answears := dm.loadAnswears(dm.TaskDataFile, answearName, 1);
+          messageBox(self.Handle,
+              'По данному разделу тесты не загружены',
+                           'Ошибка', MB_OK or MB_ICONERROR);
+          abort;
      end;
+
+     with aTopic do
+     begin
+         img.SetBounds(0, 0, task.Width, task.Height);
+         img.Picture.Assign(task);
+     end;
+
+     ScrollBox.HorzScrollBar.Range := img.Picture.Width;
+     ScrollBox.VertScrollBar.Range := img.Picture.Height;
 end;
 
 procedure TfrmTasks.ShowTasks;
 begin
-    mode := mNormal;
-    fmoduleList := dm.loadTaskModuleList();
-    if (moduleList = nil) then
+    if (topic_model_list = nil) then
     begin
       messageBox(self.Handle, 'Не удалось загузить тесты', 'Ошибка', MB_OK or MB_ICONERROR);
       abort;
@@ -268,29 +177,21 @@ begin
     show;
 end;
 
-procedure TfrmTasks.clearUserResults;
-var i,j: integer;
-begin
-     for i := 0 to length(taskResultMask) - 1 do taskResultMask[i] := false;
-
-     for i := 0 to length(moduleList) - 1 do
-          for j := 0 to length(moduleList[i].sections) - 1 do
-                            moduleList[i].sections[j].points := 0;
-end;
-
 procedure TfrmTasks.linkClick(Sender: TObject);
-var s: string;
 begin
     if not (Sender is TLinkLabel) then exit;
-    with TLinkLabel(Sender) do
-    begin
-        fModule := Tag + 1;
-        s := rightStr(Name, length(Name) - pos('_', Name));
-        fSection := strToInt(s) + 1;
-        fTask := 1;
-    end;
-    setLength(taskResultMask, MODULE_TASK_COUNT);
-    loadTask(fModule, fSection, fTask);
+
+    mTask := topic_model_list[TLinkLabel(Sender).Tag];
+    mTask.OnAllTaskComplete := AllTaskCompleate;
+    mTask.section := mTask.sectionByName(TLinkLabel(Sender).Name);
+    mTask.FirstTask;
+    viewTask(mTask);
+    mTask.loadAnswears();
+end;
+
+procedure TfrmTasks.clearUserResults;
+begin
+    mTask.clearResults;
 end;
 
 procedure TfrmTasks.createLinks;
@@ -303,12 +204,12 @@ begin
      ld := 10;
 
      cnt := 0;
-     for i := 0 to length(moduleList) - 1 do
-          cnt := cnt + length(moduleList[i].sections) + 1;
+     for i := 0 to length(topic_model_list) - 1 do
+          cnt := cnt + length(topic_model_list[i].sections) + 1;
 
      setLength(links, cnt);
 
-     for i := 0 to length(moduleList) - 1 do
+     for i := 0 to length(topic_model_list) - 1 do
      begin
           inc(k);
 
@@ -317,22 +218,22 @@ begin
           links[k].OnClick := nil;
           links[k].Left := l;
           links[k].Top := t;
-          links[k].Caption := '<a href="#">' + moduleList[i].display_lable + '</a>';
+          links[k].Caption := '<a href="#">' + topic_model_list[i].Caption + '</a>';
 
           t := t + links[k].Height + td;
 
-          for j := 0 to length(moduleList[i].sections) - 1 do
+          for j := 0 to length(topic_model_list[i].sections) - 1 do
           begin
               inc(k);
 
               links[k] := TLinkLabel.Create(pnlLinks);
-              links[k].Name := format('%s%d%s_%d', ['module', i, 'sec', j]);
+              links[k].Name := topic_model_list[i].sections[j].name;
               links[k].Parent := pnlLinks;
               links[k].OnClick := linkClick;
               links[k].Left := l + ld;
               links[k].Top := t;
               links[k].Tag := i;
-              links[k].Caption := '<a href="#">' + moduleList[i].sections[j].display_lable + '</a>';
+              links[k].Caption := '<a href="#">' + topic_model_list[i].sections[j].display_lable + '</a>';
 
               t := t + links[k].Height + td;
           end;
@@ -360,6 +261,11 @@ begin
         then position := position + increment
         else if (position > 0) then position := position - increment
     end;
+end;
+
+function TfrmTasks.gettaskResultMask: TResultMask;
+begin
+    result := mtask.ResultMask;
 end;
 
 end.

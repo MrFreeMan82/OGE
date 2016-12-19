@@ -4,17 +4,9 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, Buttons, ExtCtrls;
+  Dialogs, Buttons, ExtCtrls, uTopicModel;
 
 type
-  TTopicInfo = record
-      id: integer;
-      pageCount: integer;
-      dir: string;
-      displayLabel: string;
-  end;
-
-  TTopicList = array of TTopicInfo;
 
   TfrmTopics = class(TForm)
     pnlLinks: TPanel;
@@ -27,250 +19,141 @@ type
     btNextPage: TSpeedButton;
     Splitter1: TSplitter;
     btTest: TSpeedButton;
-    procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
-      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
-    procedure FormDestroy(Sender: TObject);
     procedure linkClick(Sender: TObject);
     procedure btNextPageClick(Sender: TObject);
     procedure btPrevPageClick(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure btTestClick(Sender: TObject);
-    procedure FormResize(Sender: TObject);
   private
     { Private declarations }
-    topics: TTopicList;
-    page:integer;
+    fTopic: TTopic;
+    needer: TObject;
     links: array of TLinkLabel;
-    fCurrentTopic: TTopicInfo;
-
-    indigent: TObject;
-
-    procedure clear;
-    procedure createTopicLinks();
-   // procedure loadPage(pageNo, topicNo: integer);overload;
-    procedure loadPage(pageNo: integer);
-    function isSetCurrentTopic(raiseException: boolean = true): boolean;
-    function getItem(topicID: integer): TTopicInfo;
+    procedure createLinks();
+    procedure viewTopic();
   public
     { Public declarations }
-    procedure HelpWithTopic(topic_id: integer; Sender: TObject);
     procedure showTopics();
-    property TopicList: TTopicList read topics;
-    property Item[topicID: integer]: TTopicInfo read getItem;
+    procedure HelpWithTopic(topic_id: integer; Sender: TObject);
   end;
 
 implementation
-uses uGlobals, uOGE, GdiPlus, GdiPlusHelpers, ActiveX, uData, uTests, uTasks;
+uses uGlobals, uOGE;
 
 {$R *.dfm}
 
-{ TfrmTheme }
 
-function TfrmTopics.isSetCurrentTopic(raiseException: boolean = true): boolean;
-begin
-     if fCurrentTopic.id < 0 then
-     begin
-        if raiseException then
-        begin
-            messageBox(self.Handle, 'Выберите тему!', 'Ошибка', MB_OK or MB_ICONERROR);
-            abort
-        end
-        else
-           exit(false);
-     end;
-     result := true;
-end;
-
-procedure TfrmTopics.showTopics;
-begin
-    page := 1;
-    fcurrentTopic.id := -1;
-    topics := dm.loadTopics();
-    if topics = nil then
-    begin
-        messageBox(self.Handle, 'Не удалось загузить темы', 'Ошибка', MB_OK or MB_ICONERROR);
-        abort;
-    end;
-    createTopicLinks();
-    show;
-end;
+{ TfrmTopics }
 
 procedure TfrmTopics.btNextPageClick(Sender: TObject);
 begin
-    isSetCurrentTopic();
-
-    inc(page);
-    if page > fcurrentTopic.pageCount then
-    begin
-       page := fcurrentTopic.pageCount;
-       exit;
-    end;
-
-    loadPage(page);
+   fTopic.NextPage;
+   viewTopic();
 end;
 
 procedure TfrmTopics.btPrevPageClick(Sender: TObject);
 begin
-     isSetCurrentTopic();
-
-     dec(page);
-     if page < 1 then
-     begin
-         page := 1;
-         exit;
-     end;
-
-     loadPage(page);
+    fTopic.PrevPage;
+    viewTopic();
 end;
 
 procedure TfrmTopics.btTestClick(Sender: TObject);
 begin
-     btTest.Visible := false;
-     if (indigent = nil) then exit;
-
-     if (indigent is TfrmTasks) then
-     begin
-        frmOGE.pgPages.ActivePage := frmOGE.tabTasks;
-     end;
-{     isSetCurrentTopic;
-
-     test := getTestByTopic(fcurrentTopic.id, frmOGE.Tests.Tests);
-     if test = nil then
-     begin
-          messageBox(self.Handle, 'По данной теме тестов нет', 'Ошибка', MB_OK or MB_ICONERROR);
-          abort;
-     end;
-
-     frmOGE.Tests.setNewTopic(fcurrentTopic.id);
-     frmOGE.Tests.SelectVariant(1);
-
-     frmOGE.pgPages.ActivePage := frmOGE.tabTests; }
+    btTest.Visible := false;
+    frmOGE.pgPages.ActivePage := frmOGE.tabTasks;
 end;
 
-procedure TfrmTopics.clear;
+procedure TfrmTopics.viewTopic;
+var marginLeft: integer;
 begin
+    if  fTopic.content = nil then
+    begin
+       messageBox(handle, 'Раздел не загружен.', 'ОГЕ', MB_OK or MB_ICONERROR);
+       exit;
+    end;
+
     img.Canvas.Brush.Color:=ClWhite;
     img.Canvas.FillRect(img.Canvas.ClipRect);
-    //fcurrentTopic.id := -1;
+
     ScrollBox.HorzScrollBar.Range := 0;
-    ScrollBox.VertScrollBar.Range := 0
-end;
+    ScrollBox.VertScrollBar.Range := 0;
 
-procedure TfrmTopics.createTopicLinks;
-var i, l, t, m: integer;
-begin
-     l := 3;
-     t := 5;
-     m := 10;
+    marginLeft := (ScrollBox.ClientWidth - fTopic.content.Width) div 2;
+    if marginLeft < 0 then marginLeft := 0;
+    img.SetBounds(marginLeft, 5, fTopic.content.Width, fTopic.content.Height);
+    img.Picture.Bitmap.Assign(fTopic.content);
 
-     setLength(links, length(topics));
-
-     for i := 0 to length(links) - 1 do
-     begin
-          links[i] := TLinkLabel.Create(pnlLinks);
-          links[i].Parent := pnlLinks;
-          links[i].OnClick := linkClick;
-          links[i].Left := l;
-          links[i].Top := t;
-          links[i].Tag := i;
-          links[i].Caption := '<a href="#">' + topics[i].displayLabel + '</a>';
-
-          t := t + links[i].Height + m;
-     end;
+    ScrollBox.HorzScrollBar.Range := img.Picture.Width;
+    ScrollBox.VertScrollBar.Range := img.Picture.Height;
 end;
 
 procedure TfrmTopics.linkClick(Sender: TObject);
 begin
     if not (Sender is TLinkLabel) then exit;
 
-    page := 1;
-    fcurrentTopic := topics[TLinkLabel(Sender).Tag];
-    loadPage(page);
+    fTopic := topic_model_list[TLinkLabel(Sender).Tag];
+    fTopic.section := fTopic.sectionByName(TLinkLabel(Sender).Name);
+    fTopic.FirstPage;
+    viewTopic();
 end;
 
-procedure Streach(source: TGPRectF; destWidth, destHeight: single; out dest: TGPrectF);
-const e = 0.0001;
-var x_ratio, y_ratio, ratio, w_or, h_or, w, h: single;
-    use_x_ratio: boolean;
+procedure TfrmTopics.showTopics;
 begin
-     w := DestWidth;
-     h := DestHeight ;
-     w_or := source.Width;
-     h_or := source.Height;
+    loadTopicList();
+    if topic_model_list = nil then
+    begin
+        messageBox(self.Handle, 'Не удалось загузить раздел', 'Ошибка', MB_OK or MB_ICONERROR);
+        abort;
+    end;
 
-     x_ratio := w / w_or;
-     y_ratio := h / h_or;
-
-     if x_ratio < (y_ratio - e) then ratio := x_ratio else ratio := y_ratio;
-
-     use_x_ratio := abs(x_ratio - e) < ratio;
-     if use_x_ratio then dest.Width := w else dest.Width := trunc(w_or * ratio);
-     if not use_x_ratio then dest.Height := h  else dest.Height := trunc(h_or * ratio);
+    createLinks;
+    show;
 end;
 
-procedure TfrmTopics.loadPage(pageNo: integer);
-var fileName: string;
-    mem: TMemoryStream;
-    marginLeft: integer;
-    adptr: IStream;
-    graphic: IGPGraphics;
-    source, dest: TGPRectF;
-    gdiBmp: IGPBitmap;
-    bmp: TBitmap;
+procedure TfrmTopics.createLinks;
+var i, j, k, l, t, td, ld, cnt: integer;
 begin
-     clear;
-     isSetCurrentTopic();
+     k := -1;
+     l := 2;
+     t := 2;
+     td := 10;
+     ld := 10;
 
-     fileName := format('%s/%s/%d.jpg',
-        [TOPIC_DIR, fcurrentTopic.dir, pageNo]);
+     cnt := 0;
+     for i := 0 to length(topic_model_list) - 1 do
+          cnt := cnt + length(topic_model_list[i].sections) + 1;
 
-     mem := TMemoryStream.Create;
-     bmp := TBitMap.Create;
-     try
-        if not FindData(dm.DataFile, fileName, mem) then abort;
+     setLength(links, cnt);
 
-        adptr  := TStreamAdapter.Create(mem);
-        gdiBmp := TGPBitmap.Create(adptr);
-       // gdBmp.GetPixel(gdBmp.Width - 1, gdBmp.Height - 1);
-
-        source.InitializeFromLTRB(0, 0, gdiBmp.Width, gdiBmp.Height);
-        dest.InitializeFromLTRB(0, 0, 900, source.Height);
-
-        streach(source, dest.Width, dest.Height, dest);
-
-        bmp.Width := trunc(dest.Width);
-        bmp.Height := trunc(dest.Height);
-        
-        graphic := TGPGraphics.Create(bmp.Canvas.Handle);
-        graphic.InterpolationMode := InterpolationModeHighQualityBicubic;
-        graphic.DrawImage(gdiBmp, dest);
-
-        marginLeft := (ScrollBox.ClientWidth - bmp.Width) div 2;
-        if marginLeft < 0 then marginLeft := 0;
-        img.SetBounds(marginLeft, 5, bmp.Width, bmp.Height);
-        img.Picture.Bitmap.Assign(bmp);
-        
-        ScrollBox.HorzScrollBar.Range := img.Picture.Width;
-        ScrollBox.VertScrollBar.Range := img.Picture.Height;        
-     finally
-       bmp.Free;
-       mem.Free;
-     end;
-end;
-
-procedure TfrmTopics.HelpWithTopic(topic_id: integer; Sender: TObject);
-var i: integer;
-begin
-     for i := 0 to length(self.topics) - 1 do
+     for i := 0 to length(topic_model_list) - 1 do
      begin
-          if(topics[i].id = topic_id) then
+          inc(k);
+
+          links[k] := TLinkLabel.Create(pnlLinks);
+          links[k].Parent := pnlLinks;
+          links[k].OnClick := nil;
+          links[k].Left := l;
+          links[k].Top := t;
+          links[k].Caption := '<a href="#">' + topic_model_list[i].Caption + '</a>';
+
+          t := t + links[k].Height + td;
+
+          for j := 0 to length(topic_model_list[i].sections) - 1 do
           begin
-                page := 1;
-                fCurrentTopic := topics[i];
-                if not btTest.Visible then btTest.Visible := true;
-                loadPage(page);
-                indigent := sender;
-                frmOGE.pgPages.ActivePage := frmOGE.tabThemes;
-                exit;
+              inc(k);
+
+              links[k] := TLinkLabel.Create(pnlLinks);
+              links[k].Name := topic_model_list[i].sections[j].name;
+              links[k].Parent := pnlLinks;
+              links[k].OnClick := linkClick;
+              links[k].Left := l + ld;
+              links[k].Top := t;
+              links[k].Tag := i;
+              links[k].Caption := '<a href="#">' + topic_model_list[i].sections[j].display_lable + '</a>';
+
+              t := t + links[k].Height + td;
           end;
      end;
 end;
@@ -278,7 +161,8 @@ end;
 procedure TfrmTopics.FormDestroy(Sender: TObject);
 var i: integer;
 begin
-     for i := 0 to length(links) - 1 do freeAndNil(links[i]);
+    for i := 0 to length(links) - 1 do freeAndNil(links[i]);
+    freeTopicList();
 end;
 
 procedure TfrmTopics.FormMouseWheel(Sender: TObject; Shift: TShiftState;
@@ -292,17 +176,24 @@ begin
     end;
 end;
 
-procedure TfrmTopics.FormResize(Sender: TObject);
+procedure TfrmTopics.HelpWithTopic(topic_id: integer; Sender: TObject);
+var i, j : integer;
 begin
-  if isSetCurrentTopic(false) then loadPage(page)
-end;
-
-function TfrmTopics.getItem(topicID: integer): TTopicInfo;
-var i: integer;
-
-begin
-    for i := 0 to length(self.topics) - 1 do
-        if topics[i].id = topicID then exit(topics[i]);
+     for i := 0 to length(topic_model_list) - 1 do
+     begin
+        for j := 0 to length(topic_model_list[i].sections) - 1 do
+        begin
+            if topic_model_list[i].sections[j].topic_id = topic_id then
+            begin
+                btTest.Visible := true;
+                needer := sender;
+                fTopic := topic_model_list[i];
+                fTopic.FirstPage;
+                viewTopic();
+                frmOGE.pgPages.ActivePage := frmOGE.tabThemes;
+            end;
+        end;
+     end;
 end;
 
 end.

@@ -6,16 +6,15 @@ uses
   Forms,
   uOGE in 'uOGE.pas' {frmOGE},
   uData in 'uData.pas' {dm: TDataModule},
-  uTests in 'uTests.pas' {frmTests},
   uTheme in 'uTheme.pas' {frmTopics},
   uTestResult in 'uTestResult.pas' {frmTestResult},
   uUTT in 'uUTT.pas' {frmUTT},
-  uTestDiagram in 'uTestDiagram.pas' {frmTestDiagram},
   uUTTDiagram in 'uUTTDiagram.pas' {frmUTTDiagram},
   uGlobals in 'uGlobals.pas',
   uTasks in 'uTasks.pas' {frmTasks},
   uTaskDiagram in 'uTaskDiagram.pas' {frmTaskDiagram},
-  uWorkPlan in 'uWorkPlan.pas' {frmWorkPlan};
+  uWorkPlan in 'uWorkPlan.pas' {frmWorkPlan},
+  uTopicModel in 'uTopicModel.pas';
 
 {$R *.res}
 

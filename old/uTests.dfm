@@ -1,27 +1,24 @@
-object frmUTT: TfrmUTT
+object frmTests: TfrmTests
   Left = 0
   Top = 0
   Align = alClient
   BorderStyle = bsNone
-  Caption = #1059#1095#1077#1073#1085#1086' '#1090#1088#1077#1085#1080#1088#1086#1074#1086#1095#1085#1099#1077' '#1090#1077#1089#1090#1099
-  ClientHeight = 452
-  ClientWidth = 779
+  ClientHeight = 277
+  ClientWidth = 657
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
-  Font.Height = -13
+  Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
   OnMouseWheel = FormMouseWheel
-  ExplicitWidth = 320
-  ExplicitHeight = 240
   PixelsPerInch = 96
-  TextHeight = 16
-  object Panel3: TPanel
+  TextHeight = 13
+  object Panel1: TPanel
     Left = 0
-    Top = 423
-    Width = 779
+    Top = 248
+    Width = 657
     Height = 29
     Align = alBottom
     BevelOuter = bvNone
@@ -29,13 +26,13 @@ object frmUTT: TfrmUTT
     ShowHint = True
     TabOrder = 0
     DesignSize = (
-      779
+      657
       29)
-    object Label2: TLabel
+    object Label1: TLabel
       Left = 5
       Top = 8
-      Width = 40
-      Height = 16
+      Width = 36
+      Height = 13
       Anchors = [akLeft, akBottom]
       Caption = #1054#1090#1074#1077#1090':'
     end
@@ -111,13 +108,32 @@ object frmUTT: TfrmUTT
         DFF4E389D395B4DCB7BCE0BAB9E1B5CEEACBA4CEA695C99AF3DAC4E3AB7CF6E6
         D8FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF9FDFABDE7C492D49C6CC37965
         BD7180C689ACD7B0FEFEFDFEFCF9FFFFFFFFFFFFFFFFFFFFFFFF}
+      Visible = False
       OnClick = btResultsClick
     end
+    object txtAnswer: TEdit
+      Left = 42
+      Top = 5
+      Width = 183
+      Height = 21
+      Anchors = [akLeft, akBottom]
+      TabOrder = 0
+      OnKeyDown = txtAnswerKeyDown
+    end
+  end
+  object Panel3: TPanel
+    Left = 0
+    Top = 0
+    Width = 657
+    Height = 35
+    Align = alTop
+    BevelOuter = bvNone
+    TabOrder = 1
     object btPrevTask: TSpeedButton
-      Left = 699
+      Left = 577
       Top = 0
       Width = 40
-      Height = 29
+      Height = 35
       Hint = #1053#1072#1079#1072#1076
       Align = alRight
       Glyph.Data = {
@@ -148,14 +164,14 @@ object frmUTT: TfrmUTT
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
       OnClick = btPrevTaskClick
-      ExplicitLeft = 651
+      ExplicitLeft = 596
       ExplicitTop = 6
     end
     object btNextTask: TSpeedButton
-      Left = 739
+      Left = 617
       Top = 0
       Width = 40
-      Height = 29
+      Height = 35
       Hint = #1042#1087#1077#1088#1077#1076
       Align = alRight
       Glyph.Data = {
@@ -186,24 +202,47 @@ object frmUTT: TfrmUTT
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
       OnClick = btNextTaskClick
-      ExplicitLeft = 717
-      ExplicitHeight = 41
+      ExplicitLeft = 507
+      ExplicitTop = 6
+      ExplicitHeight = 29
     end
-    object txtAnswer: TEdit
-      Left = 42
-      Top = 5
-      Width = 183
-      Height = 24
-      Anchors = [akLeft, akBottom]
+    object cboTopics: TComboBox
+      Left = 5
+      Top = 6
+      Width = 145
+      Height = 22
+      Style = csOwnerDrawFixed
       TabOrder = 0
-      OnKeyDown = txtAnswerKeyDown
+      OnChange = cboTopicsChange
+    end
+    object rgVariants: TRadioGroup
+      Left = 156
+      Top = 0
+      Width = 381
+      Height = 33
+      Align = alCustom
+      Caption = #1042#1072#1088#1080#1072#1085#1090
+      Columns = 10
+      Items.Strings = (
+        '1'
+        '2'
+        '3'
+        '4'
+        '5'
+        '6'
+        '7'
+        '8'
+        '9'
+        '10')
+      TabOrder = 1
+      OnClick = rgVariantsClick
     end
   end
   object ScrollBox: TScrollBox
-    Left = 121
-    Top = 0
-    Width = 658
-    Height = 423
+    Left = 0
+    Top = 35
+    Width = 657
+    Height = 213
     Align = alClient
     BevelInner = bvNone
     BevelOuter = bvNone
@@ -212,55 +251,13 @@ object frmUTT: TfrmUTT
     Color = clWhite
     ParentColor = False
     ParentDoubleBuffered = False
-    TabOrder = 1
+    TabOrder = 2
     object img: TImage
-      Left = 21
-      Top = 76
+      Left = 26
+      Top = 20
       Width = 591
       Height = 169
       Align = alCustom
     end
-  end
-  object rgVariants: TRadioGroup
-    Left = 0
-    Top = 0
-    Width = 121
-    Height = 423
-    Align = alLeft
-    Caption = #1042#1072#1088#1080#1072#1085#1090
-    Columns = 2
-    Items.Strings = (
-      '1'
-      '2'
-      '3'
-      '4'
-      '5'
-      '6'
-      '7'
-      '8'
-      '9'
-      '10'
-      '11'
-      '12'
-      '13'
-      '14'
-      '15'
-      '16'
-      '17'
-      '18'
-      '19'
-      '20'
-      '21'
-      '22'
-      '23'
-      '24'
-      '25'
-      '26'
-      '27'
-      '28'
-      '29'
-      '30')
-    TabOrder = 2
-    OnClick = rgVariantsClick
   end
 end

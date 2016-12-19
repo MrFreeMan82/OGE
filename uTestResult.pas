@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Buttons, ExtCtrls, StdCtrls, GdiPlus, GdiPlusHelpers, uData,
-  uTestDiagram, uUTTDiagram, uTaskDiagram;
+  uUTTDiagram, uTaskDiagram;
 
 type
 
@@ -28,12 +28,10 @@ TfrmTestResult = class(TForm)
   private
     { Private declarations }
 
-    frmTestDiagram: TfrmTestDiagram deprecated;
-    frmUTTDiagram: TfrmUTTDiagram deprecated;
+    frmUTTDiagram: TfrmUTTDiagram;
     frmTaskDiagram: TfrmTaskDiagram;
   public
     { Public declarations }
-    class function showResults(): TModalResult;
     class function showUTTResults(): TModalResult;
     class function showTaskResults(): TModalResult;
   end;
@@ -52,12 +50,7 @@ begin
          'Вы уверены что хотите сбросить результаты?',
               'ОГЕ', MB_YESNO or MB_ICONQUESTION) = mrYes then
     begin
-         if Assigned(frmTestDiagram) then
-         begin
-             frmOGE.Tests.clearUserResults();
-             frmTestDiagram.createNewBmp(chkRandom.Checked);
-         end
-         else if Assigned(frmUTTDiagram) then
+         if Assigned(frmUTTDiagram) then
          begin
              frmOGE.UTT.clearUserResults();
              frmUTTDiagram.refresh(chkRandom.Checked);
@@ -87,28 +80,10 @@ end;
 
 procedure TfrmTestResult.chkRandomClick(Sender: TObject);
 begin
-     if Assigned(frmTestDiagram) then
-     begin
-         frmTestDiagram.createNewBmp(chkRandom.Checked);
-     end
-     else if Assigned(frmUTTDiagram) then
+     if Assigned(frmUTTDiagram) then
      begin
          frmUTTDiagram.refresh(chkRandom.Checked);
      end;
-end;
-
-class function TfrmTestResult.showResults(): TModalResult;
-begin
-    if not Assigned(frmTestResult) then frmTestResult := TFrmTestResult.Create(frmOGE);
-    frmTestResult.frmtestDiagram := TfrmTestDiagram.Create(frmTestResult);
-    try
-      frmTestResult.frmTestDiagram.Dock(frmtestResult.pnlDiagram, frmtestResult.pnlDiagram.ClientRect);
-      frmTestResult.frmTestDiagram.showTestDiagram();
-      result := frmTestResult.showModal;
-    finally
-        freeAndNil(frmTestResult.frmTestDiagram);
-        freeAndNil(frmTestResult)
-    end;
 end;
 
 class function TfrmTestResult.showTaskResults: TModalResult;
@@ -143,11 +118,7 @@ procedure TfrmTestResult.FormResize(Sender: TObject);
 begin
    pnlOptions.Left := (pnlTools.Width div 2) - (pnlOptions.Width div 2);
 
-   if Assigned(frmTestDiagram) then
-   begin
-       frmTestDiagram.createNewBmp(chkRandom.Checked);
-   end
-   else if Assigned(frmUTTDiagram) then
+   if Assigned(frmUTTDiagram) then
    begin
        frmUTTDiagram.refresh(chkRandom.Checked);
    end

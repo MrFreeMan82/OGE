@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, OleCtrls, SHDocVw, ComCtrls, StdCtrls, ExtCtrls, ExtDlgs, Grids,
   ToolWin, Buttons, PlatformDefaultStyleActnCtrls, ActnList, ActnMan,
-  AppEvnts, uTests, uTheme, uUTT, uTasks, uWorkPlan;
+  AppEvnts, uTheme, uUTT, uTasks, uWorkPlan;
 
 type
   TfrmOGE = class(TForm)
@@ -23,9 +23,9 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure WebBrowser1DocumentComplete(ASender: TObject;
       const pDisp: IDispatch; var URL: OleVariant);
+    procedure pgPagesChange(Sender: TObject);
   private
     { Private declarations }
-    frmTests: TfrmTests deprecated;
     frmTopics: TfrmTopics;
     frmUTT: TfrmUTT;
     frmTasks: TfrmTasks;
@@ -35,7 +35,6 @@ type
   public
     { Public declarations }
     property TaskTests: TfrmTasks read frmTasks;
-    property Tests: TfrmTests read frmTests;
     property Topics: TfrmTopics read frmTopics;
     property UTT:TfrmUTT read frmUTT;
   end;
@@ -45,11 +44,12 @@ var
 
 implementation
 uses uGlobals;
+
 {$R *.dfm}
 
 resourcestring password = '1';
 
-//{$DEFINE TEST}
+{$DEFINE TEST}
 
 function TfrmOGE.Login():TModalResult;
 var s: string;
@@ -68,10 +68,16 @@ begin
      until result = mrCancel;
 end;
 
+procedure TfrmOGE.pgPagesChange(Sender: TObject);
+begin
+    if pgPages.ActivePage = tabPlan then frmWorkPlan.refreshWorkPlan;
+
+end;
+
 procedure TfrmOGE.FormCreate(Sender: TObject);
 begin
     {$IFDEF TEST}
- //   showMessage('Тестовый образец');
+    showMessage('Тестовый образец');
     {$ENDIF}
 
     if Login() = mrCancel then
@@ -89,10 +95,6 @@ begin
     frmTopics.Dock(tabThemes, tabThemes.ClientRect);
     frmTopics.showTopics();
 
-   { if not Assigned(frmTests) then frmTests := TfrmTests.Create(self);
-    frmTests.Dock(tabTests, tabTests.ClientRect);
-    frmTests.ShowTests(); }
-
     if not assigned(frmUTT) then frmUTT := TfrmUTT.Create(self);
     frmUTT.Dock(tabUTT, tabUTT.ClientRect);
     frmUTT.ShowUTT();
@@ -104,9 +106,6 @@ begin
     if not assigned(frmWorkPlan) then frmWorkPlan := TfrmWorkPlan.Create(self);
     frmWorkPlan.Dock(tabPlan, tabPlan.ClientRect);
     frmWorkPlan.ShowWorkPlan();
-
-  //  TestResults.showResults;   // DELETE AFTER TESTT
-  //  Application.Terminate;    str
 end;
 
 procedure TfrmOGE.FormDestroy(Sender: TObject);
