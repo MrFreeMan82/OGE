@@ -14,7 +14,10 @@ uses
   uTasks in 'uTasks.pas' {frmTasks},
   uTaskDiagram in 'uTaskDiagram.pas' {frmTaskDiagram},
   uWorkPlan in 'uWorkPlan.pas' {frmWorkPlan},
-  uTopicModel in 'uTopicModel.pas';
+  uTopicModel in 'uTopicModel.pas',
+  uCollectiveTask in 'uCollectiveTask.pas' {frmCollectiveTask},
+  uUser in 'uUser.pas' {frmUser},
+  uSavePoint in 'uSavePoint.pas';
 
 {$R *.res}
 

@@ -42,8 +42,6 @@ uses uOGE, math;
 
 {$R *.dfm}
 
-var frmTestResult: TfrmTestResult;
-
 procedure TfrmTestResult.btClearResultsClick(Sender: TObject);
 begin
     if messageBox(handle,
@@ -87,13 +85,20 @@ begin
 end;
 
 class function TfrmTestResult.showTaskResults: TModalResult;
+var frmTestResult: TfrmTestResult;
 begin
-    if not assigned(frmTestResult) then frmTestResult := TFrmTestResult.Create(frmOGE);
+   // if not assigned(frmTestResult) then
+    frmTestResult := TFrmTestResult.Create(frmOGE);
+
     frmTestResult.frmTaskDiagram := TfrmTaskDiagram.Create(frmTestResult);
     try
-      frmTestResult.frmTaskDiagram.Dock(frmTestResult.pnlDiagram, frmTestResult.pnlDiagram.ClientRect);
+       frmTestResult.frmTaskDiagram.Dock(
+                       frmTestResult.pnlDiagram,
+                            frmTestResult.pnlDiagram.ClientRect);
+
       frmTestResult.frmTaskDiagram.showDiagram();
       result := frmTestResult.ShowModal;
+
     finally
         freeAndNil(frmTestResult.frmTaskDiagram);
         freeAndNil(frmTestResult);
@@ -101,13 +106,20 @@ begin
 end;
 
 class function TfrmTestResult.showUTTResults: TModalResult;
+var frmTestResult: TfrmTestResult;
 begin
-    if not Assigned(frmTestResult) then frmTestResult := TFrmTestResult.Create(frmOGE);
+   // if not Assigned(frmTestResult) then
+    frmTestResult := TFrmTestResult.Create(frmOGE);
+
     frmTestResult.frmUTTDiagram := TfrmUTTDiagram.Create(frmTestResult);
     try
-        frmTestResult.frmUTTDiagram.Dock(frmTestResult.pnlDiagram, frmTestResult.pnlDiagram.ClientRect);
+        frmTestResult.frmUTTDiagram.Dock(
+                frmTestResult.pnlDiagram,
+                    frmTestResult.pnlDiagram.ClientRect);
+
         frmTestResult.frmUTTDiagram.showUTTDiagram();
         result := frmTestResult.showModal;
+
     finally
         freeAndNil(frmTestResult.frmUTTDiagram);
         freeAndNil(frmTestResult)
@@ -129,3 +141,4 @@ begin
 end;
 
 end.
+

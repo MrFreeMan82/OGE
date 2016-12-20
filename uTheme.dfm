@@ -34,26 +34,6 @@ object frmTopics: TfrmTopics
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 0
-    DesignSize = (
-      257
-      370)
-    object lkUTT: TLinkLabel
-      Left = 1
-      Top = 344
-      Width = 185
-      Height = 20
-      Anchors = [akLeft, akBottom]
-      Caption = '<a href="#"> '#1059#1095#1077#1073#1085#1086'-'#1090#1088#1077#1085#1080#1088#1086#1074#1086#1095#1085#1099#1077' '#1090#1077#1089#1090#1099'</a>'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clBlue
-      Font.Height = -13
-      Font.Name = 'Tahoma'
-      Font.Style = [fsUnderline]
-      ParentFont = False
-      TabOrder = 0
-      Visible = False
-      ExplicitTop = 255
-    end
   end
   object pnlTopic: TPanel
     Left = 262
@@ -63,9 +43,6 @@ object frmTopics: TfrmTopics
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitLeft = 206
-    ExplicitWidth = 285
-    ExplicitHeight = 281
     object ScrollBox: TScrollBox
       Left = 0
       Top = 26
@@ -82,8 +59,6 @@ object frmTopics: TfrmTopics
       DoubleBuffered = True
       ParentDoubleBuffered = False
       TabOrder = 0
-      ExplicitWidth = 285
-      ExplicitHeight = 255
       object img: TImage
         Left = 3
         Top = 3
@@ -102,7 +77,6 @@ object frmTopics: TfrmTopics
       DoubleBuffered = True
       ParentDoubleBuffered = False
       TabOrder = 1
-      ExplicitWidth = 285
       object btPrevPage: TSpeedButton
         Left = 330
         Top = 0

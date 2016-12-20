@@ -5,6 +5,8 @@ interface
 uses uGlobals, Graphics;
 
 type
+  TContentType = (cntUnknown, cntInformation, cntTask);
+
   PSection = ^TSection;
   TSection = record
     topic_id: integer;
@@ -28,24 +30,20 @@ type
       display_lable: string;
       mMode: Tmode;
       pageNo: integer;
-      taskNo: integer;
-      procedure doLoadPage();
-      procedure doLoadTask();
+      mContentPageCount: integer;
+      mContentType: TContentType;
+      mContentFolder: string;
+      msection: PSection;
+
+    procedure doLoadPage();
     procedure setMode(const Value: TMode);
     function getResultMask: TResultMask;
     function getResultMaskValue(index: integer): boolean;
     procedure setResultMaskValue(index: integer; const Value: boolean);
-
   public
       sections: TSectionList;
-      section: PSection;
-      task: TBitmap;
       content: TBitmap;
       OnAllTaskComplete: POnAllTaskComleteEvent;
-      procedure FirstTask;
-      procedure NextTask;
-      procedure PrevTask;
-
       procedure FirstPage;
       procedure NextPage;
       procedure PrevPage;
@@ -58,8 +56,11 @@ type
       property Name: string read mname write mname;
       property ResultMask: TResultMask read getResultMask;
       property ResultMaskValue[index: integer]: boolean read getResultMaskValue write setResultMaskValue;
-      property CurrentTask: integer read taskNo;
+      property CurrentTask: integer read pageNo;
+      property ContentType: TContentType read mContentType;
+      property Section : PSection read mSection;
 
+      procedure setSection(ContentType: TContentType; const Value: PSection);
       function isTrueAnswear(answ: double): boolean;
       function sectionByName(const name: string): PSection;
       function sectionByID(topic_id: integer): PSection;
@@ -71,10 +72,8 @@ type
 
   TTopicList = array of TTopic;
 
-var topic_model_list: TTopicList = nil;
-
-procedure loadTopicList();
-procedure freeTopicList();
+procedure loadTopicList(out List: TTopicList);
+procedure freeTopicList(List: TTopicList);
 
 implementation
 
@@ -87,53 +86,41 @@ var filename: string;
     taskResultMask: TResultMask;
     answears: TAnswears;
 
-procedure loadTopicList();
+procedure loadTopicList(out List: TTopicList);
 begin
-    topic_model_list := dm.loadTopicList;
+    List := dm.loadTopicList;
 end;
 
-procedure freeTopicList();
+procedure freeTopicList(List: TTopicList);
 var i: integer;
 begin
-    for i := 0 to length(topic_model_list) - 1 do freeAndNil(topic_model_list[i]);
-    topic_model_list := nil;
+    for i := 0 to length(List) - 1 do freeAndNil(List[i]);
+    List := nil;
 end;
 
 function TTopic.allTaskComplete: boolean;
 begin
-   result := getNextFalseTask(taskNo, taskResultMask, true) = ALL_TASK_COMPLETE;
+   result := getNextFalseTask(pageNo, taskResultMask, true) = ALL_TASK_COMPLETE;
 end;
 
 procedure TTopic.doLoadPage;
 begin
-    fileName := format('%s/%s/%s/Content/%d.jpg', [TOPIC_DIR, name, section.name, pageNo]);
+    filename := format('%s/%s/%s/%s/%d.jpg', [TOPIC_DIR, name, section.name, mContentFolder, pageNo]);
+
     if assigned(content) then freeAndNil(content);
-    content := dm.LoadPage(fileName);
-end;
-
-procedure TTopic.doLoadTask;
-begin
-    filename := format('%s/%s/%s/Task/%d.jpg', [TOPIC_DIR, name, section.name, taskNo]);
-
-    if assigned(task) then freeAndNil(task);
-    task:= dm.LoadPage(filename);
+    content := dm.LoadPage(filename);
 end;
 
 procedure TTopic.FirstPage;
 begin
-    pageNo := 1;
-    if section.topic_link > 0 then
-    begin
+   pageNo := 1;
+   if (mContentType = cntInformation) and (section.topic_link > 0) then
+   begin
         pageNo := section.page_link;
-        section := sectionByID(section.topic_link);
-    end;
-    doLoadPage();
-end;
-
-procedure TTopic.FirstTask;
-begin
-   taskNo := 1;
-   doLoadTask();
+        mSection := sectionByID(section.topic_link);
+        if mContentPageCount = 0 then mContentPageCount := mSection.pages_count;
+   end;
+   doLoadPage();
 end;
 
 function TTopic.getResultMask: TResultMask;
@@ -148,75 +135,53 @@ end;
 
 function TTopic.isTrueAnswear(answ: double): boolean;
 begin
-    result := abs(answ - answears[taskNo - 1]) < e;
+    result := abs(answ - answears[pageNo - 1]) < e;
 end;
 
 procedure TTopic.NextPage;
 begin
-     inc(pageNo);
-     if(pageNo > section.pages_count) then
-     begin
-          pageNo := section.pages_count;
-          exit;
-     end;
-     doLoadPage();
-end;
-
-procedure TTopic.NextTask;
-begin
    if mode = mReTest then
    begin
-        taskNo := getNextFalseTask(taskNo, taskResultMask);
-        if taskNo = ALL_TASK_COMPLETE then
+        pageNo := getNextFalseTask(pageNo, taskResultMask);
+        if pageNo = ALL_TASK_COMPLETE then
         begin
             mode := mNormal;
             if assigned(OnAllTaskComplete) then OnAllTaskComplete();
             exit;
         end;
    end
-   else inc(taskNo);
+   else inc(pageNo);
 
-   if taskNo > section.task_count then
+   if pageNo > mContentPageCount then
    begin
-         taskNo := section.task_count;
+         pageNo := mContentPageCount;
          exit;
    end;
 
-   doLoadTask();
+   doLoadPage();
 end;
 
 procedure TTopic.PrevPage;
 begin
-     dec(pageNo);
-     if (pageNo < 1) then
-     begin
-          pageNo := 1;
-          exit;
-     end;
-     doLoadPage();
-end;
-
-procedure TTopic.PrevTask;
-begin
    if mode = mRetest then
    begin
-      taskNo := getPrevFalseTask(taskNo, taskResultMask);
-      if taskNo = ALL_TASK_COMPLETE then
+      pageNo := getPrevFalseTask(pageNo, taskResultMask);
+      if pageNo = ALL_TASK_COMPLETE then
       begin
            mode := mNormal;
            if assigned(OnAllTaskComplete) then OnAllTaskComplete();
            exit;
       end;
    end
-   else dec(taskNo);
+   else dec(pageNo);
 
-   if (taskNo < 1) then
+   if (pageNo < 1) then
    begin
-        taskNo := 1;
+        pageNo := 1;
         exit;
    end;
 
-   doLoadTask();
+   doLoadPage();
 end;
 
 function TTopic.sectionByID(topic_id: integer): PSection;
@@ -240,12 +205,23 @@ end;
 procedure TTopic.setMode(const Value: TMode);
 begin
     mMode := value;
-    if mMode = mRetest then taskNo := 1;
+    if mMode = mRetest then pageNo := 1;
 end;
 
 procedure TTopic.setResultMaskValue(index: integer; const Value: boolean);
 begin
      taskResultMask[index] := value
+end;
+
+procedure TTopic.setSection(ContentType: TContentType; const Value: PSection);
+begin
+    mSection := value;
+    mContentType := ContentType;
+    case ContentType of
+      cntUnknown:begin mContentPageCount := 0; mContentFolder := ''; end;
+      cntInformation: begin mContentPageCount := section.pages_count; mContentFolder := 'Content' end;
+      cntTask: begin mContentPageCount := section.task_count; mContentFolder := 'Task' end;
+    end;
 end;
 
 procedure TTopic.loadAnswears;

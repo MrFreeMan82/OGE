@@ -46,9 +46,11 @@ type
     timeGrad: array of TLine;
     timeLabels: array of TTimeLabel;
     stageList: array[0..2] of TStage;
+    noteRect: TGPRectF;
     center: TGPPointF;
     delta: double;
 
+    procedure createNote();
     procedure createStages();
     procedure createGradLines();
     procedure createTimeLine();
@@ -73,22 +75,26 @@ const
       months: array[0..MAX_TIMELINE_GRAD - 1] of string =
             ('', 'Сентябрь', 'Октябрь', 'Ноябрь','Декабрь', 'Январь', 'Февраль', 'Март', 'Апрель', 'Май', '');
 
-
+resourcestring STAGE1 = 'Этап 1. Задания для самостоятельного выполнения';
+               STAGE2 = 'Этап 2. Совместная работа';
+               STAGE3 = 'Этап 3. Тренировочные варианты КИМов';
+               NOTE   = 'Для того чтобы получить зачет по первому этапу ' +
+                        'необходимо выполнить 1152 заданий из 1440, то есть 80%.';
 
 procedure TfrmWorkPlan.createStages;
 var len, len2, k: double;
     i: integer;
 begin
-     stageList[0].displayLabel := 'Этап 1. Задания для самостоятельного выполнения';
-     stageList[1].displayLabel := 'Этап 2. Задания для коллективного выполнения';
-     stageList[2].displayLabel := 'Этап 3. Тренировочные варианты КИМов';
+     stageList[0].displayLabel := STAGE1;
+     stageList[1].displayLabel := STAGE2;
+     stageList[2].displayLabel := STAGE3;
 
      stageList[0].period := 5;
      stageList[1].period := 2;
      stageList[2].period := 3;
 
-     stageList[0].resultLabel := format('%s%f', ['РЕЗУЛЬТАТ: ', stageList[0].result]);
-     stageList[1].resultLabel := format('%s%f', ['РЕЗУЛЬТАТ: ', stageList[1].result]);
+     stageList[0].resultLabel := 'РЕЗУЛЬТАТ: не зачтено';
+     stageList[1].resultLabel := 'РЕЗУЛЬТАТ: не зачтено';
 
      len := lineLen(mainRectLeftLine);
      len2 := len / 3;
@@ -102,7 +108,7 @@ begin
      stageList[0].resultRect.X := timeline.p1.X;
      stageList[0].resultRect.Y := timeLine.p1.Y;
      stageList[0].resultRect.Width := stageList[0].rect.Width;
-     stageList[0].resultRect.Height := len2;
+     stageList[0].resultRect.Height := len2 / 2;
 
      for i := 1 to length(stageList) - 1 do
      begin
@@ -115,7 +121,7 @@ begin
            stageList[i].resultRect.X := stageList[i - 1].resultRect.Right;
            stageList[i].resultRect.Y := stageList[i - 1].resultRect.Top;
            stageList[i].resultRect.Width := stageList[i].rect.Width;
-           stageList[i].resultRect.Height := len2;
+           stageList[i].resultRect.Height := len2 / 2;
      end;
 end;
 
@@ -164,6 +170,14 @@ begin
     mainRect.Height := bmp.Height;
 end;
 
+procedure TfrmWorkPlan.createNote;
+begin
+     noteRect.X := 5;
+     noteRect.Y := bmp.Height - 70;
+     noteRect.Width := mainRect.Width ;
+     noteRect.Height := 30;
+end;
+
 procedure TfrmWorkPlan.createTimeLine;
 var len, len2, k: double;
 begin
@@ -188,6 +202,7 @@ begin
     createTimeLine();
     createGradLines();
     createStages();
+    createNote();
 end;
 
 procedure TfrmWorkPlan.refreshWorkPlan;
@@ -246,11 +261,15 @@ begin
 
        graphic.DrawString(stageList[i].resultLabel, stageLabelFont,
                        stageList[i].resultRect, resultAlign, BlackBrush);
+
+      // graphic.DrawRectangle(pen, stageList[i].resultRect);
     end;
 
     for i := 1 to length(timeLabels) - 1 do
              graphic.DrawString(timeLabels[i].displayLabel,
                     gradFont, timeLabels[i].rect, gradFontAlign, BlackBrush);
+
+     graphic.DrawString(NOTE, gradFont, noteRect, nil, BlackBrush);
 
     img.Picture.Assign(bmp);
 end;

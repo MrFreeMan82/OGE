@@ -145,7 +145,7 @@ procedure TfrmTaskDiagram.createTasks;
 var i, j, k, offset: integer;
     points : array[0..2] of TGPPointF;
 begin
-     setLength(tasks, TASK_COUNT);
+     setLength(tasks, taskCount);
 
      offset := -4;
 

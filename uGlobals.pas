@@ -6,15 +6,12 @@ uses GdiPlus, GdiPlusHelpers, Classes;
 const
       e = 0.001;
       ALL_TASK_COMPLETE = 0;
-
-      VARIANT_COUNT = 10;
-      TASK_COUNT = 10;
       UTT_TASK_COUNT = 26;
-
-const CALC_POINTS_FROM_V = 6;
 
 const TOPIC_DIR = 'Topics';
       UTT_DIR = 'UTT';
+
+const USR_FIELD_COUNT = 4;
 
 type
   TaxisAngle = double;

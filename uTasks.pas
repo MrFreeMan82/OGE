@@ -13,13 +13,15 @@ type
     ScrollBox: TScrollBox;
     img: TImage;
     Panel3: TPanel;
-    Label2: TLabel;
-    btAnswear: TSpeedButton;
-    btResults: TSpeedButton;
-    btPrevTask: TSpeedButton;
-    btNextTask: TSpeedButton;
-    txtAnswer: TEdit;
+    pnlTools: TPanel;
+    btNext: TSpeedButton;
+    btPrev: TSpeedButton;
     btHelp: TSpeedButton;
+    btResults: TSpeedButton;
+    btAnswear: TSpeedButton;
+    Label3: TLabel;
+    txtAnswer: TEdit;
+    Panel1: TPanel;
     procedure FormDestroy(Sender: TObject);
     procedure linkClick(Sender: TObject);
     procedure btAnswearClick(Sender: TObject);
@@ -31,13 +33,16 @@ type
     procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure btHelpClick(Sender: TObject);
+    procedure FormResize(Sender: TObject);
   private
     mTask: TTopic;
+    mTaskList: TTopicList;
     links: array of TLinkLabel;
     procedure createLinks();
     procedure AllTaskCompleate;
     procedure viewTask(aTopic: TTopic);
     function gettaskResultMask: TResultMask;
+    procedure assignedCurrent();
     { Private declarations }
   public
     { Public declarations }
@@ -64,11 +69,21 @@ begin
      end;
 end;
 
+procedure TfrmTasks.assignedCurrent;
+begin
+    if mTask = nil then
+    begin
+        messageBox(handle, 'Для продолжения выберите раздел.', 'ОГЕ', MB_OK or MB_ICONERROR);
+        abort;
+    end;
+end;
+
 procedure TfrmTasks.btAnswearClick(Sender: TObject);
 var usrAnswear: double;
     TrueAnswear: boolean;
     task: integer;
 begin
+     assignedCurrent();
      if trim(txtAnswer.Text) = '' then exit;
 
     task := mTask.CurrentTask;
@@ -107,24 +122,28 @@ end;
 
 procedure TfrmTasks.btHelpClick(Sender: TObject);
 begin
+    assignedCurrent();
     frmOGE.Topics.HelpWithTopic(mTask.section.topic_id, self);
 end;
 
 procedure TfrmTasks.btNextTaskClick(Sender: TObject);
 begin
-    mTask.NextTask;
+    assignedCurrent();
+    mTask.NextPage;
     viewTask(mTask);
 end;
 
 procedure TfrmTasks.btPrevTaskClick(Sender: TObject);
 begin
-    mTask.PrevTask;
+    assignedCurrent();
+    mTask.PrevPage;
     viewTask(mTask);
 end;
 
 procedure TfrmTasks.btResultsClick(Sender: TObject);
 var mr: TModalResult;
 begin
+  //  mTask.ResultMaskValue[119] := true;
     mr := TfrmTestResult.showTaskResults;
     case mr of
       mrYes: mTask.mode := mNormal;
@@ -133,7 +152,7 @@ begin
           // Перейдем в режим прохода теста заново
           // Найдем первый не пройденый тест
               mTask.mode := mReTest;
-              mTask.NextTask;
+              mTask.NextPage;
               viewTask(mTask);
         end;
     end;
@@ -141,24 +160,24 @@ end;
 
 procedure TfrmTasks.viewTask(aTopic: TTopic);
 begin
+     if aTopic.content = nil then
+     begin
+         { messageBox(self.Handle,
+              'По данному разделу тесты не загружены',
+                           'Ошибка', MB_OK or MB_ICONERROR); }
+          abort;
+     end;
+
      img.Canvas.Brush.Color:=ClWhite;
      img.Canvas.FillRect(img.Canvas.ClipRect);
 
      ScrollBox.HorzScrollBar.Range := 0;
      ScrollBox.VertScrollBar.Range := 0;
 
-     if aTopic.task = nil then
-     begin
-          messageBox(self.Handle,
-              'По данному разделу тесты не загружены',
-                           'Ошибка', MB_OK or MB_ICONERROR);
-          abort;
-     end;
-
      with aTopic do
      begin
-         img.SetBounds(0, 0, task.Width, task.Height);
-         img.Picture.Assign(task);
+         img.SetBounds(0, 0, content.Width, content.Height);
+         img.Picture.Assign(content);
      end;
 
      ScrollBox.HorzScrollBar.Range := img.Picture.Width;
@@ -167,7 +186,8 @@ end;
 
 procedure TfrmTasks.ShowTasks;
 begin
-    if (topic_model_list = nil) then
+    loadTopicList(mTaskList);
+    if (mTaskList = nil) then
     begin
       messageBox(self.Handle, 'Не удалось загузить тесты', 'Ошибка', MB_OK or MB_ICONERROR);
       abort;
@@ -181,10 +201,11 @@ procedure TfrmTasks.linkClick(Sender: TObject);
 begin
     if not (Sender is TLinkLabel) then exit;
 
-    mTask := topic_model_list[TLinkLabel(Sender).Tag];
+    mTask := mTaskList[TLinkLabel(Sender).Tag];
+   // mTask.ContentType  := cntTask;
     mTask.OnAllTaskComplete := AllTaskCompleate;
-    mTask.section := mTask.sectionByName(TLinkLabel(Sender).Name);
-    mTask.FirstTask;
+    mTask.setSection(cntTask, mTask.sectionByName(TLinkLabel(Sender).Name));
+    mTask.FirstPage;
     viewTask(mTask);
     mTask.loadAnswears();
 end;
@@ -204,12 +225,12 @@ begin
      ld := 10;
 
      cnt := 0;
-     for i := 0 to length(topic_model_list) - 1 do
-          cnt := cnt + length(topic_model_list[i].sections) + 1;
+     for i := 0 to length(mTaskList) - 1 do
+          cnt := cnt + length(mTaskList[i].sections) + 1;
 
      setLength(links, cnt);
 
-     for i := 0 to length(topic_model_list) - 1 do
+     for i := 0 to length(mTaskList) - 1 do
      begin
           inc(k);
 
@@ -218,22 +239,22 @@ begin
           links[k].OnClick := nil;
           links[k].Left := l;
           links[k].Top := t;
-          links[k].Caption := '<a href="#">' + topic_model_list[i].Caption + '</a>';
+          links[k].Caption := '<a href="#">' + mTaskList[i].Caption + '</a>';
 
           t := t + links[k].Height + td;
 
-          for j := 0 to length(topic_model_list[i].sections) - 1 do
+          for j := 0 to length(mTaskList[i].sections) - 1 do
           begin
               inc(k);
 
               links[k] := TLinkLabel.Create(pnlLinks);
-              links[k].Name := topic_model_list[i].sections[j].name;
+              links[k].Name := mTaskList[i].sections[j].name;
               links[k].Parent := pnlLinks;
               links[k].OnClick := linkClick;
               links[k].Left := l + ld;
               links[k].Top := t;
               links[k].Tag := i;
-              links[k].Caption := '<a href="#">' + topic_model_list[i].sections[j].display_lable + '</a>';
+              links[k].Caption := '<a href="#">' + mTaskList[i].sections[j].display_lable + '</a>';
 
               t := t + links[k].Height + td;
           end;
@@ -250,6 +271,7 @@ procedure TfrmTasks.FormDestroy(Sender: TObject);
 var i: integer;
 begin
      for i := 0 to length(links) - 1 do freeAndNil(links[i]);
+     freeTopicList(mTaskList);
 end;
 
 procedure TfrmTasks.FormMouseWheel(Sender: TObject; Shift: TShiftState;
@@ -261,6 +283,11 @@ begin
         then position := position + increment
         else if (position > 0) then position := position - increment
     end;
+end;
+
+procedure TfrmTasks.FormResize(Sender: TObject);
+begin
+      pnlTools.Left := (Panel3.Width div 2) - (pnlTools.Width div 2);
 end;
 
 function TfrmTasks.gettaskResultMask: TResultMask;

@@ -10,7 +10,6 @@ type
 
   TfrmTopics = class(TForm)
     pnlLinks: TPanel;
-    lkUTT: TLinkLabel;
     pnlTopic: TPanel;
     ScrollBox: TScrollBox;
     img: TImage;
@@ -29,10 +28,12 @@ type
   private
     { Private declarations }
     fTopic: TTopic;
+    fTopicList: TTopicList;
     needer: TObject;
     links: array of TLinkLabel;
     procedure createLinks();
     procedure viewTopic();
+    procedure assignedCurrent;
   public
     { Public declarations }
     procedure showTopics();
@@ -47,14 +48,25 @@ uses uGlobals, uOGE;
 
 { TfrmTopics }
 
+procedure TfrmTopics.assignedCurrent;
+begin
+    if fTopic = nil then
+    begin
+        messageBox(handle, 'Для продолжения выберите раздел.', 'ОГЕ', MB_OK or MB_ICONERROR);
+        abort;
+    end;
+end;
+
 procedure TfrmTopics.btNextPageClick(Sender: TObject);
 begin
+   assignedCurrent();
    fTopic.NextPage;
    viewTopic();
 end;
 
 procedure TfrmTopics.btPrevPageClick(Sender: TObject);
 begin
+    assignedCurrent();
     fTopic.PrevPage;
     viewTopic();
 end;
@@ -70,8 +82,8 @@ var marginLeft: integer;
 begin
     if  fTopic.content = nil then
     begin
-       messageBox(handle, 'Раздел не загружен.', 'ОГЕ', MB_OK or MB_ICONERROR);
-       exit;
+      // messageBox(handle, 'Раздел не загружен.', 'ОГЕ', MB_OK or MB_ICONERROR);
+       abort;
     end;
 
     img.Canvas.Brush.Color:=ClWhite;
@@ -93,16 +105,16 @@ procedure TfrmTopics.linkClick(Sender: TObject);
 begin
     if not (Sender is TLinkLabel) then exit;
 
-    fTopic := topic_model_list[TLinkLabel(Sender).Tag];
-    fTopic.section := fTopic.sectionByName(TLinkLabel(Sender).Name);
+    fTopic := fTopicList[TLinkLabel(Sender).Tag];
+    fTopic.setSection(cntInformation, fTopic.sectionByName(TLinkLabel(Sender).Name));
     fTopic.FirstPage;
     viewTopic();
 end;
 
 procedure TfrmTopics.showTopics;
 begin
-    loadTopicList();
-    if topic_model_list = nil then
+    loadTopicList(ftopicList);
+    if ftopicList = nil then
     begin
         messageBox(self.Handle, 'Не удалось загузить раздел', 'Ошибка', MB_OK or MB_ICONERROR);
         abort;
@@ -122,12 +134,12 @@ begin
      ld := 10;
 
      cnt := 0;
-     for i := 0 to length(topic_model_list) - 1 do
-          cnt := cnt + length(topic_model_list[i].sections) + 1;
+     for i := 0 to length(ftopicList) - 1 do
+          cnt := cnt + length(ftopicList[i].sections) + 1;
 
      setLength(links, cnt);
 
-     for i := 0 to length(topic_model_list) - 1 do
+     for i := 0 to length(ftopicList) - 1 do
      begin
           inc(k);
 
@@ -136,22 +148,22 @@ begin
           links[k].OnClick := nil;
           links[k].Left := l;
           links[k].Top := t;
-          links[k].Caption := '<a href="#">' + topic_model_list[i].Caption + '</a>';
+          links[k].Caption := '<a href="#">' + ftopicList[i].Caption + '</a>';
 
           t := t + links[k].Height + td;
 
-          for j := 0 to length(topic_model_list[i].sections) - 1 do
+          for j := 0 to length(ftopicList[i].sections) - 1 do
           begin
               inc(k);
 
               links[k] := TLinkLabel.Create(pnlLinks);
-              links[k].Name := topic_model_list[i].sections[j].name;
+              links[k].Name := ftopicList[i].sections[j].name;
               links[k].Parent := pnlLinks;
               links[k].OnClick := linkClick;
               links[k].Left := l + ld;
               links[k].Top := t;
               links[k].Tag := i;
-              links[k].Caption := '<a href="#">' + topic_model_list[i].sections[j].display_lable + '</a>';
+              links[k].Caption := '<a href="#">' + ftopicList[i].sections[j].display_lable + '</a>';
 
               t := t + links[k].Height + td;
           end;
@@ -162,7 +174,7 @@ procedure TfrmTopics.FormDestroy(Sender: TObject);
 var i: integer;
 begin
     for i := 0 to length(links) - 1 do freeAndNil(links[i]);
-    freeTopicList();
+    freeTopicList(ftopicList);
 end;
 
 procedure TfrmTopics.FormMouseWheel(Sender: TObject; Shift: TShiftState;
@@ -179,15 +191,16 @@ end;
 procedure TfrmTopics.HelpWithTopic(topic_id: integer; Sender: TObject);
 var i, j : integer;
 begin
-     for i := 0 to length(topic_model_list) - 1 do
+     for i := 0 to length(ftopicList) - 1 do
      begin
-        for j := 0 to length(topic_model_list[i].sections) - 1 do
+        for j := 0 to length(ftopicList[i].sections) - 1 do
         begin
-            if topic_model_list[i].sections[j].topic_id = topic_id then
+            if ftopicList[i].sections[j].topic_id = topic_id then
             begin
                 btTest.Visible := true;
                 needer := sender;
-                fTopic := topic_model_list[i];
+                fTopic := ftopicList[i];
+                fTopic.setSection(cntInformation, @ftopicList[i].sections[j]);
                 fTopic.FirstPage;
                 viewTopic();
                 frmOGE.pgPages.ActivePage := frmOGE.tabThemes;

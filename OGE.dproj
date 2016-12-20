@@ -79,6 +79,13 @@
 				<Form>frmWorkPlan</Form>
 			</DCCReference>
 			<DCCReference Include="uTopicModel.pas"/>
+			<DCCReference Include="uCollectiveTask.pas">
+				<Form>frmCollectiveTask</Form>
+			</DCCReference>
+			<DCCReference Include="uUser.pas">
+				<Form>frmUser</Form>
+			</DCCReference>
+			<DCCReference Include="uSavePoint.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

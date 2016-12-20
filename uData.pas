@@ -4,18 +4,26 @@ interface
 
 uses
   SysUtils, Classes, xmldom, XMLIntf, msxmldom, XMLDoc, uGlobals, uTheme,
-  uUTT, uTasks, Graphics, uTopicModel;
+  uUTT, uTasks, Graphics, uTopicModel, SQLite3, SQLiteTable3, uUser, uSavePoint;
 
 type
 
   Tdm = class(TDataModule)
     xmlDoc: TXMLDocument;
     procedure DataModuleCreate(Sender: TObject);
+    procedure DataModuleDestroy(Sender: TObject);
   private
     { Private declarations }
-    fDataFile, fUTTDataFile, fTaskDataFile: string;
+    sqlite : TSQLiteDatabase;
+    fDataFile, fUTTDataFile, fTaskDataFile, sqliteFile: string;
+    sql: TStringList;
+
     function doLoadUTT(): TUTTModulesList;
     function doLoadTopicList():TTopicList;
+
+    procedure createTableUser();
+    procedure createTableSavePoints();
+    procedure dropTable(const tableName: string);
   public
     { Public declarations }
     property  DataFile: string read fDataFile;
@@ -26,6 +34,15 @@ type
     function LoadPage(const path: string): TBitmap;
     function loadUTTTests(): TUTTModulesList;
     function loadTopicList(): TTopicList;
+
+    function loadUserList(): TUserList;
+    procedure addUser(usr: PUser);
+    procedure editUser(usr: Puser);
+    procedure deleteUser(id: integer);
+
+    procedure CreateSavePoint(records: TRecords);
+    procedure LoadSavePoint(us_id: integer; window: string; out records: TRecords);
+
   end;
 
 var
@@ -40,11 +57,129 @@ uses FWZipModifier, FWZipReader, ActiveX, GdiPlus, GdiPlusHelpers;
 
 { Tdm }
 
+procedure Tdm.addUser(usr: PUser);
+begin
+     sql.Clear;
+     sql.Add('INSERT INTO USER(UT_ID, FIO, PASSWORD)');
+     sql.Add(format('VALUES(%d, "%s", "%s")', [usr.ut_id, usr.fio, usr.password]));
+     sqlite.ExecSQL(ansiString(sql.Text));
+end;
+
+procedure Tdm.editUser(usr: Puser);
+begin
+     sql.Clear;
+     sql.Add('UPDATE USER');
+     sql.Add(format(
+        'SET UT_ID = %d, FIO = "%s", PASSWORD = "%s" WHERE ID = %d',
+                [usr.ut_id, usr.fio, usr.password, usr.id])
+     );
+
+     sqlite.ExecSQL(ansiString(sql.Text));
+end;
+
+procedure Tdm.deleteUser(id: integer);
+begin
+     sql.Clear;
+     sql.Add('DELETE FROM USER WHERE ID = ' + intToStr(id));
+     sqlite.ExecSQL(ansiString(sql.Text));
+end;
+               // create or edit existing savepoint
+procedure Tdm.CreateSavePoint(records: TRecords);
+begin
+
+end;
+
+procedure Tdm.LoadSavePoint(us_id: integer; window: string; out records: TRecords);
+begin
+
+end;
+
+procedure Tdm.createTableSavePoints;
+begin
+    if sqlite.TableExists('SAVEPOINT') then exit;
+
+    sql.Clear;
+    sql.Add('CREATE TABLE SAVEPOINT');
+    sql.Add('(ID INTEGER PRIMARY KEY AUTOINCREMENT,');
+    sql.Add('US_ID INTEGER,');
+    sql.Add('WINDOW TEXT,');
+    sql.Add('KEY_FIELD TEXT,');
+    sql.Add('VALUE_FIELD TEXT)');
+    sqlite.ExecSQL(ansistring(sql.Text));
+end;
+
+procedure Tdm.createTableUser;
+var defaultUser: TUser;
+begin
+   if sqlite.TableExists('USER') then exit;
+
+   sql.Clear;
+   sql.Add('CREATE TABLE USER ');
+   sql.Add('(ID INTEGER PRIMARY KEY AUTOINCREMENT,');
+   sql.Add('UT_ID INTEGER,');
+   sql.Add('FIO TEXT,');
+   sql.Add('PASSWORD TEXT)');
+   sqlite.ExecSQL(ansiString(sql.Text));
+
+   defaultUser.ut_id := 1;
+   defaultUser.fio := 'Администратор';
+   defaultUser.password := '1';
+
+   addUser(@defaultUser);
+end;
+
+procedure Tdm.dropTable(const tableName: string);
+begin
+     sql.Clear;
+     sql.Add('DROP TABLE ' + tablename);
+     sqlite.ExecSQL(ansiString(sql.Text));
+end;
+
+
 procedure Tdm.DataModuleCreate(Sender: TObject);
 begin
+    sql := TStringList.Create;
     fDataFile := exePath() + 'OGE.dat';
     fUTTDataFile := exePath() + 'OGE.dat';
-    fTaskDataFile := exePath() + 'OGE.dat'
+    fTaskDataFile := exePath() + 'OGE.dat';
+    sqliteFile := exePath() + 'sqlite.dat';
+
+    sqlite := TSQLiteDatabase.Create(sqliteFile);
+    createTableUser();
+    createTableSavePoints();
+end;
+
+function Tdm.loadUserList: TUserList;
+var cnt, i: integer;
+    table: TSQLiteUniTable;
+begin
+     table := nil;
+     sql.Clear;
+     sql.Add('SELECT COUNT(*) FROM USER');
+
+     try
+         table := sqlite.GetUniTable(ansiString(sql.Text));
+         cnt := table.FieldAsInteger(0);
+         freeAndNil(table);
+
+         sql.Clear;
+         sql.Add('SELECT ID, UT_ID, FIO, PASSWORD FROM USER');
+         table := sqlite.GetUniTable(ansistring(sql.Text));
+
+         setLength(result, cnt);
+
+         for i := 0 to cnt - 1 do
+         begin
+              result[i].id := table.FieldAsInteger(0);
+              result[i].ut_id := table.FieldAsInteger(1);
+              result[i].fio := table.FieldAsString(2);
+              result[i].password := table.FieldAsString(3);
+
+              table.Next;
+         end;
+     finally
+          freeAndNil(table);
+     end;
 end;
 
 function Tdm.loadAnswears(const DBFile, fileName: string; aVariant: integer): TAnswears;
@@ -85,9 +220,15 @@ begin
      end;
 end;
 
+procedure Tdm.DataModuleDestroy(Sender: TObject);
+begin
+    sql.Free;
+    sqlite.Free;
+end;
+
 function Tdm.doLoadTopicList: TTopicList;
 var i, j, cnt, scnt: integer;
-    root, node, link, link_page, sections: IXMLNode;
+    root, node, link, link_page, sectionNodes: IXMLNode;
 begin
      result := nil;
      if not xmlDoc.Active then exit;
@@ -104,31 +245,34 @@ begin
           result[i].id := strToInt(node.ChildNodes.FindNode('ID').Text);
           result[i].name := node.ChildNodes.FindNode('DIR').Text;
           result[i].Caption := node.ChildNodes.FindNode('DISPLAY_LABEL').Text;
-          result[i].section := nil;
 
-          sections := node.ChildNodes.FindNode('SECTIONS');
-          scnt := sections.ChildNodes.Count;
+          sectionNodes := node.ChildNodes.FindNode('SECTIONS');
+          scnt := sectionNodes.ChildNodes.Count;
           setLength(result[i].sections, scnt);
 
           for j := 0 to scnt - 1 do
+          with result[i] do
           begin
-               node := sections.ChildNodes.Get(j);
-               result[i].sections[j].name := node.ChildNodes.FindNode('DIR').Text;
-               result[i].sections[j].display_lable := node.ChildNodes.FindNode('DISPLAY_LABEL').Text;
-               result[i].sections[j].topic_id := strToInt(node.ChildNodes.FindNode('TOPIC_ID').Text);
-               result[i].sections[j].task_count := strToInt(node.ChildNodes.FindNode('TASK_COUNT').Text);
-               result[i].sections[j].pages_count := strToInt(node.ChildNodes.FindNode('PAGES_COUNT').Text);
-               result[i].sections[j].visible := node.ChildNodes.FindNode('VISIBLE').Text = '0';
-               link := node.ChildNodes.FindNode('LINK');
-               link_page := node.ChildNodes.FindNode('LINK_PAGE');
+               node := sectionNodes.ChildNodes.Get(j);
+                with node.ChildNodes do
+                begin
+                   sections[j].name := FindNode('DIR').Text;
+                   sections[j].display_lable := FindNode('DISPLAY_LABEL').Text;
+                   sections[j].topic_id := strToInt(FindNode('TOPIC_ID').Text);
+                   sections[j].task_count := strToInt(FindNode('TASK_COUNT').Text);
+                   sections[j].pages_count := strToInt(FindNode('PAGES_COUNT').Text);
+                   sections[j].visible := FindNode('VISIBLE').Text = '0';
+                   link := FindNode('LINK');
+                   link_page := FindNode('LINK_PAGE');
+                end;
 
-               if assigned(link) and assigned(link_page) then
-               begin
-                    result[i].sections[j].topic_link := strToInt(link.Text);
-                    result[i].sections[j].page_link := strToInt(link_page.Text);
-               end;
+                if assigned(link) and assigned(link_page) then
+                begin
+                     sections[j].topic_link := strToInt(link.Text);
+                     sections[j].page_link := strToInt(link_page.Text);
+                end;
 
-               result[i].sections[j].points := 0;
+                sections[j].points := 0;
           end;
      end;
 end;
