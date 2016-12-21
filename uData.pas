@@ -24,6 +24,8 @@ type
     procedure createTableUser();
     procedure createTableSavePoints();
     procedure dropTable(const tableName: string);
+
+    procedure loadUserFromFile(fl: string);
   public
     { Public declarations }
     property  DataFile: string read fDataFile;
@@ -40,8 +42,9 @@ type
     procedure editUser(usr: Puser);
     procedure deleteUser(id: integer);
 
-    procedure CreateSavePoint(records: TRecords);
+    procedure CreateSavePoint(us_id: integer; window: string; records: TRecords);
     procedure LoadSavePoint(us_id: integer; window: string; out records: TRecords);
+    procedure deleteSavePoint(us_id: integer; window, key: string);
 
   end;
 
@@ -51,7 +54,7 @@ var
 function FindData(const zipFile, name: string; outData: TStream): boolean;
 
 implementation
-uses FWZipModifier, FWZipReader, ActiveX, GdiPlus, GdiPlusHelpers;
+uses FWZipModifier, FWZipReader, ActiveX, GdiPlus, GdiPlusHelpers, uOGE;
 
 {$R *.dfm}
 
@@ -68,7 +71,7 @@ end;
 procedure Tdm.editUser(usr: Puser);
 begin
      sql.Clear;
-     sql.Add('UPDATE USER');
+     sql.Add('UPDATE USER ');
      sql.Add(format(
         'SET UT_ID = %d, FIO = "%s", PASSWORD = "%s" WHERE ID = %d',
                 [usr.ut_id, usr.fio, usr.password, usr.id])
@@ -82,16 +85,100 @@ begin
      sql.Clear;
      sql.Add('DELETE FROM USER WHERE ID = ' + intToStr(id));
      sqlite.ExecSQL(ansiString(sql.Text));
+
+     sql.Clear;
+     sql.Add('DELETE FROM SAVEPOINT WHERE US_ID = ' + intToStr(id));
+     sqlite.ExecSQL(ansistring(sql.Text));
+end;
+
+procedure Tdm.deleteSavePoint(us_id: integer; window, key: string);
+begin
+    sql.Clear;
+    sql.Add(format(
+      'DELETE FROM SAVEPOINT WHERE US_ID = %d AND WINDOW = "%s" AND KEY_FIELD = "%s"',
+        [us_id, window, key]));
+    sqlite.ExecSQL(ansistring(sql.Text));
 end;
                // create or edit existing savepoint
-procedure Tdm.CreateSavePoint(records: TRecords);
+procedure Tdm.CreateSavePoint(us_id: integer; window: string; records: TRecords);
+var i, cnt: integer; table: TSQLiteUniTable;
 begin
+    for i := 0 to length(records) - 1 do
+    begin
+        if records[i].deleted then continue;
 
+        sql.Clear;
+        sql.Add(format(
+            'SELECT COUNT(*)FROM SAVEPOINT ' +
+                'WHERE US_ID = %d AND WINDOW = "%s" AND KEY_FIELD = "%s"',
+                [us_id, window, records[i].key])
+        );
+        try
+          table := TSQLiteUniTable.Create(sqlite, ansiString(sql.Text));
+          cnt := table.FieldAsInteger(0);
+        finally
+              freeAndNil(table)
+        end;
+
+        sql.Clear;
+        if cnt = 0 then
+        begin
+             sql.Add(format(
+                'INSERT INTO SAVEPOINT(US_ID, WINDOW, KEY_FIELD, VALUE_FIELD) ' +
+                  'VALUES(%d, "%s", "%s", "%s")',
+                      [us_id, window, records[i].key, records[i].value])
+             );
+
+        end
+        else begin
+            sql.Add(format(
+                'UPDATE SAVEPOINT ' +
+                'SET VALUE_FIELD = "%s" ' +
+                'WHERE US_ID = %d AND WINDOW = "%s" AND KEY_FIELD = "%s"',
+                [records[i].value, us_id, window, records[i].key])
+            );
+        end;
+        sqlite.ExecSQL(ansistring(sql.Text));
+    end;
 end;
 
 procedure Tdm.LoadSavePoint(us_id: integer; window: string; out records: TRecords);
+var i, cnt: integer; table: TSQLiteUniTable;
 begin
+    records := nil;
+    sql.Clear;
+    sql.Add(format(
+        'SELECT COUNT(*)FROM SAVEPOINT ' +
+            'WHERE US_ID = %d AND WINDOW = "%s"', [us_id, window])
+    );
+    try
+      table := TSQLiteUniTable.Create(sqlite, ansiString(sql.Text));
+      cnt := table.FieldAsInteger(0);
+    finally
+        freeAndNil(table);
+    end;
 
+    if (cnt = 0) then exit;
+    setLength(records, cnt);
+
+    sql.Clear;
+    sql.Add(format(
+        'SELECT KEY_FIELD, VALUE_FIELD FROM SAVEPOINT ' +
+            'WHERE US_ID = %d AND WINDOW = "%s"', [us_id, window]));
+
+    try
+      table := TSQLiteUniTable.Create(sqlite, ansiString(sql.Text));
+
+      for i := 0 to cnt - 1 do
+      begin
+           records[i].key := table.FieldAsString(0);
+           records[i].value := table.FieldAsString(1);
+
+           table.Next;
+      end;
+    finally
+          freeAndNil(table)
+    end;
 end;
 
 procedure Tdm.createTableSavePoints;
@@ -124,8 +211,9 @@ begin
    defaultUser.ut_id := 1;
    defaultUser.fio := 'Администратор';
    defaultUser.password := '1';
-
    addUser(@defaultUser);
+
+   if FileExists('usr.sql') then loadUserFromFile('usr.sql');
 end;
 
 procedure Tdm.dropTable(const tableName: string);
@@ -147,6 +235,22 @@ begin
     sqlite := TSQLiteDatabase.Create(sqliteFile);
     createTableUser();
     createTableSavePoints();
+//  dropTable('RESULTS')
+end;
+
+procedure Tdm.loadUserFromFile(fl: string);
+var l: TStringList;
+    i: integer;
+begin
+     l := TStringList.Create;
+     l.LoadFromFile(fl);
+
+     for i := 0 to l.Count - 1 do
+     begin
+          sql.Clear;
+          sql.Add(l.Strings[i]);
+          sqlite.ExecSQL(ansistring(sql.Text));
+     end;
 end;
 
 function Tdm.loadUserList: TUserList;
@@ -226,7 +330,7 @@ begin
     sqlite.Free;
 end;
 
-function Tdm.doLoadTopicList: TTopicList;
+function Tdm.doLoadTopicList(): TTopicList;
 var i, j, cnt, scnt: integer;
     root, node, link, link_page, sectionNodes: IXMLNode;
 begin
@@ -240,7 +344,7 @@ begin
 
      for i := 0 to cnt - 1 do
      begin
-          result[i] := TTopic.Create;
+          result[i] := TTopic.Create();
           node := root.ChildNodes.Get(i);
           result[i].id := strToInt(node.ChildNodes.FindNode('ID').Text);
           result[i].name := node.ChildNodes.FindNode('DIR').Text;
@@ -277,7 +381,7 @@ begin
      end;
 end;
 
-function Tdm.loadTopicList: TTopicList;
+function Tdm.loadTopicList(): TTopicList;
 var info: string;
     s: TStringStream;
 begin

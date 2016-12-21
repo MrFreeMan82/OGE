@@ -19,12 +19,14 @@ TfrmTestResult = class(TForm)
     btNo: TSpeedButton;
     chkRandom: TCheckBox;
     pnlDiagram: TPanel;
+    btSaveresults: TSpeedButton;
     procedure btExitClick(Sender: TObject);
     procedure btClearResultsClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure chkRandomClick(Sender: TObject);
     procedure btNoClick(Sender: TObject);
     procedure btYesClick(Sender: TObject);
+    procedure btSaveresultsClick(Sender: TObject);
   private
     { Private declarations }
 
@@ -52,12 +54,18 @@ begin
          begin
              frmOGE.UTT.clearUserResults();
              frmUTTDiagram.refresh(chkRandom.Checked);
+             btClearResults.Enabled := false;
          end
          else if assigned(frmTaskDiagram) then
          begin
-              frmOGE.TaskTests.clearUserResults;
-              frmTaskDiagram.refresh(chkRandom.Checked);
+              frmOGE.Tasks.clearUserResults;
+              frmTaskDiagram.Free;
+              frmTaskDiagram := TfrmTaskDiagram.Create(self);
+              frmTaskDiagram.Dock(pnlDiagram, pnlDiagram.ClientRect);
+              frmTaskDiagram.showDiagram(chkRandom.Checked, true);
+              btClearResults.Enabled := false;
          end;
+
     end;
 end;
 
@@ -69,6 +77,20 @@ end;
 procedure TfrmTestResult.btNoClick(Sender: TObject);
 begin
     modalResult := mrNo;
+end;
+
+procedure TfrmTestResult.btSaveresultsClick(Sender: TObject);
+begin
+     if Assigned(frmUTTDiagram) then
+     begin
+         frmOGE.UTT.saveResults();
+         btSaveresults.Enabled := false;
+     end
+     else if assigned(frmTaskDiagram) then
+     begin
+          frmOGE.Tasks.saveResults;
+          btSaveresults.Enabled := false;
+     end;
 end;
 
 procedure TfrmTestResult.btYesClick(Sender: TObject);
@@ -96,7 +118,7 @@ begin
                        frmTestResult.pnlDiagram,
                             frmTestResult.pnlDiagram.ClientRect);
 
-      frmTestResult.frmTaskDiagram.showDiagram();
+      frmTestResult.frmTaskDiagram.showDiagram(frmTestResult.chkRandom.Checked, false);
       result := frmTestResult.ShowModal;
 
     finally
@@ -117,7 +139,7 @@ begin
                 frmTestResult.pnlDiagram,
                     frmTestResult.pnlDiagram.ClientRect);
 
-        frmTestResult.frmUTTDiagram.showUTTDiagram();
+        frmTestResult.frmUTTDiagram.showUTTDiagram(frmOGE.UTT);
         result := frmTestResult.showModal;
 
     finally

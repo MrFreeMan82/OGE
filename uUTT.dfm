@@ -14,8 +14,6 @@ object frmUTT: TfrmUTT
   Font.Style = []
   OldCreateOrder = False
   OnMouseWheel = FormMouseWheel
-  ExplicitWidth = 320
-  ExplicitHeight = 240
   PixelsPerInch = 96
   TextHeight = 16
   object Panel3: TPanel

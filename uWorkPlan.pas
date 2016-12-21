@@ -34,7 +34,7 @@ type
     softPen: IGPPen;
 
     FontFamily: IGPFontFamily;
-    gradFont, stageLabelFont: IGPFont;
+    gradFont, stageLabelFont, noteFont, resultFont: IGPFont;
     gradFontAlign: IGPStringFormat;
     resultAlign: IGPStringFormat;
     BlackBrush: IGPBrush;
@@ -78,8 +78,11 @@ const
 resourcestring STAGE1 = 'Этап 1. Задания для самостоятельного выполнения';
                STAGE2 = 'Этап 2. Совместная работа';
                STAGE3 = 'Этап 3. Тренировочные варианты КИМов';
-               NOTE   = 'Для того чтобы получить зачет по первому этапу ' +
-                        'необходимо выполнить 1152 заданий из 1440, то есть 80%.';
+               NOTE   = 'Первый этап содержит тренировочные задания по всем темам курса математики 5-9 классов. Всего заданий 1440. '#13#10 +
+                        'Второй этап  содержит текстовые задачи на числа и движение. Всего заданий 120. '#13#10 +
+                        'Этапы программы необходимо выполнить в правильном порядке.'#13#10 +
+                        'Оценка результатов выполнения заданий первого и второго этапа осуществляется по двухбалльной шкале: «зачтено» — «не зачтено».'#13#10 +
+                        'Оценка «зачтено»  ставится, если ученик  верно выполнил не менее 80% заданий  в течение определенного промежутка времени. В противном случае выставляется оценка «не зачтено».';
 
 procedure TfrmWorkPlan.createStages;
 var len, len2, k: double;
@@ -173,9 +176,9 @@ end;
 procedure TfrmWorkPlan.createNote;
 begin
      noteRect.X := 5;
-     noteRect.Y := bmp.Height - 70;
+     noteRect.Y := bmp.Height - 150;
      noteRect.Width := mainRect.Width ;
-     noteRect.Height := 30;
+     noteRect.Height := bmp.Height - noteRect.Y;
 end;
 
 procedure TfrmWorkPlan.createTimeLine;
@@ -232,6 +235,9 @@ begin
 
     stageLabelFont := TGPFont.Create(FontFamily, 16, FontStyleRegular, UnitPoint);
 
+    noteFont := TGPFont.Create(FontFamily, 10, FontStyleRegular, UnitPoint);
+    resultFont := TGPFont.Create(FontFamily, 12, FontStyleRegular, UnitPoint);
+
     Graphic.TextRenderingHint := TextRenderingHintAntiAlias;
     BlackBrush := TGPSolidBrush.Create(TGPColor.Black);
 
@@ -259,7 +265,7 @@ begin
               TGPPointF.Create(stageList[i].rect.Right + 2, stageList[i].rect.Top),
                  TGPPointF.Create(stageList[i].rect.Right + 2, stageList[i].rect.Bottom));
 
-       graphic.DrawString(stageList[i].resultLabel, stageLabelFont,
+       graphic.DrawString(stageList[i].resultLabel, resultFont,
                        stageList[i].resultRect, resultAlign, BlackBrush);
 
       // graphic.DrawRectangle(pen, stageList[i].resultRect);
@@ -269,7 +275,7 @@ begin
              graphic.DrawString(timeLabels[i].displayLabel,
                     gradFont, timeLabels[i].rect, gradFontAlign, BlackBrush);
 
-     graphic.DrawString(NOTE, gradFont, noteRect, nil, BlackBrush);
+     graphic.DrawString(NOTE, noteFont, noteRect, nil, BlackBrush);
 
     img.Picture.Assign(bmp);
 end;

@@ -56,8 +56,8 @@ type
     { Public declarations }
     property ResultMask: TResultMask read taskResultMask;
     procedure clearUserResults();
+    procedure saveResults();
     property UTTTModuleList: TUTTModulesList read fUTTTest;
-    function VisibleModuleCount(): integer;
     procedure ShowUTT();
   end;
 
@@ -79,6 +79,11 @@ begin
      begin
          btResultsClick(self);
      end;
+end;
+
+procedure TfrmUTT.saveResults;
+begin
+
 end;
 
 procedure TfrmUTT.setPoints(pts: integer);
@@ -165,37 +170,11 @@ end;
 
 procedure TfrmUTT.btResultsClick(Sender: TObject);
 var mr: TmodalResult;
-    r, m: string;
-    i, j, pts: integer;
 begin
-//    if rgVariants.ItemIndex < 0 then rgVariants.ItemIndex := 0;
-    r := ''; m := '';
-    for i := 0 to length(fUTTTest) - 1 do
-    begin
-         if not fUTTTest[i].visible then continue;
-         if (m <> fUTTTest[i].lable) then m := fUTTTest[i].lable;
-         pts := 0;
-
-         for j := 0 to length(taskResultMask) - 1 do
-                if ((j + 1) >= fUTTTest[i].task_from) and
-                        ((j + 1) <= fUTTTest[i].task_to) and
-                                   taskResultMask[j] then inc(pts);
-
-         r := r + m + ' = ' + intToStr(pts) + #13;
-    end;
-    r := r + #13;
-    mr := messageBox(handle,
-        PWideChar(r + 'Довольны вы результатом?'),
-                    'ОГЕ', MB_YESNO or MB_ICONQUESTION);
-
-  // mr := TfrmTestResult.showUTTResults;
+    mr := TfrmTestResult.showUTTResults;
     case mr of
-      mrYes:
-          begin
-               mode := mNormal;
-               if messageBox(handle, 'Хотите сбросить результаты?',
-                    'ОГЕ', MB_YESNO or MB_ICONQUESTION) = mrYes then clearUserResults;
-          end;
+      mrYes: mode := mNormal;
+
       mrNo:
         begin
           // Перейдем в режим прохода теста заново
@@ -318,14 +297,6 @@ procedure TfrmUTT.txtAnswerKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
     if key = VK_RETURN then btAnswearClick(Sender);
-end;
-
-function TfrmUTT.VisibleModuleCount: integer;
-var i: integer;
-begin
-     result := 0;
-     for i:= 0 to length(fUTTTest) - 1 do
-          if fUTTTest[i].visible then inc(result);
 end;
 
 end.

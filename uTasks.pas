@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, ExtCtrls, uGlobals, uTopicModel;
+  Dialogs, StdCtrls, Buttons, ExtCtrls, uGlobals, uTopicModel, uSavePoint;
 
 type
   TfrmTasks = class(TForm)
@@ -35,12 +35,13 @@ type
     procedure btHelpClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
   private
+    savePoint: TSavePoint;
     mTask: TTopic;
     mTaskList: TTopicList;
     links: array of TLinkLabel;
     procedure createLinks();
     procedure AllTaskCompleate;
-    procedure viewTask(aTopic: TTopic);
+    procedure viewTask(aTopic: TTopic; silent: boolean = true);
     function gettaskResultMask: TResultMask;
     procedure assignedCurrent();
     { Private declarations }
@@ -48,6 +49,7 @@ type
     { Public declarations }
     property ResultMask: TResultMask read gettaskResultMask;
     procedure clearUserResults;
+    procedure saveResults();
     procedure ShowTasks();
   end;
 
@@ -158,18 +160,22 @@ begin
     end;
 end;
 
-procedure TfrmTasks.viewTask(aTopic: TTopic);
+procedure TfrmTasks.viewTask(aTopic: TTopic; silent: boolean = true);
 begin
-     if aTopic.content = nil then
-     begin
-         { messageBox(self.Handle,
-              'По данному разделу тесты не загружены',
-                           'Ошибка', MB_OK or MB_ICONERROR); }
-          abort;
-     end;
+     ScrollBox.HorzScrollBar.Range := 0;
+     ScrollBox.VertScrollBar.Range := 0;
 
      img.Canvas.Brush.Color:=ClWhite;
      img.Canvas.FillRect(img.Canvas.ClipRect);
+
+     if (aTopic.content = nil) then
+     begin
+          if not silent then
+              messageBox(self.Handle,
+                  'По данному разделу тесты не загружены',
+                               'Ошибка', MB_OK or MB_ICONERROR);
+          exit;
+     end;
 
      ScrollBox.HorzScrollBar.Range := 0;
      ScrollBox.VertScrollBar.Range := 0;
@@ -185,8 +191,9 @@ begin
 end;
 
 procedure TfrmTasks.ShowTasks;
+var id: integer;
 begin
-    loadTopicList(mTaskList);
+    loadTopicList(self, mTaskList);
     if (mTaskList = nil) then
     begin
       messageBox(self.Handle, 'Не удалось загузить тесты', 'Ошибка', MB_OK or MB_ICONERROR);
@@ -194,6 +201,21 @@ begin
     end;
 
     createLinks();
+    savePoint := TsavePoint.Create(frmOGE.User.id, self.ClassName);
+    savepoint.Load;
+    id := savepoint.asInteger('TOPIC');
+    if(id > 0) then
+    begin
+          mtask := getTopicByID(id, mTaskList);
+          if mtask = nil then exit;
+          id := savepoint.asInteger('SEC');
+          if id < 0 then exit;
+          mtask.setSection(cntTask, mtask.sectionByID(id));
+          mTask.Page := savepoint.asInteger('PAGE');
+          mTask.ResultMask := savepoint.asResultMask('MASK_' + intToStr(mTask.Section.topic_id));
+          mTask.loadAnswears();
+          viewTask(mTask);
+    end;
     show;
 end;
 
@@ -206,13 +228,29 @@ begin
     mTask.OnAllTaskComplete := AllTaskCompleate;
     mTask.setSection(cntTask, mTask.sectionByName(TLinkLabel(Sender).Name));
     mTask.FirstPage;
-    viewTask(mTask);
+    viewTask(mTask, false);
     mTask.loadAnswears();
+end;
+
+procedure TfrmTasks.saveResults;
+begin
+   if assigned(mTask) then
+   begin
+       savePoint.addIntValue('TOPIC', mTask.ID);
+       if assigned(mTask.Section) then
+       begin
+          savepoint.addIntValue('SEC', mTask.Section.topic_id);
+          savepoint.addIntValue('PAGE', mTask.Page);
+          savepoint.addResultMask('MASK_' + intToStr(mTask.Section.topic_id), mtask.ResultMask);
+       end;
+       savepoint.Save;
+   end;
 end;
 
 procedure TfrmTasks.clearUserResults;
 begin
     mTask.clearResults;
+    savepoint.Delete('MASK_' + intToStr(mTask.Section.topic_id));
 end;
 
 procedure TfrmTasks.createLinks;
@@ -270,6 +308,7 @@ end;
 procedure TfrmTasks.FormDestroy(Sender: TObject);
 var i: integer;
 begin
+     savePoint.Free;
      for i := 0 to length(links) - 1 do freeAndNil(links[i]);
      freeTopicList(mTaskList);
 end;

@@ -1,0 +1,11 @@
+INSERT INTO USER(UT_ID, FIO)VALUES(2, "Азалханов Саид")
+INSERT INTO USER(UT_ID, FIO)VALUES(2, "Акрамов Халил")
+INSERT INTO USER(UT_ID, FIO)VALUES(2, "Баранов Семён")
+INSERT INTO USER(UT_ID, FIO)VALUES(2, "Братякин Кирилл")
+INSERT INTO USER(UT_ID, FIO)VALUES(2, "Головач Михаил")
+INSERT INTO USER(UT_ID, FIO)VALUES(2, "Гульмамедов Рахим") 
+INSERT INTO USER(UT_ID, FIO)VALUES(2, "Ким Юлия")
+INSERT INTO USER(UT_ID, FIO)VALUES(2, "Логвинов Денис")
+INSERT INTO USER(UT_ID, FIO)VALUES(2, "Мадинова Арзу")
+INSERT INTO USER(UT_ID, FIO)VALUES(2, "Похвала Ольга")
+

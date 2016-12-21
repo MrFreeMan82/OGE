@@ -7,7 +7,7 @@ uses
   Dialogs, OleCtrls, SHDocVw, ComCtrls, StdCtrls, ExtCtrls, ExtDlgs, Grids,
   ToolWin, Buttons, PlatformDefaultStyleActnCtrls, ActnList, ActnMan,
   AppEvnts, uTheme, uUTT, uTasks, uWorkPlan, XPMan, uCollectiveTask, ImgList,
-  ShellAnimations, uUser;
+  ShellAnimations, uUser, NiceGrid;
 
 type
   TfrmOGE = class(TForm)
@@ -29,7 +29,10 @@ type
     btDeleteUser: TToolButton;
     ImageList1: TImageList;
     ShellResources1: TShellResources;
-    grdUsers: TStringGrid;
+    tabResults: TTabSheet;
+    grdUserresult: TNiceGrid;
+    grdUsers: TNiceGrid;
+    NiceGrid1: TNiceGrid;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure WebBrowser1DocumentComplete(ASender: TObject;
@@ -38,8 +41,8 @@ type
     procedure btAddUserClick(Sender: TObject);
     procedure btEditUserClick(Sender: TObject);
     procedure btDeleteUserClick(Sender: TObject);
-    procedure grdUsersSelectCell(Sender: TObject; ACol, ARow: Integer;
-      var CanSelect: Boolean);
+    procedure grdUsersColRowChanged(Sender: TObject; Col, Row: Integer);
+    procedure FormResize(Sender: TObject);
   private
     { Private declarations }
     frmTopics: TfrmTopics;
@@ -48,7 +51,7 @@ type
     frmWorkPlan: TfrmWorkPlan;
     frmCollectiveTask: TfrmCollectiveTask;
 
-    currentUser: PUser;
+    CurrentUser: PUser;
     usr: PUser;
     usrList: TUserList;
     path: string;
@@ -57,9 +60,10 @@ type
     procedure refreshUserList();
   public
     { Public declarations }
-    property TaskTests: TfrmTasks read frmTasks;
+    property Tasks: TfrmTasks read frmTasks;
     property Topics: TfrmTopics read frmTopics;
     property UTT:TfrmUTT read frmUTT;
+    property User: PUser read currentUser;
   end;
 
 var
@@ -129,28 +133,20 @@ begin
 end;
 
 procedure TfrmOGE.fillGrid;
-var i, j: integer;
+var i: integer;
 begin
-     grdUsers.RowCount := length(UsrList) + 1;
+     grdUsers.RowCount := length(UsrList);
      grdUsers.ColCount := USR_FIELD_COUNT;
-    // grdUsers.FixedRows := 1;
-     grdUsers.FixedCols := 0;
-
-     grdUsers.Cells[0, 0] := 'ИД';
-     grdUsers.Cells[1, 0] := 'Тип';
-     grdUsers.Cells[2, 0] := 'ФИО';
-     grdUsers.Cells[3, 0] := 'Пароль';
 
      grdUsers.ColWidths[1] := 300;
      grdUsers.ColWidths[2] := 500;
 
      for i := 0 to length(UsrList) - 1 do
      begin
-          j := i + 1;
-          grdUsers.Cells[0, j] := intToStr(UsrList[i].id);
-          grdUsers.Cells[1, j] := ut_idToString(usrList[i].ut_id);
-          grdUsers.Cells[2, j] := usrList[i].fio;
-          grdUsers.Cells[3, j] := usrList[i].password;
+          grdUsers.Cells[0, i] := intToStr(UsrList[i].id);
+          grdUsers.Cells[1, i] := ut_idToString(usrList[i].ut_id);
+          grdUsers.Cells[2, i] := usrList[i].fio;
+          grdUsers.Cells[3, i] := usrList[i].password;
      end;
 end;
 
@@ -166,16 +162,20 @@ begin
     showMessage('Тестовый образец');
     {$ENDIF}
 
-    usrList := dm.loadUserList();
+    try
+        usrList := dm.loadUserList();
+    except
+        usrList := nil;
+    end;
 
-    if Login() = mrCancel then
+    if (usrList = nil) or (Login() = mrCancel) then
     begin
         Application.Terminate;
         exit;
     end;
 
-    if currentUser.ut_id = 1 then tabAdmin.TabVisible := true;
-
+    if currentUser.ut_id = 1 then tabAdmin.TabVisible := true else tabAdmin.TabVisible := false;
+    Caption := 'ОГЕ - ' + currentUser.fio;
     Path := exePath();
     WebBrowser1.Navigate('res://' + Application.ExeName + '/HTML/FIRST_PAGE');
     WebBrowser1.OleObject.Document.bgColor := '#E0FFFF';
@@ -214,11 +214,15 @@ begin
     freeAndNil(frmCollectiveTask)
 end;
 
-procedure TfrmOGE.grdUsersSelectCell(Sender: TObject; ACol, ARow: Integer;
-  var CanSelect: Boolean);
+procedure TfrmOGE.FormResize(Sender: TObject);
 begin
-      if (grdUsers.Cells[0, Arow] <> '') then
-        usr := getUserByID(strToInt(grdUsers.Cells[0, ARow]), usrList)
+    if pgPages.ActivePage = tabPlan then frmWorkPlan.refreshWorkPlan;
+end;
+
+procedure TfrmOGE.grdUsersColRowChanged(Sender: TObject; Col, Row: Integer);
+begin
+      if (grdUsers.Cells[0, row] <> '') then
+        usr := getUserByID(strToInt(grdUsers.Cells[0, Row]), usrList)
 end;
 
 procedure TfrmOGE.pgPagesChange(Sender: TObject);

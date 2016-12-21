@@ -1,4 +1,4 @@
-object frmTaskDiagram: TfrmTaskDiagram
+object frmUTTDiagram: TfrmUTTDiagram
   Left = 0
   Top = 0
   Align = alClient
@@ -12,8 +12,6 @@ object frmTaskDiagram: TfrmTaskDiagram
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  ExplicitWidth = 320
-  ExplicitHeight = 240
   PixelsPerInch = 96
   TextHeight = 13
   object img: TImage

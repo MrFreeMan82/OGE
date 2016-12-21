@@ -44,7 +44,7 @@ type
     procedure Render();
   public
     { Public declarations }
-    procedure showDiagram();
+    procedure showDiagram(useRandom, draw: boolean);
     procedure refresh(useRandom: boolean);
   end;
 
@@ -151,7 +151,7 @@ begin
 
      for i := 0 to taskCount -  1 do
      begin
-          if frmOGE.TaskTests.ResultMask[i] = true then
+          if frmOGE.Tasks.ResultMask[i] = true then
           begin
                 tasks[i] := TGPGraphicsPath.Create();
 
@@ -199,7 +199,7 @@ end;
 
 procedure TfrmTaskDiagram.initialize;
 begin
-     taskCount := length(frmOGE.TaskTests.ResultMask);
+     taskCount := length(frmOGE.Tasks.ResultMask);
      setLength(tasks, taskCount);
      createCircle(length(tasks) div MAX_GRADUATION);
      createGradCircles();
@@ -209,7 +209,8 @@ end;
 procedure TfrmTaskDiagram.Render;
 var i, j, c: integer; rect: TGPRectF;
 begin
-  //  graphic.DrawEllipse(Pen, CircleRect);
+   // img.Canvas.Brush.Color:=clWhite;
+  //  img.Canvas.FillRect(img.Canvas.ClipRect);
 
     for i := 0 to length(tasks) - 1 do
     begin
@@ -267,8 +268,9 @@ begin
     Render();
 end;
 
-procedure TfrmTaskDiagram.showDiagram();
+procedure TfrmTaskDiagram.showDiagram(useRandom, draw: boolean);
 begin
+    if draw then refresh(useRandom);
     show;
 end;
 

@@ -32,7 +32,7 @@ type
     needer: TObject;
     links: array of TLinkLabel;
     procedure createLinks();
-    procedure viewTopic();
+    procedure viewTopic(silent: boolean = true);
     procedure assignedCurrent;
   public
     { Public declarations }
@@ -77,20 +77,21 @@ begin
     frmOGE.pgPages.ActivePage := frmOGE.tabTasks;
 end;
 
-procedure TfrmTopics.viewTopic;
+procedure TfrmTopics.viewTopic(silent: boolean = true);
 var marginLeft: integer;
 begin
-    if  fTopic.content = nil then
-    begin
-      // messageBox(handle, 'Раздел не загружен.', 'ОГЕ', MB_OK or MB_ICONERROR);
-       abort;
-    end;
+    ScrollBox.HorzScrollBar.Range := 0;
+    ScrollBox.VertScrollBar.Range := 0;
 
     img.Canvas.Brush.Color:=ClWhite;
     img.Canvas.FillRect(img.Canvas.ClipRect);
 
-    ScrollBox.HorzScrollBar.Range := 0;
-    ScrollBox.VertScrollBar.Range := 0;
+    if  fTopic.content = nil then
+    begin
+       if not silent then
+           messageBox(handle, 'Раздел не загружен.', 'ОГЕ', MB_OK or MB_ICONERROR);
+       exit;
+    end;
 
     marginLeft := (ScrollBox.ClientWidth - fTopic.content.Width) div 2;
     if marginLeft < 0 then marginLeft := 0;
@@ -108,12 +109,12 @@ begin
     fTopic := fTopicList[TLinkLabel(Sender).Tag];
     fTopic.setSection(cntInformation, fTopic.sectionByName(TLinkLabel(Sender).Name));
     fTopic.FirstPage;
-    viewTopic();
+    viewTopic(false);
 end;
 
 procedure TfrmTopics.showTopics;
 begin
-    loadTopicList(ftopicList);
+    loadTopicList(self, ftopicList);
     if ftopicList = nil then
     begin
         messageBox(self.Handle, 'Не удалось загузить раздел', 'Ошибка', MB_OK or MB_ICONERROR);
