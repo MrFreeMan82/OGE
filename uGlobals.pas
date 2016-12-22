@@ -10,6 +10,7 @@ const
 
 const TOPIC_DIR = 'Topics';
       UTT_DIR = 'UTT';
+      COLLECTIVE = 'Collective';
       ZACHET = 'зачтено';
       NOT_ZACHET = 'не зачтено';
 
@@ -30,6 +31,8 @@ type
       p1, p2: TGPPointF;
       len: double;
   end;
+
+  POnAllTaskComleteEvent = procedure of object;
 
 procedure Streach(source: TGPRectF; destWidth, destHeight: single; out dest: TGPrectF);
 

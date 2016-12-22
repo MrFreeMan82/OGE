@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, OleCtrls, SHDocVw, ComCtrls, StdCtrls, ExtCtrls, ExtDlgs, Grids,
   ToolWin, Buttons, PlatformDefaultStyleActnCtrls, ActnList, ActnMan,
-  AppEvnts, uTheme, uUTT, uTasks, uWorkPlan, XPMan, uCollectiveTask, ImgList,
+  AppEvnts, uTheme, uUTT, uTasks, uWorkPlan, XPMan, ImgList,
   ShellAnimations, uUser, NiceGrid;
 
 type
@@ -54,7 +54,7 @@ type
     frmUTT: TfrmUTT;
     frmTasks: TfrmTasks;
     frmWorkPlan: TfrmWorkPlan;
-    frmCollectiveTask: TfrmCollectiveTask;
+    frmCollectiveTask: TfrmTasks;
 
     CurrentUser: PUser;
     usr: PUser;
@@ -277,7 +277,7 @@ begin
     frmWorkPlan.Dock(tabPlan, tabPlan.ClientRect);
     frmWorkPlan.ShowWorkPlan();
 
-    if not assigned(frmCollectiveTask) then frmCollectiveTask := TfrmCollectiveTask.Create(self);
+    if not assigned(frmCollectiveTask) then frmCollectiveTask := TfrmTasks.Create(self);
     frmCollectiveTask.Dock(tabCollectiveTask, tabCollectiveTask.ClientRect);
     frmCollectiveTask.showCollectiveTask();
 
@@ -319,7 +319,9 @@ end;
 
 procedure TfrmOGE.pgPagesChange(Sender: TObject);
 begin
-    if pgPages.ActivePage = tabPlan then frmWorkPlan.refreshWorkPlan;
+    if pgPages.ActivePage = tabPlan then frmWorkPlan.refreshWorkPlan
+    else if pgPages.ActivePage = tabTasks then
+
 end;
 
 procedure TfrmOGE.WebBrowser1DocumentComplete(ASender: TObject;

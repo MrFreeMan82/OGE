@@ -153,6 +153,14 @@ begin
 
           t := t + links[k].Height + td;
 
+          if length(ftopicList[i].sections) = 1 then
+          begin
+               links[k].Name := ftopicList[i].name;
+               links[k].OnClick := linkClick;
+               links[k].Tag := i;
+               continue;
+          end;
+
           for j := 0 to length(ftopicList[i].sections) - 1 do
           begin
               inc(k);

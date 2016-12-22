@@ -14,8 +14,6 @@ object frmTopics: TfrmTopics
   OldCreateOrder = False
   OnDestroy = FormDestroy
   OnMouseWheel = FormMouseWheel
-  ExplicitWidth = 320
-  ExplicitHeight = 240
   PixelsPerInch = 96
   TextHeight = 16
   object Splitter1: TSplitter
@@ -59,6 +57,8 @@ object frmTopics: TfrmTopics
       BevelOuter = bvNone
       BorderStyle = bsNone
       DoubleBuffered = True
+      Color = clWhite
+      ParentColor = False
       ParentDoubleBuffered = False
       TabOrder = 0
       object img: TImage

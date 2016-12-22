@@ -328,7 +328,7 @@ object frmOGE: TfrmOGE
     Top = 0
     Width = 1184
     Height = 762
-    ActivePage = tabResults
+    ActivePage = tabInfo
     Align = alClient
     MultiLine = True
     TabOrder = 0
@@ -357,32 +357,60 @@ object frmOGE: TfrmOGE
     object tabThemes: TTabSheet
       Caption = #1056#1072#1079#1076#1077#1083#1099
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
     object tabTasks: TTabSheet
       Caption = #1047#1072#1076#1072#1085#1080#1103' '#1076#1083#1103' '#1089#1072#1084#1086#1089#1090#1086#1103#1090#1077#1083#1100#1085#1086#1075#1086' '#1074#1099#1087#1086#1083#1085#1077#1085#1080#1103
       ImageIndex = 4
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
     object tabCollectiveTask: TTabSheet
       Caption = #1057#1086#1074#1084#1077#1089#1090#1085#1072#1103' '#1088#1072#1073#1086#1090#1072
       ImageIndex = 5
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
     object tabUTT: TTabSheet
       Caption = #1058#1088#1077#1088#1086#1074#1086#1095#1085#1099#1077' '#1074#1072#1088#1080#1072#1085#1090#1099' '#1050#1048#1052#1086#1074
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
     object tabTests: TTabSheet
       Caption = #1058#1077#1089#1090#1099
       Enabled = False
       ImageIndex = 4
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
     object tabPlan: TTabSheet
       Caption = #1055#1083#1072#1085' '#1088#1072#1073#1086#1090
       ImageIndex = 6
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
     object tabResults: TTabSheet
       Caption = #1056#1077#1079#1091#1083#1100#1090#1072#1090#1099
       ImageIndex = 8
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object grdUserresult: TNiceGrid
         Left = 0
         Top = 29
@@ -412,27 +440,27 @@ object frmOGE: TfrmOGE
           end
           item
             Title = #1054#1094#1077#1085#1082#1072' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1086#1074'|'#1057#1072#1084#1086#1089#1090#1086#1103#1090#1077#1083#1100#1085#1086#1077' '#1074#1099#1087#1086#1083#1085#1077#1085#1080#1077
-            Width = 200
+            Width = 201
           end
           item
             Title = #1054#1094#1077#1085#1082#1072' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1086#1074'|'#1057#1086#1074#1084#1077#1089#1090#1085#1072#1103' '#1088#1072#1073#1086#1090#1072
-            Width = 195
+            Width = 194
           end
           item
             Title = #1054#1094#1077#1085#1082#1072' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1086#1074'|'#1058#1088#1077#1085#1080#1088#1086#1074#1086#1095#1085#1099#1077' '#1074#1072#1088#1080#1072#1085#1090#1099' '#1050#1048#1052#1086#1074'|'#1052#1086#1076#1091#1083#1100' '#171#1040#1083#1075#1077#1073#1088#1072#187
-            Width = 195
+            Width = 194
           end
           item
             Title = 
               #1054#1094#1077#1085#1082#1072' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1086#1074'|'#1058#1088#1077#1085#1080#1088#1086#1074#1086#1095#1085#1099#1077' '#1074#1072#1088#1080#1072#1085#1090#1099' '#1050#1048#1052#1086#1074'|'#1052#1086#1076#1091#1083#1100' '#171#1043#1077#1086#1084#1077#1090#1088#1080 +
               #1103#187
-            Width = 195
+            Width = 194
           end
           item
             Title = 
               #1054#1094#1077#1085#1082#1072' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1086#1074'|'#1058#1088#1077#1085#1080#1088#1086#1074#1086#1095#1085#1099#1077' '#1074#1072#1088#1080#1072#1085#1090#1099' '#1050#1048#1052#1086#1074'|'#1052#1086#1076#1091#1083#1100' '#171#1056#1077#1072#1083#1100#1085#1072#1103 +
               ' '#1084#1072#1090#1077#1084#1072#1090#1080#1082#1072#187
-            Width = 193
+            Width = 191
           end>
         GutterKind = gkNone
         GutterFont.Charset = DEFAULT_CHARSET
@@ -450,8 +478,6 @@ object frmOGE: TfrmOGE
         Align = alClient
         BorderStyle = bsNone
         TabOrder = 0
-        ExplicitTop = 88
-        ExplicitHeight = 656
       end
       object grdVariants: TNiceGrid
         Left = 0
@@ -529,19 +555,19 @@ object frmOGE: TfrmOGE
           end
           item
             Title = '14'
-            Width = 41
+            Width = 42
           end
           item
             Title = '15'
-            Width = 41
+            Width = 42
           end
           item
             Title = '16'
-            Width = 41
+            Width = 42
           end
           item
             Title = '17'
-            Width = 40
+            Width = 41
           end
           item
             Title = '18'
@@ -557,19 +583,19 @@ object frmOGE: TfrmOGE
           end
           item
             Title = '21'
-            Width = 37
+            Width = 35
           end
           item
             Title = '22'
-            Width = 37
+            Width = 35
           end
           item
             Title = '23'
-            Width = 37
+            Width = 35
           end
           item
             Title = '24'
-            Width = 37
+            Width = 35
           end
           item
             Title = '25'
@@ -671,6 +697,10 @@ object frmOGE: TfrmOGE
     object tabAdmin: TTabSheet
       Caption = #1055#1086#1083#1100#1079#1086#1074#1072#1090#1077#1083#1080' '#1080' '#1087#1072#1088#1086#1083#1080
       ImageIndex = 7
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object GroupBox1: TGroupBox
         Left = 0
         Top = 0

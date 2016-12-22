@@ -69,17 +69,17 @@ object frmTasks: TfrmTasks
     ShowHint = True
     TabOrder = 2
     object pnlTools: TPanel
-      Left = 248
+      Left = 272
       Top = 0
-      Width = 544
+      Width = 416
       Height = 30
       BevelOuter = bvNone
       TabOrder = 0
       DesignSize = (
-        544
+        416
         30)
       object btNext: TSpeedButton
-        Left = 504
+        Left = 376
         Top = 0
         Width = 40
         Height = 30
@@ -117,7 +117,7 @@ object frmTasks: TfrmTasks
         ExplicitHeight = 41
       end
       object btPrev: TSpeedButton
-        Left = 464
+        Left = 336
         Top = 0
         Width = 40
         Height = 30
@@ -156,7 +156,7 @@ object frmTasks: TfrmTasks
         ExplicitHeight = 32
       end
       object btHelp: TSpeedButton
-        Left = 285
+        Left = 271
         Top = 0
         Width = 40
         Height = 30
@@ -194,7 +194,7 @@ object frmTasks: TfrmTasks
         ExplicitHeight = 26
       end
       object btResults: TSpeedButton
-        Left = 245
+        Left = 231
         Top = 0
         Width = 40
         Height = 30
@@ -231,7 +231,7 @@ object frmTasks: TfrmTasks
         ExplicitLeft = 239
       end
       object btAnswear: TSpeedButton
-        Left = 205
+        Left = 191
         Top = 0
         Width = 40
         Height = 30
@@ -286,9 +286,9 @@ object frmTasks: TfrmTasks
         OnKeyDown = txtAnswerKeyDown
       end
       object Panel1: TPanel
-        Left = 325
+        Left = 311
         Top = 0
-        Width = 139
+        Width = 25
         Height = 30
         Align = alRight
         BevelOuter = bvNone

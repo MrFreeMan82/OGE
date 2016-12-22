@@ -38,7 +38,10 @@ type
     savePoint: TSavePoint;
     mTask: TTopic;
     mTaskList: TTopicList;
+    flagCollective: boolean;
+    suffix: string;
     links: array of TLinkLabel;
+
     procedure createLinks();
     procedure AllTaskCompleate;
     procedure viewTask(aTopic: TTopic; silent: boolean = true);
@@ -52,6 +55,7 @@ type
     procedure clearUserResults;
     procedure saveResults();
     procedure ShowTasks();
+    procedure ShowCollectiveTask();
   end;
 
 implementation
@@ -61,6 +65,9 @@ uses uData, uTestResult, uOGE;
 {$R *.dfm}
 
 { TfrmTasks }
+
+const COLLECTIVE = 'COLLECTIVE_';
+      COLLECTIVE_TASK_ID = 4;
 
 function TfrmTasks.Over80(us_id: integer): boolean;
 var i,j,k, total_tasks, true_tasks: integer;
@@ -77,7 +84,7 @@ begin
           for j :=  0 to length(mTaskList[i].sections) - 1 do
           begin
                inc(total_tasks);
-               rm := sp.asResultMask('MASK_' +
+               rm := sp.asResultMask('MASK_' + suffix +
                         intTostr(mTaskList[i].sections[j].topic_id));
 
                if (rm = nil) then continue;
@@ -218,6 +225,40 @@ begin
      ScrollBox.VertScrollBar.Range := img.Picture.Height;
 end;
 
+procedure TfrmTasks.ShowCollectiveTask;
+var id: integer;
+begin
+    loadTopicList(self, mTaskList);
+    mTask := mTaskList[high(mTaskList)];
+
+    if (mTask = nil) then
+    begin
+      messageBox(self.Handle, 'Не удалось загузить тесты', 'Ошибка', MB_OK or MB_ICONERROR);
+      abort;
+    end;
+
+    flagCollective := true;
+    suffix := COLLECTIVE;
+    createLinks();
+
+    savePoint := TsavePoint.Create(frmOGE.User.id, self.ClassName);
+    savepoint.Load;
+    id := savepoint.asInteger('TOPIC' + suffix);
+    if(id > 0) then
+    begin
+          mtask := getTopicByID(id, mTaskList);
+          if mtask = nil then exit;
+          id := savepoint.asInteger('SEC' + suffix);
+          if id < 0 then exit;
+          mtask.setSection(cntTask, mtask.sectionByID(id));
+          mTask.Page := savepoint.asInteger('PAGE_' + suffix + intToStr(mTask.Section.topic_id));
+          mTask.ResultMask := savepoint.asResultMask('MASK_' + suffix + intToStr(mTask.Section.topic_id));
+          mTask.loadAnswears();
+          viewTask(mTask);
+    end;
+    show;
+end;
+
 procedure TfrmTasks.ShowTasks;
 var id: integer;
 begin
@@ -227,7 +268,8 @@ begin
       messageBox(self.Handle, 'Не удалось загузить тесты', 'Ошибка', MB_OK or MB_ICONERROR);
       abort;
     end;
-
+    flagCollective := false;
+    suffix := '';
     createLinks();
     savePoint := TsavePoint.Create(frmOGE.User.id, self.ClassName);
     savepoint.Load;
@@ -272,12 +314,12 @@ procedure TfrmTasks.saveResults;
 begin
    if assigned(mTask) then
    begin
-       savePoint.addIntValue('TOPIC', mTask.ID);
+       savePoint.addIntValue('TOPIC' + suffix, mTask.ID);
        if assigned(mTask.Section) then
        begin
-          savepoint.addIntValue('SEC', mTask.Section.topic_id);
-          savepoint.addIntValue('PAGE_' +  intToStr(mTask.Section.topic_id), mTask.Page);
-          savepoint.addResultMask('MASK_' + intToStr(mTask.Section.topic_id), mtask.ResultMask);
+          savepoint.addIntValue('SEC' + suffix, mTask.Section.topic_id);
+          savepoint.addIntValue('PAGE_' + suffix +  intToStr(mTask.Section.topic_id), mTask.Page);
+          savepoint.addResultMask('MASK_' + suffix + intToStr(mTask.Section.topic_id), mtask.ResultMask);
        end;
        savepoint.Save;
    end;
@@ -287,7 +329,7 @@ procedure TfrmTasks.clearUserResults;
 begin
     mTask.clearResults;
     if assigned(mTask) and assigned(mTask.section) then
-        savepoint.Delete('MASK_' + intToStr(mTask.Section.topic_id));
+        savepoint.Delete('MASK_' + suffix + intToStr(mTask.Section.topic_id));
 end;
 
 procedure TfrmTasks.createLinks;
@@ -307,6 +349,9 @@ begin
 
      for i := 0 to length(mTaskList) - 1 do
      begin
+          if not flagCollective and (mTaskList[i].ID = COLLECTIVE_TASK_ID) then continue;
+          if flagCollective and (mTaskList[i].ID <> COLLECTIVE_TASK_ID) then continue;
+
           inc(k);
 
           links[k] := TLinkLabel.Create(pnlLinks);
@@ -317,6 +362,14 @@ begin
           links[k].Caption := '<a href="#">' + mTaskList[i].Caption + '</a>';
 
           t := t + links[k].Height + td;
+
+          if length(mTaskList[i].sections) = 1 then
+          begin
+               links[k].Name := mTaskList[i].name;
+               links[k].OnClick := linkClick;
+               links[k].Tag := i;
+               continue;
+          end;
 
           for j := 0 to length(mTaskList[i].sections) - 1 do
           begin

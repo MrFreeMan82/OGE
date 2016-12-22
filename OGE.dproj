@@ -79,9 +79,6 @@
 				<Form>frmWorkPlan</Form>
 			</DCCReference>
 			<DCCReference Include="uTopicModel.pas"/>
-			<DCCReference Include="uCollectiveTask.pas">
-				<Form>frmCollectiveTask</Form>
-			</DCCReference>
 			<DCCReference Include="uUser.pas">
 				<Form>frmUser</Form>
 			</DCCReference>

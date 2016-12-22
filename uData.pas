@@ -36,6 +36,7 @@ type
     function LoadPage(const path: string): TBitmap;
     function loadUTTTests(): TUTTModulesList;
     function loadTopicList(): TTopicList;
+    function loadTopic(): TTopic;
 
     function loadUserList(): TUserList;
     procedure addUser(usr: PUser);
@@ -330,12 +331,6 @@ begin
      end;
 end;
 
-procedure Tdm.DataModuleDestroy(Sender: TObject);
-begin
-    sql.Free;
-    sqlite.Free;
-end;
-
 function Tdm.doLoadTopicList(): TTopicList;
 var i, j, cnt, scnt: integer;
     root, node, sectionNodes: IXMLNode;
@@ -374,6 +369,24 @@ begin
                    sections[j].visible := FindNode('VISIBLE').Text = '0';
                 end;
           end;
+     end;
+end;
+
+function Tdm.loadTopic: TTopic;
+var info: string;
+    s: TStringStream;
+    tl: TTopicList;
+begin
+     result := nil;
+     info := COLLECTIVE + '/info.xml';
+     s := TStringStream.Create;
+     try
+        if not FindData(TaskDataFile, info, s) then abort;
+        xmlDoc.LoadFromStream(s);
+        tl := doLoadTopicList();
+        if assigned(tl) then result := tl[0];
+     finally
+          s.Free;
      end;
 end;
 
@@ -497,6 +510,12 @@ begin
     finally
         zip.Free;
     end;
+end;
+
+procedure Tdm.DataModuleDestroy(Sender: TObject);
+begin
+    sql.Free;
+    sqlite.Free;
 end;
 
 end.

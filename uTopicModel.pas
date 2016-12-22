@@ -5,7 +5,7 @@ interface
 uses uGlobals, Graphics, uSavePoint;
 
 type
-  TContentFolder = (cntUnknown, cntContent, cntTask, cntCollectiveTask);
+  TContentFolder = (cntUnknown, cntContent, cntTask);
 
   PSection = ^TSection;
   TSection = record
@@ -18,8 +18,6 @@ type
   end;
 
   TSectionList = array of TSection;
-
-  POnAllTaskComleteEvent = procedure of object;
 
   TTopic = class
   private
@@ -71,6 +69,7 @@ type
 
   TTopicList = array of TTopic;
 
+function loadCollective(): TTopic;
 procedure loadTopicList(Sender: TObject; out List: TTopicList);
 procedure freeTopicList(List: TTopicList);
 function getTopicByID(id: integer; topicList: TTopicList): TTopic;
@@ -92,6 +91,11 @@ begin
      result := nil;
      for i := 0 to length(topicList) - 1 do
         if(id = topicList[i].ID) then exit(topicList[i]);
+end;
+
+function loadCollective(): TTopic;
+begin
+     result := dm.loadTopic();
 end;
 
 procedure loadTopicList(Sender: TObject; out List: TTopicList);
@@ -213,16 +217,9 @@ end;
 procedure TTopic.setPage(const Value: integer);
 begin
     case mContentFolderType of
-      cntUnknown: ;
+      cntTask:;
       cntContent:
                 if(value >= 1) and (value <= section.pages_count) then
-                begin
-                    pageNo := value - 1;
-                    NextPage;
-                end;
-
-      cntCollectiveTask, cntTask:
-                if(value >= 1) and (value <= section.task_count) then
                 begin
                     pageNo := value - 1;
                     NextPage;
@@ -251,7 +248,6 @@ begin
       cntUnknown:begin mContentPageCount := 0; mContentFolder := ''; end;
       cntContent: begin mContentPageCount := section.pages_count; mContentFolder := 'Content' end;
       cntTask: begin mContentPageCount := section.task_count; mContentFolder := 'Task' end;
-      cntCollectiveTask: begin mContentPageCount := section.task_count; mContentFolder := 'CollectiveTask' end;
     end;
 end;
 

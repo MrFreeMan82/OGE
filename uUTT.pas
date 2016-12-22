@@ -28,14 +28,16 @@ type
   TfrmUTT = class(TForm)
     rgVariants: TRadioGroup;
     Panel3: TPanel;
-    Label2: TLabel;
-    btAnswear: TSpeedButton;
-    btResults: TSpeedButton;
-    txtAnswer: TEdit;
     ScrollBox: TScrollBox;
     img: TImage;
-    btPrevTask: TSpeedButton;
-    btNextTask: TSpeedButton;
+    pnlTools: TPanel;
+    btNext: TSpeedButton;
+    btPrev: TSpeedButton;
+    btResults: TSpeedButton;
+    btAnswear: TSpeedButton;
+    Label3: TLabel;
+    txtAnswer: TEdit;
+    Panel1: TPanel;
     procedure rgVariantsClick(Sender: TObject);
     procedure btNextTaskClick(Sender: TObject);
     procedure btPrevTaskClick(Sender: TObject);
@@ -46,6 +48,7 @@ type
     procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure FormDestroy(Sender: TObject);
+    procedure FormResize(Sender: TObject);
   private
     { Private declarations }
     mode: Tmode;
@@ -320,6 +323,11 @@ begin
     end;
 end;
 
+procedure TfrmUTT.FormResize(Sender: TObject);
+begin
+    pnlTools.Left := (Panel3.Width div 2) - (pnlTools.Width div 2);
+end;
+
 procedure TfrmUTT.rgVariantsClick(Sender: TObject);
 var page: integer;
 begin
@@ -352,7 +360,7 @@ begin
 end;
 
 procedure TfrmUTT.ShowUTT;
-var variant, page: integer;
+var variant: integer;
 begin
     mode := mNormal;
     fUTTTest := dm.loadUTTTests();
