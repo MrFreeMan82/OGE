@@ -48,6 +48,7 @@ type
   public
     { Public declarations }
     property ResultMask: TResultMask read gettaskResultMask;
+    function Over80(us_id: integer): boolean;
     procedure clearUserResults;
     procedure saveResults();
     procedure ShowTasks();
@@ -60,6 +61,35 @@ uses uData, uTestResult, uOGE;
 {$R *.dfm}
 
 { TfrmTasks }
+
+function TfrmTasks.Over80(us_id: integer): boolean;
+var i,j,k, total_tasks, true_tasks: integer;
+    sp: TSavePoint;
+    rm: TResultMask;
+begin
+     total_tasks := 0; true_tasks := 0;
+
+     sp := TSavePoint.Create(us_id, self.ClassName);
+     sp.Load;
+
+     for i := 0 to length(mTaskList) - 1  do
+     begin
+          for j :=  0 to length(mTaskList[i].sections) - 1 do
+          begin
+               inc(total_tasks);
+               rm := sp.asResultMask('MASK_' +
+                        intTostr(mTaskList[i].sections[j].topic_id));
+
+               if (rm = nil) then continue;
+
+               for k := 0 to length(rm) - 1 do
+                   if rm[k] = true then inc(true_tasks);
+          end;
+     end;
+
+     sp.Free;
+     result := true_tasks >= trunc(total_tasks * 0.8);
+end;
 
 procedure TfrmTasks.AllTaskCompleate;
 begin
@@ -97,8 +127,6 @@ begin
     begin
          if mTask.ResultMaskValue[task - 1] = false then
          begin
-              mTask.section.points := mTask.section.points + 1;
-
               mTask.ResultMaskValue[task - 1] := true;
          end
          else begin
@@ -211,7 +239,7 @@ begin
           id := savepoint.asInteger('SEC');
           if id < 0 then exit;
           mtask.setSection(cntTask, mtask.sectionByID(id));
-          mTask.Page := savepoint.asInteger('PAGE');
+          mTask.Page := savepoint.asInteger('PAGE_' + intToStr(mTask.Section.topic_id));
           mTask.ResultMask := savepoint.asResultMask('MASK_' + intToStr(mTask.Section.topic_id));
           mTask.loadAnswears();
           viewTask(mTask);
@@ -220,6 +248,7 @@ begin
 end;
 
 procedure TfrmTasks.linkClick(Sender: TObject);
+var page: integer;
 begin
     if not (Sender is TLinkLabel) then exit;
 
@@ -227,7 +256,14 @@ begin
    // mTask.ContentType  := cntTask;
     mTask.OnAllTaskComplete := AllTaskCompleate;
     mTask.setSection(cntTask, mTask.sectionByName(TLinkLabel(Sender).Name));
-    mTask.FirstPage;
+    page := savePoint.asInteger('PAGE_' + intToStr(mTask.Section.topic_id));
+
+    if (page >= 1) and
+      (page <= mTask.Section.task_count)
+          then mTask.Page := page else mTask.FirstPage;
+
+    mTask.ResultMask := savepoint.asResultMask('MASK_' + intToStr(mTask.Section.topic_id));
+
     viewTask(mTask, false);
     mTask.loadAnswears();
 end;
@@ -240,7 +276,7 @@ begin
        if assigned(mTask.Section) then
        begin
           savepoint.addIntValue('SEC', mTask.Section.topic_id);
-          savepoint.addIntValue('PAGE', mTask.Page);
+          savepoint.addIntValue('PAGE_' +  intToStr(mTask.Section.topic_id), mTask.Page);
           savepoint.addResultMask('MASK_' + intToStr(mTask.Section.topic_id), mtask.ResultMask);
        end;
        savepoint.Save;
@@ -250,7 +286,8 @@ end;
 procedure TfrmTasks.clearUserResults;
 begin
     mTask.clearResults;
-    savepoint.Delete('MASK_' + intToStr(mTask.Section.topic_id));
+    if assigned(mTask) and assigned(mTask.section) then
+        savepoint.Delete('MASK_' + intToStr(mTask.Section.topic_id));
 end;
 
 procedure TfrmTasks.createLinks;

@@ -5,17 +5,15 @@ interface
 uses uGlobals, Graphics, uSavePoint;
 
 type
-  TContentType = (cntUnknown, cntInformation, cntTask);
+  TContentFolder = (cntUnknown, cntContent, cntTask, cntCollectiveTask);
 
   PSection = ^TSection;
   TSection = record
     topic_id: integer;
-    topic_link, page_link: integer;
     task_count: integer;
     pages_count: integer;
     name: string;
     display_lable: string;
-    points: double;
     visible: boolean;
   end;
 
@@ -31,7 +29,7 @@ type
       mMode: Tmode;
       pageNo: integer;
       mContentPageCount: integer;
-      mContentType: TContentType;
+      mContentFolderType: TContentFolder;
       mContentFolder: string;
       msection: PSection;
 
@@ -59,11 +57,11 @@ type
       property ResultMask: TResultMask read getResultMask write setResultMask;
       property ResultMaskValue[index: integer]: boolean read getResultMaskValue write setResultMaskValue;
       property CurrentTask: integer read pageNo;
-      property ContentType: TContentType read mContentType;
+      property ContentType: TContentFolder read mContentFolderType;
       property Section : PSection read mSection;
       property Page: integer read PageNo write setPage;
 
-      procedure setSection(ContentType: TContentType; const Value: PSection);
+      procedure setSection(ContentType: TContentFolder; const Value: PSection);
       function isTrueAnswear(answ: double): boolean;
       function sectionByName(const name: string): PSection;
       function sectionByID(topic_id: integer): PSection;
@@ -124,12 +122,6 @@ end;
 procedure TTopic.FirstPage;
 begin
    pageNo := 1;
-   if (mContentType = cntInformation) and (section.topic_link > 0) then
-   begin
-        pageNo := section.page_link;
-        mSection := sectionByID(section.topic_link);
-        if mContentPageCount = 0 then mContentPageCount := mSection.pages_count;
-   end;
    doLoadPage();
 end;
 
@@ -220,11 +212,23 @@ end;
 
 procedure TTopic.setPage(const Value: integer);
 begin
-    if(value >= 1) and (value <= section.pages_count) then
-    begin
-        pageNo := value - 1;
-        NextPage;
+    case mContentFolderType of
+      cntUnknown: ;
+      cntContent:
+                if(value >= 1) and (value <= section.pages_count) then
+                begin
+                    pageNo := value - 1;
+                    NextPage;
+                end;
+
+      cntCollectiveTask, cntTask:
+                if(value >= 1) and (value <= section.task_count) then
+                begin
+                    pageNo := value - 1;
+                    NextPage;
+                end;
     end;
+
 end;
 
 procedure TTopic.setResultMask(const Value: TResultMask);
@@ -237,15 +241,17 @@ begin
      taskResultMask[index] := value
 end;
 
-procedure TTopic.setSection(ContentType: TContentType; const Value: PSection);
+procedure TTopic.setSection(ContentType: TContentFolder; const Value: PSection);
 begin
+    mMode := mNormal;
     mSection := value;
-    mContentType := ContentType;
+    mContentFolderType := ContentType;
 
     case ContentType of
       cntUnknown:begin mContentPageCount := 0; mContentFolder := ''; end;
-      cntInformation: begin mContentPageCount := section.pages_count; mContentFolder := 'Content' end;
+      cntContent: begin mContentPageCount := section.pages_count; mContentFolder := 'Content' end;
       cntTask: begin mContentPageCount := section.task_count; mContentFolder := 'Task' end;
+      cntCollectiveTask: begin mContentPageCount := section.task_count; mContentFolder := 'CollectiveTask' end;
     end;
 end;
 
@@ -253,15 +259,17 @@ procedure TTopic.loadAnswears;
 begin
     filename := format('%s/%s/%s/answ.xml',[TOPIC_DIR, name, section.name]);
     answears := dm.loadAnswears(dm.TaskDataFile, filename, 1);
-    if taskResultMask = nil then setLength(taskResultMask, length(answears));
+    if taskResultMask = nil then
+    begin
+         setLength(taskResultMask, length(answears));
+         clearResults();
+    end;
 end;
 
 procedure TTopic.clearResults;
 var i: integer;
 begin
      for i := 0 to length(taskResultMask) - 1 do taskResultMask[i] := false;
-
-     section.points := 0;
 end;
 
 end.

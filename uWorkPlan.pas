@@ -66,6 +66,8 @@ type
 
 implementation
 
+uses uOGE, dateUtils;
+
 {$R *.dfm}
 
 { TfrmWorkPlan }
@@ -87,6 +89,8 @@ resourcestring STAGE1 = 'Этап 1. Задания для самостоятельного выполнения';
 procedure TfrmWorkPlan.createStages;
 var len, len2, k: double;
     i: integer;
+    result: boolean;
+    cm,m:word;
 begin
      stageList[0].displayLabel := STAGE1;
      stageList[1].displayLabel := STAGE2;
@@ -96,7 +100,16 @@ begin
      stageList[1].period := 2;
      stageList[2].period := 3;
 
-     stageList[0].resultLabel := 'РЕЗУЛЬТАТ: не зачтено';
+     result := frmOGE.Tasks.Over80(frmOGE.User.id);
+     cm := MonthOf(Date);
+     m := 12;
+
+     if result and (cm <= m) then
+        stageList[0].resultLabel := 'РЕЗУЛЬТАТ: ' + ZACHET
+     else
+        stageList[0].resultLabel := 'РЕЗУЛЬТАТ: ' + NOT_ZACHET;
+
+
      stageList[1].resultLabel := 'РЕЗУЛЬТАТ: не зачтено';
 
      len := lineLen(mainRectLeftLine);

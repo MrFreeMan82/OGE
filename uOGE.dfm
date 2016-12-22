@@ -328,15 +328,13 @@ object frmOGE: TfrmOGE
     Top = 0
     Width = 1184
     Height = 762
-    ActivePage = tabAdmin
+    ActivePage = tabResults
     Align = alClient
     MultiLine = True
     TabOrder = 0
     OnChange = pgPagesChange
     object tabInfo: TTabSheet
       Caption = #1048#1085#1092#1086#1088#1084#1072#1094#1080#1103
-      ExplicitWidth = 884
-      ExplicitHeight = 394
       object WebBrowser1: TWebBrowser
         Left = 0
         Top = 0
@@ -359,51 +357,37 @@ object frmOGE: TfrmOGE
     object tabThemes: TTabSheet
       Caption = #1056#1072#1079#1076#1077#1083#1099
       ImageIndex = 3
-      ExplicitWidth = 884
-      ExplicitHeight = 394
     end
     object tabTasks: TTabSheet
       Caption = #1047#1072#1076#1072#1085#1080#1103' '#1076#1083#1103' '#1089#1072#1084#1086#1089#1090#1086#1103#1090#1077#1083#1100#1085#1086#1075#1086' '#1074#1099#1087#1086#1083#1085#1077#1085#1080#1103
       ImageIndex = 4
-      ExplicitWidth = 884
-      ExplicitHeight = 394
     end
     object tabCollectiveTask: TTabSheet
       Caption = #1057#1086#1074#1084#1077#1089#1090#1085#1072#1103' '#1088#1072#1073#1086#1090#1072
       ImageIndex = 5
-      ExplicitWidth = 884
-      ExplicitHeight = 394
     end
     object tabUTT: TTabSheet
       Caption = #1058#1088#1077#1088#1086#1074#1086#1095#1085#1099#1077' '#1074#1072#1088#1080#1072#1085#1090#1099' '#1050#1048#1052#1086#1074
       ImageIndex = 3
-      ExplicitWidth = 884
-      ExplicitHeight = 394
     end
     object tabTests: TTabSheet
       Caption = #1058#1077#1089#1090#1099
       Enabled = False
       ImageIndex = 4
       TabVisible = False
-      ExplicitWidth = 884
-      ExplicitHeight = 394
     end
     object tabPlan: TTabSheet
       Caption = #1055#1083#1072#1085' '#1088#1072#1073#1086#1090
       ImageIndex = 6
-      ExplicitWidth = 884
-      ExplicitHeight = 394
     end
     object tabResults: TTabSheet
       Caption = #1056#1077#1079#1091#1083#1100#1090#1072#1090#1099
       ImageIndex = 8
-      ExplicitWidth = 1087
-      ExplicitHeight = 394
       object grdUserresult: TNiceGrid
         Left = 0
-        Top = 0
+        Top = 29
         Width = 1176
-        Height = 664
+        Height = 627
         Cursor = 101
         ColCount = 6
         DefRowHeight = 25
@@ -428,7 +412,7 @@ object frmOGE: TfrmOGE
           end
           item
             Title = #1054#1094#1077#1085#1082#1072' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1086#1074'|'#1057#1072#1084#1086#1089#1090#1086#1103#1090#1077#1083#1100#1085#1086#1077' '#1074#1099#1087#1086#1083#1085#1077#1085#1080#1077
-            Width = 199
+            Width = 200
           end
           item
             Title = #1054#1094#1077#1085#1082#1072' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1086#1074'|'#1057#1086#1074#1084#1077#1089#1090#1085#1072#1103' '#1088#1072#1073#1086#1090#1072
@@ -448,7 +432,7 @@ object frmOGE: TfrmOGE
             Title = 
               #1054#1094#1077#1085#1082#1072' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1086#1074'|'#1058#1088#1077#1085#1080#1088#1086#1074#1086#1095#1085#1099#1077' '#1074#1072#1088#1080#1072#1085#1090#1099' '#1050#1048#1052#1086#1074'|'#1052#1086#1076#1091#1083#1100' '#171#1056#1077#1072#1083#1100#1085#1072#1103 +
               ' '#1084#1072#1090#1077#1084#1072#1090#1080#1082#1072#187
-            Width = 194
+            Width = 193
           end>
         GutterKind = gkNone
         GutterFont.Charset = DEFAULT_CHARSET
@@ -457,22 +441,23 @@ object frmOGE: TfrmOGE
         GutterFont.Name = 'Tahoma'
         GutterFont.Style = []
         ShowFooter = False
+        OnColRowChanged = grdUserresultColRowChanged
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
-        Font.Height = -11
+        Font.Height = -13
         Font.Name = 'Tahoma'
         Font.Style = []
         Align = alClient
         BorderStyle = bsNone
         TabOrder = 0
-        ExplicitWidth = 1066
-        ExplicitHeight = 369
+        ExplicitTop = 88
+        ExplicitHeight = 656
       end
-      object NiceGrid1: TNiceGrid
+      object grdVariants: TNiceGrid
         Left = 0
-        Top = 664
+        Top = 656
         Width = 1176
-        Height = 67
+        Height = 75
         Cursor = 101
         ColCount = 30
         RowCount = 1
@@ -486,7 +471,9 @@ object frmOGE: TfrmOGE
         FooterFont.Height = -11
         FooterFont.Name = 'Tahoma'
         FooterFont.Style = []
+        SelectionColor = clSkyBlue
         FitToWidth = True
+        ReadOnly = True
         Columns = <
           item
             Title = '1'
@@ -542,19 +529,19 @@ object frmOGE: TfrmOGE
           end
           item
             Title = '14'
-            Width = 40
+            Width = 41
           end
           item
             Title = '15'
-            Width = 40
+            Width = 41
           end
           item
             Title = '16'
-            Width = 40
+            Width = 41
           end
           item
             Title = '17'
-            Width = 39
+            Width = 40
           end
           item
             Title = '18'
@@ -570,19 +557,19 @@ object frmOGE: TfrmOGE
           end
           item
             Title = '21'
-            Width = 38
+            Width = 37
           end
           item
             Title = '22'
-            Width = 38
+            Width = 37
           end
           item
             Title = '23'
-            Width = 38
+            Width = 37
           end
           item
             Title = '24'
-            Width = 38
+            Width = 37
           end
           item
             Title = '25'
@@ -623,15 +610,67 @@ object frmOGE: TfrmOGE
         Align = alBottom
         BorderStyle = bsNone
         TabOrder = 1
-        ExplicitTop = 360
-        ExplicitWidth = 1066
+      end
+      object ToolBar2: TToolBar
+        Left = 0
+        Top = 0
+        Width = 1176
+        Height = 29
+        ButtonHeight = 29
+        ButtonWidth = 33
+        Caption = 'ToolBar1'
+        Color = clBtnFace
+        EdgeInner = esNone
+        EdgeOuter = esNone
+        ParentColor = False
+        TabOrder = 2
+        Transparent = True
+        object ToolButton1: TToolButton
+          Left = 0
+          Top = 0
+          Width = 17
+          Caption = 'ToolButton1'
+          Style = tbsSeparator
+        end
+        object btRefresh: TSpeedButton
+          Left = 17
+          Top = 0
+          Width = 41
+          Height = 29
+          Glyph.Data = {
+            36030000424D3603000000000000360000002800000010000000100000000100
+            18000000000000030000C40E0000C40E00000000000000000000FFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFDFEFD9FC2A2FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF8BBC905E9D63FF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFF9BCBA066B06E61AA683D8B4437833E327B373D7F436496689EBC
+            A0E6EDE6FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFAAD8AF73BD7C96D19F94CF9C8F
+            CD968ACA9185C78B7ABE8165AD6C4B925168976BCDDCCEFFFFFFFFFFFFFFFFFF
+            FFFFFFA9DBAF79C4839ED7A79BD4A497D29F92CF9A8DCC9588CA907AC2827EC4
+            855DA46369996CE6EDE6FFFFFFFFFFFFFFFFFFFFFFFFA4DAAB7BC78577C28154
+            AB5E4EA357499B5163AC6B83C38B87C98F82C689509756A0BFA2FFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFF9ED8A57BC784FFFFFFFFFFFFFFFFFF9BC9A05BA26286C6
+            8E88C98F6FB376699D6DB8D7BBB6D4B9B4D1B6B2CEB4AFCBB1FDFEFDB4E2BAFF
+            FFFFFFFFFFFFFFFFFFFFFFA4CFA854A05B48954F408B47478B4E5DA9644C9C54
+            48954F49904F97BE9BFFFFFFFFFFFFFFFFFFFFFFFF92B294FCFDFCBEDFC2BCDC
+            BFBAD9BDB7D6BBB5D3B884C38B80C3898DCC9583C48A54995A90BA94FFFFFFFF
+            FFFFFFFFFF4A814D739C76FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB7DEBB75BF7E
+            98D2A194CF9C86C78D5EA765398640347E3A2E763349904F458B4A7EA581FFFF
+            FFFFFFFFFFFFFFFFFFFFEDF7EE8ECD9685C98E9BD4A48FCE9892CF9A8DCC9588
+            CA9083C68B7EC48579C17F478D4C87AC89FFFFFFFFFFFFFFFFFFFFFFFFDCF0DE
+            90CF9779C38389CA9294D09C95D19E90CF998CCB9487C98F80C4874E95548FB3
+            92FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEDF8EFB9E1BE89C99064B46C50A65A4B
+            9E5345964D60A8685BA2628CB690FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF67AB6E8BBC90FFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFACD4B0FDFEFDFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
+          OnClick = btRefreshClick
+        end
       end
     end
     object tabAdmin: TTabSheet
       Caption = #1055#1086#1083#1100#1079#1086#1074#1072#1090#1077#1083#1080' '#1080' '#1087#1072#1088#1086#1083#1080
       ImageIndex = 7
-      ExplicitWidth = 884
-      ExplicitHeight = 394
       object GroupBox1: TGroupBox
         Left = 0
         Top = 0
@@ -639,9 +678,9 @@ object frmOGE: TfrmOGE
         Height = 731
         Align = alClient
         Caption = #1055#1086#1083#1100#1079#1086#1074#1072#1090#1077#1083#1080' '#1080' '#1087#1072#1088#1086#1083#1080
+        Color = clBtnFace
+        ParentColor = False
         TabOrder = 0
-        ExplicitWidth = 884
-        ExplicitHeight = 394
         object ToolBar1: TToolBar
           Left = 2
           Top = 18
@@ -650,11 +689,13 @@ object frmOGE: TfrmOGE
           ButtonHeight = 25
           ButtonWidth = 33
           Caption = 'ToolBar1'
+          Color = clCream
           Images = ImageList1
+          ParentColor = False
           ParentShowHint = False
           ShowHint = True
           TabOrder = 0
-          ExplicitWidth = 880
+          Transparent = True
           object btAddUser: TToolButton
             Left = 0
             Top = 0
@@ -664,7 +705,7 @@ object frmOGE: TfrmOGE
             OnClick = btAddUserClick
           end
           object btEditUser: TToolButton
-            Left = 23
+            Left = 33
             Top = 0
             Hint = #1056#1077#1076#1072#1082#1090#1080#1088#1086#1074#1072#1090#1100
             Caption = 'btEditUser'
@@ -672,7 +713,7 @@ object frmOGE: TfrmOGE
             OnClick = btEditUserClick
           end
           object btDeleteUser: TToolButton
-            Left = 46
+            Left = 66
             Top = 0
             Hint = #1059#1076#1072#1083#1080#1090#1100
             Caption = 'btDeleteUser'
@@ -685,6 +726,7 @@ object frmOGE: TfrmOGE
           Top = 47
           Width = 1172
           Height = 682
+          Cursor = 101
           ColCount = 4
           RowCount = 1
           HeaderFont.Charset = DEFAULT_CHARSET
@@ -736,8 +778,6 @@ object frmOGE: TfrmOGE
           Align = alClient
           BorderStyle = bsNone
           TabOrder = 1
-          ExplicitWidth = 939
-          ExplicitHeight = 324
         end
       end
     end

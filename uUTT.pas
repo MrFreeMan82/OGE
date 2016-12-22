@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, Buttons, uGlobals, GdiPlus, GdiPlusHelpers;
+  Dialogs, StdCtrls, ExtCtrls, Buttons, uGlobals, GdiPlus, GdiPlusHelpers,
+  uSavePoint;
 
 type
   TUTTLevel = (lvlLow, lvlHigh);
@@ -16,11 +17,13 @@ type
        lable: string;
        task_from, task_to: integer;
        visible: boolean;
-       points: integer;
+      // points: integer;
        color: TGPColor;
   end;
 
   TUTTModulesList = array of TUTTModule;
+
+  TPointsPerVariant = array of integer;
 
   TfrmUTT = class(TForm)
     rgVariants: TRadioGroup;
@@ -42,6 +45,7 @@ type
     procedure btResultsClick(Sender: TObject);
     procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure FormDestroy(Sender: TObject);
   private
     { Private declarations }
     mode: Tmode;
@@ -49,15 +53,18 @@ type
     fUTTTest: TUTTModulesList;
     answears: TAnswears;
     taskResultMask: TResultMask;
+    savePoint: TSavePoint;
     procedure loadTask(aVariant, aTask: integer);
     procedure AllTaskCompleate();
-    procedure setPoints(pts: integer);
   public
     { Public declarations }
+    function getModuleByID(id: integer): PUTTModule;
     property ResultMask: TResultMask read taskResultMask;
     procedure clearUserResults();
     procedure saveResults();
     property UTTTModuleList: TUTTModulesList read fUTTTest;
+    function pointByUserAndModule(us_id: integer; mdl: PUTTModule): integer;
+    function pointsByUserAllVariant(us_id: integer; mdl: PUTTModule): TPointsPerVariant;
     procedure ShowUTT();
   end;
 
@@ -67,6 +74,59 @@ uses uOGE, uTestResult, ActiveX, uData;
 {$R *.dfm}
 
 { TfrmUTT }
+
+function TfrmUTT.pointByUserAndModule(us_id: integer; mdl: PUTTModule): integer;
+var i,j: integer;
+    sp: TSavePoint;
+    rm: TResultMask;
+begin
+     result := 0;
+     sp := TSavePoint.Create(us_id, self.ClassName);
+     sp.Load;
+
+     for i := 0 to rgVariants.Items.Count - 1 do
+     begin
+           rm := sp.asResultMask('MASK_' + intToStr(i + 1));
+           if rm = nil then continue;
+
+           for j := mdl.task_from - 1 to mdl.task_to - 1 do
+              if (j >= 0) and (j < length(rm)) and rm[j] then inc(result);
+     end;
+     sp.Free;
+end;
+
+function TfrmUTT.pointsByUserAllVariant(us_id: integer; mdl: PUTTModule): TPointsPerVariant;
+var i,j: integer;
+    sp: TSavePoint;
+    rm: TResultMask;
+begin
+     result := nil;
+     if mdl = nil then exit;
+
+     setLength(result, rgVariants.Items.Count);
+     sp := TSavePoint.Create(us_id, self.ClassName);
+     sp.Load;
+
+     for i := 0 to rgVariants.Items.Count - 1 do
+     begin
+          rm := sp.asResultMask('MASK_' + intToStr(i + 1));
+          if rm = nil then continue;
+
+          for j := mdl.task_from - 1 to mdl.task_to - 1 do
+               if (j >= 0) and (j < length(rm)) and rm[j] then inc(result[i]);
+     end;
+
+     sp.Free
+end;
+
+function TfrmUTT.getModuleByID(id: integer): PUTTModule;
+var i: integer;
+begin
+     result := nil;
+
+     for i := 0 to length(fUTTTest) - 1 do
+        if (id = fUTTTest[i].id) then exit(@fUTTTest[i]);
+end;
 
 procedure TfrmUTT.AllTaskCompleate;
 begin
@@ -79,20 +139,6 @@ begin
      begin
          btResultsClick(self);
      end;
-end;
-
-procedure TfrmUTT.saveResults;
-begin
-
-end;
-
-procedure TfrmUTT.setPoints(pts: integer);
-var i: integer;
-begin
-    for i := 0 to length(fUTTTest) - 1 do
-       if (fTask >= fUTTTest[i].task_from) and
-                 (fTask <= fUTTTest[i].task_to) then
-                   fUTTTest[i].points := fUTTTest[i].points + pts;
 end;
 
 procedure TfrmUTT.btAnswearClick(Sender: TObject);
@@ -111,7 +157,6 @@ begin
     begin
          if taskResultMask[fTask - 1] = false then
          begin
-              setPoints(1);
               taskResultMask[fTask - 1] := true;
          end
          else begin
@@ -255,7 +300,13 @@ var i: integer;
 begin
      for i := 0 to UTT_TASK_COUNT - 1 do taskResultMask[i] := false;
 
-     for i := 0 to length(fUTTTest) - 1 do fUTTTest[i].points := 0;
+     if (rgVariants.ItemIndex >= 0) then
+        savepoint.Delete('MASK_' + intToStr(rgVariants.ItemIndex + 1));
+end;
+
+procedure TfrmUTT.FormDestroy(Sender: TObject);
+begin
+    freeAndNil(savePoint)
 end;
 
 procedure TfrmUTT.FormMouseWheel(Sender: TObject; Shift: TShiftState;
@@ -270,17 +321,38 @@ begin
 end;
 
 procedure TfrmUTT.rgVariantsClick(Sender: TObject);
+var page: integer;
 begin
      if rgVariants.ItemIndex < 0 then exit;
      answears := nil;
-     setLength(taskResultMask, UTT_TASK_COUNT);
-     clearUserResults();
-   //  fiilMask();
-     fTask := 1;
+     page := savePoint.asInteger('PAGE_' + intToStr(rgVariants.ItemIndex + 1));
+
+     if(page >= 1) and
+        (page <= UTT_TASK_COUNT) then
+                fTask := page else fTask := 1;
+
+     taskResultMask := savePoint.asResultMask('MASK_' + intToStr(rgVariants.ItemIndex + 1));
+     if taskResultMask = nil then
+     begin
+         setLength(taskResultMask, UTT_TASK_COUNT);
+         clearUserResults();
+     end;
+
      loadTask(rgVariants.ItemIndex + 1, fTask);
 end;
 
+procedure TfrmUTT.saveResults;
+begin
+     if rgVariants.ItemIndex < 0 then exit;
+
+     savePoint.addIntValue('VARIANT', rgVariants.ItemIndex + 1);
+     savePoint.addIntValue('PAGE_' + intToStr(rgVariants.ItemIndex + 1), fTask);
+     savePoint.addResultMask('MASK_' + intToStr(rgVariants.ItemIndex + 1), taskResultMask);
+     savePoint.Save;
+end;
+
 procedure TfrmUTT.ShowUTT;
+var variant, page: integer;
 begin
     mode := mNormal;
     fUTTTest := dm.loadUTTTests();
@@ -290,6 +362,13 @@ begin
       abort;
     end;
 
+    savePoint := TSavePoint.Create(frmOGE.User.id, self.ClassName);
+    savePoint.Load;
+    variant := savePoint.asInteger('VARIANT');
+
+    if (variant >= 1) and
+        (variant <= rgVariants.Items.Count) then
+                 rgVariants.ItemIndex := variant - 1;
     show;
 end;
 

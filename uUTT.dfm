@@ -13,6 +13,7 @@ object frmUTT: TfrmUTT
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  OnDestroy = FormDestroy
   OnMouseWheel = FormMouseWheel
   PixelsPerInch = 96
   TextHeight = 16

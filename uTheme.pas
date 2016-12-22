@@ -107,7 +107,7 @@ begin
     if not (Sender is TLinkLabel) then exit;
 
     fTopic := fTopicList[TLinkLabel(Sender).Tag];
-    fTopic.setSection(cntInformation, fTopic.sectionByName(TLinkLabel(Sender).Name));
+    fTopic.setSection(cntContent, fTopic.sectionByName(TLinkLabel(Sender).Name));
     fTopic.FirstPage;
     viewTopic(false);
 end;
@@ -201,7 +201,7 @@ begin
                 btTest.Visible := true;
                 needer := sender;
                 fTopic := ftopicList[i];
-                fTopic.setSection(cntInformation, @ftopicList[i].sections[j]);
+                fTopic.setSection(cntContent, @ftopicList[i].sections[j]);
                 fTopic.FirstPage;
                 viewTopic();
                 frmOGE.pgPages.ActivePage := frmOGE.tabThemes;

@@ -407,8 +407,8 @@ object frmTestResult: TfrmTestResult
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
       OnClick = btClearResultsClick
-      ExplicitLeft = 0
-      ExplicitHeight = 27
+      ExplicitLeft = 41
+      ExplicitTop = -6
     end
     object btSaveresults: TSpeedButton
       Left = 0

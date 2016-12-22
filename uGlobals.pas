@@ -10,6 +10,9 @@ const
 
 const TOPIC_DIR = 'Topics';
       UTT_DIR = 'UTT';
+      ZACHET = 'зачтено';
+      NOT_ZACHET = 'не зачтено';
+
 
 const USR_FIELD_COUNT = 4;
 

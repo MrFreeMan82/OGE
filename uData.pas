@@ -193,6 +193,10 @@ begin
     sql.Add('KEY_FIELD TEXT,');
     sql.Add('VALUE_FIELD TEXT)');
     sqlite.ExecSQL(ansistring(sql.Text));
+
+    sql.Clear;
+    sql.Add('CREATE INDEX US_ID_INDEX ON [SAVEPOINT] (US_ID)');
+    sqlite.ExecSQL(ansistring(sql.Text));
 end;
 
 procedure Tdm.createTableUser;
@@ -249,6 +253,8 @@ begin
      begin
           sql.Clear;
           sql.Add(l.Strings[i]);
+          if trim(sql.Text) = '' then continue;
+          
           sqlite.ExecSQL(ansistring(sql.Text));
      end;
 end;
@@ -332,7 +338,7 @@ end;
 
 function Tdm.doLoadTopicList(): TTopicList;
 var i, j, cnt, scnt: integer;
-    root, node, link, link_page, sectionNodes: IXMLNode;
+    root, node, sectionNodes: IXMLNode;
 begin
      result := nil;
      if not xmlDoc.Active then exit;
@@ -366,17 +372,7 @@ begin
                    sections[j].task_count := strToInt(FindNode('TASK_COUNT').Text);
                    sections[j].pages_count := strToInt(FindNode('PAGES_COUNT').Text);
                    sections[j].visible := FindNode('VISIBLE').Text = '0';
-                   link := FindNode('LINK');
-                   link_page := FindNode('LINK_PAGE');
                 end;
-
-                if assigned(link) and assigned(link_page) then
-                begin
-                     sections[j].topic_link := strToInt(link.Text);
-                     sections[j].page_link := strToInt(link_page.Text);
-                end;
-
-                sections[j].points := 0;
           end;
      end;
 end;
