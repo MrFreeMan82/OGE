@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Buttons, ExtCtrls, StdCtrls, GdiPlus, GdiPlusHelpers, uData,
-  uUTTDiagram, uTaskDiagram;
+  uUTTDiagram, uTaskDiagram, uGlobals;
 
 type
 
@@ -29,16 +29,14 @@ TfrmTestResult = class(TForm)
     procedure btSaveresultsClick(Sender: TObject);
   private
     { Private declarations }
-
+    rm: TResultMask;
     mOwner: TComponent;
     frmUTTDiagram: TfrmUTTDiagram;
     frmTaskDiagram: TfrmTaskDiagram;
-  //  frmCollectiveDiagram: TfrmTaskDiagram;
   public
     { Public declarations }
     class function showUTTResults(): TModalResult;
     class function showTaskResults(Owner: TComponent): TModalResult;
-  //  class function showCollectiveResults(): TModalResult;
   end;
 
 implementation
@@ -61,15 +59,18 @@ begin
          end
          else if assigned(frmTaskDiagram) then
          begin
-              if mOwner.Name = frmOGE.tabTasks.Name
-                  then frmOGE.Tasks.clearUserResults
-                      else if mOwner.Name = frmOGE.tabCollectiveTask.Name
-                                  then frmOGE.CollectiveTasks.clearUserResults;
+              if mOwner.Name =
+                frmOGE.tabTasks.Name then
+                  frmOGE.Tasks.clearUserResults
+
+              else if mOwner.Name =
+                  frmOGE.tabCollectiveTask.Name then
+                   frmOGE.CollectiveTasks.clearUserResults;
 
               frmTaskDiagram.Free;
               frmTaskDiagram := TfrmTaskDiagram.Create(self);
               frmTaskDiagram.Dock(pnlDiagram, pnlDiagram.ClientRect);
-              frmTaskDiagram.showDiagram(chkRandom.Checked, true);
+              frmTaskDiagram.showDiagram(chkRandom.Checked, true, rm);
               btClearResults.Enabled := false;
          end
 
@@ -144,7 +145,15 @@ begin
                        frmTestResult.pnlDiagram,
                             frmTestResult.pnlDiagram.ClientRect);
 
-      frmTestResult.frmTaskDiagram.showDiagram(frmTestResult.chkRandom.Checked, false);
+      if frmTestResult.mOwner.Name =
+              frmOGE.tabTasks.Name then
+                    frmTestResult.rm := frmOGE.Tasks.ResultMask
+
+      else if frmTestResult.mOwner.Name =
+            frmOGE.tabCollectiveTask.Name then
+                 frmTestResult.rm := frmOGE.CollectiveTasks.ResultMask;
+
+      frmTestResult.frmTaskDiagram.showDiagram(frmTestResult.chkRandom.Checked, false, frmTestResult.rm);
       result := frmTestResult.ShowModal;
 
     finally

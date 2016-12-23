@@ -214,7 +214,6 @@ object frmUTT: TfrmUTT
         Align = alRight
         BevelOuter = bvNone
         TabOrder = 1
-        ExplicitLeft = 289
       end
     end
   end

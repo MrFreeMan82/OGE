@@ -375,7 +375,6 @@ object frmUser: TfrmUser
     ModalResult = 1
     TabOrder = 3
     OnClick = btSaveClick
-    ExplicitTop = 103
   end
   object Button2: TButton
     Left = 288
@@ -386,7 +385,6 @@ object frmUser: TfrmUser
     Caption = #1054#1090#1084#1077#1085#1072
     ModalResult = 2
     TabOrder = 4
-    ExplicitTop = 103
   end
   object txtPassword: TEdit
     Left = 57

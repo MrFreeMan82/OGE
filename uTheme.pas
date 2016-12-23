@@ -31,7 +31,6 @@ type
     fTopicList: TTopicList;
     needer: TObject;
     links: array of TLinkLabel;
-    mSender: TObject;
     procedure createLinks();
     procedure viewTopic(silent: boolean = true);
     procedure assignedCurrent;
@@ -42,7 +41,7 @@ type
   end;
 
 implementation
-uses uGlobals, uOGE;
+uses uGlobals, uOGE, uTasks;
 
 {$R *.dfm}
 
@@ -75,7 +74,15 @@ end;
 procedure TfrmTopics.btTestClick(Sender: TObject);
 begin
     btTest.Visible := false;
-    frmOGE.pgPages.ActivePage := frmOGE.tabTasks;
+    if needer = nil then exit;
+
+    if TfrmTasks(needer).MyOwner.Name =
+                frmOGE.tabTasks.Name then
+                    frmOGE.pgPages.ActivePage := frmOGE.tabTasks
+
+    else if TfrmTasks(needer).MyOwner.Name =
+                frmOGE.tabCollectiveTask.Name then
+                      frmOGE.pgPages.ActivePage := frmOGE.tabCollectiveTask;
 end;
 
 procedure TfrmTopics.viewTopic(silent: boolean = true);
@@ -201,7 +208,6 @@ end;
 procedure TfrmTopics.HelpWithTopic(topic_id: integer; Sender: TObject);
 var i, j : integer;
 begin
-     mSender := Sender;
      for i := 0 to length(ftopicList) - 1 do
      begin
         for j := 0 to length(ftopicList[i].sections) - 1 do

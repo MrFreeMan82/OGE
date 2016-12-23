@@ -318,9 +318,10 @@ object frmOGE: TfrmOGE
   OldCreateOrder = False
   Position = poMainFormCenter
   WindowState = wsMaximized
+  OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  OnResize = FormResize
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 16
   object pgPages: TPageControl
@@ -328,7 +329,7 @@ object frmOGE: TfrmOGE
     Top = 0
     Width = 1184
     Height = 762
-    ActivePage = tabCollectiveTask
+    ActivePage = tabThemes
     Align = alClient
     MultiLine = True
     TabOrder = 0
@@ -357,10 +358,6 @@ object frmOGE: TfrmOGE
     object tabThemes: TTabSheet
       Caption = #1056#1072#1079#1076#1077#1083#1099
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
     end
     object tabTasks: TTabSheet
       Caption = #1047#1072#1076#1072#1085#1080#1103' '#1076#1083#1103' '#1089#1072#1084#1086#1089#1090#1086#1103#1090#1077#1083#1100#1085#1086#1075#1086' '#1074#1099#1087#1086#1083#1085#1077#1085#1080#1103

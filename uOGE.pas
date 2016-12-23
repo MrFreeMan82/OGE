@@ -7,7 +7,7 @@ uses
   Dialogs, OleCtrls, SHDocVw, ComCtrls, StdCtrls, ExtCtrls, ExtDlgs, Grids,
   ToolWin, Buttons, PlatformDefaultStyleActnCtrls, ActnList, ActnMan,
   AppEvnts, uTheme, uUTT, uTasks, uWorkPlan, XPMan, ImgList,
-  ShellAnimations, uUser, NiceGrid;
+  ShellAnimations, uUser, NiceGrid, uSavePoint;
 
 type
   TfrmOGE = class(TForm)
@@ -45,9 +45,10 @@ type
     procedure btEditUserClick(Sender: TObject);
     procedure btDeleteUserClick(Sender: TObject);
     procedure grdUsersColRowChanged(Sender: TObject; Col, Row: Integer);
-    procedure FormResize(Sender: TObject);
     procedure grdUserresultColRowChanged(Sender: TObject; Col, Row: Integer);
     procedure btRefreshClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormShow(Sender: TObject);
   private
     { Private declarations }
     frmTopics: TfrmTopics;
@@ -55,6 +56,8 @@ type
     frmTasks: TfrmTasks;
     frmWorkPlan: TfrmWorkPlan;
     frmCollectiveTask: TfrmTasks;
+
+    saveOGE: TSavePoint;
 
     CurrentUser: PUser;
     usr: PUser;
@@ -79,19 +82,25 @@ type
     property Topics: TfrmTopics read frmTopics;
     property UTT:TfrmUTT read frmUTT;
     property User: PUser read currentUser;
+    procedure UpdateCaption(const suffix: string);
   end;
 
 var
   frmOGE: TfrmOGE;
 
 implementation
-uses uGlobals, uData, uSavePoint;
+uses uGlobals, uData;
 
 {$R *.dfm}
 
 
 
 {$DEFINE TEST}
+
+procedure TfrmOGE.UpdateCaption(const suffix: string);
+begin
+    Caption := format('нце - %s [%s]', [currentUser.fio, suffix]);
+end;
 
 procedure TfrmOGE.totalResults;
 begin
@@ -102,7 +111,6 @@ procedure TfrmOGE.totalResultUTT(us_id, i: integer);
 var j, k, pts: integer;
 begin
      k := 3;
-     //setLength(ptsPerVariantArray, length(frmUTT.UTTTModuleList));
 
      for j := 0 to length(frmUTT.UTTTModuleList) - 1 do
      begin
@@ -129,16 +137,13 @@ begin
 end;
 
 procedure TfrmOGE.totalResultIndividual(us_id, i: integer);
-var r: boolean;
 begin
-     r := frmTasks.Over80(us_id);
-
-     if r then grdUserresult.Cells[1, i] := ZACHET
+     if frmWorkPlan.Stage1Result(us_id)
+        then grdUserresult.Cells[1, i] := ZACHET
            else grdUserresult.Cells[1, i] := NOT_ZACHET;
 
-     r := frmCollectiveTask.Over80(us_id);
-
-     if r then grdUserResult.Cells[2, i] := ZACHET
+     if frmWorkPlan.Stage2Result(Us_id)
+       then grdUserResult.Cells[2, i] := ZACHET
             else grdUserResult.Cells[2, i] := NOT_ZACHET;
 end;
 
@@ -261,49 +266,72 @@ begin
     end;
 
     if currentUser.ut_id = 1 then tabAdmin.TabVisible := true else tabAdmin.TabVisible := false;
-    Caption := 'нце - ' + currentUser.fio;
+    UpdateCaption('');
     Path := exePath();
+
     WebBrowser1.Navigate('res://' + Application.ExeName + '/HTML/FIRST_PAGE');
     WebBrowser1.OleObject.Document.bgColor := '#E0FFFF';
     pgPages.ActivePage := tabInfo;
 
     if not Assigned(frmTopics) then frmTopics := TfrmTopics.Create(self);
     frmTopics.Dock(tabThemes, tabThemes.ClientRect);
-    frmTopics.showTopics();
 
     if not assigned(frmUTT) then frmUTT := TfrmUTT.Create(self);
     frmUTT.Dock(tabUTT, tabUTT.ClientRect);
-    frmUTT.ShowUTT();
 
     if not assigned(frmTasks) then frmTasks := TfrmTasks.Create(self);
     frmTasks.Dock(tabTasks, tabTasks.ClientRect);
-    frmTasks.ShowTasks(tabTasks);
 
     if not assigned(frmWorkPlan) then frmWorkPlan := TfrmWorkPlan.Create(self);
     frmWorkPlan.Dock(tabPlan, tabPlan.ClientRect);
-    frmWorkPlan.ShowWorkPlan();
 
     if not assigned(frmCollectiveTask) then frmCollectiveTask := TfrmTasks.Create(self);
     frmCollectiveTask.Dock(tabCollectiveTask, tabCollectiveTask.ClientRect);
-    frmCollectiveTask.ShowTasks(tabCollectiveTask);
 
+    saveOGE := TSavePoint.Create(user.id, self.ClassName);
+end;
+
+procedure TfrmOGE.FormShow(Sender: TObject);
+var p: integer;
+begin
+    frmTopics.showTopics();
+    frmUTT.ShowUTT();
+    frmTasks.ShowTasks(tabTasks);
+    frmWorkPlan.ShowWorkPlan();
+    frmCollectiveTask.ShowTasks(tabCollectiveTask);
     fillGrid();
     totalResults();
+
+    saveOGE.Load;
+    p := saveOGE.asInteger('TAB_INDEX');
+    if p >= 0 then
+    begin
+         pgPages.ActivePageIndex := p;
+
+         if (pgPages.ActivePage = tabTasks)
+                 then UpdateCaption(self.frmTasks.SectionLabel)
+
+         else if (pgPages.ActivePage = tabCollectiveTask)
+             then UpdateCaption(self.frmCollectiveTask.SectionLabel)
+
+         else UpdateCaption(pgPages.ActivePage.Caption);
+    end;
+end;
+
+procedure TfrmOGE.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+    saveOGE.addIntValue('TAB_INDEX', pgPages.ActivePageIndex);
+    saveOGE.Save;
 end;
 
 procedure TfrmOGE.FormDestroy(Sender: TObject);
 begin
-   // freeAndNil(frmTests);
     freeAndNil(frmTopics);
     freeAndNil(frmUTT);
     freeAndNil(frmTasks);
     freeAndNil(frmWorkPlan);
-    freeAndNil(frmCollectiveTask)
-end;
-
-procedure TfrmOGE.FormResize(Sender: TObject);
-begin
-    if pgPages.ActivePage = tabPlan then frmWorkPlan.refreshWorkPlan;
+    freeAndNil(frmCollectiveTask);
+    freeAndNil(saveOGE);
 end;
 
 procedure TfrmOGE.grdUserresultColRowChanged(Sender: TObject; Col,Row: Integer);
@@ -325,9 +353,8 @@ end;
 
 procedure TfrmOGE.pgPagesChange(Sender: TObject);
 begin
-    if pgPages.ActivePage = tabPlan then frmWorkPlan.refreshWorkPlan
-    else if pgPages.ActivePage = tabTasks then
-
+    if pgPages.ActivePage = tabPlan then frmWorkPlan.refreshWorkPlan;
+    UpdateCaption(pgPages.ActivePage.Caption);
 end;
 
 procedure TfrmOGE.WebBrowser1DocumentComplete(ASender: TObject;

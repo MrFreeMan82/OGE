@@ -309,6 +309,12 @@ end;
 
 procedure TfrmUTT.FormDestroy(Sender: TObject);
 begin
+    if rgVariants.ItemIndex >= 0 then
+    begin
+         savePoint.addIntValue('VARIANT', rgVariants.ItemIndex + 1);
+         savePoint.addIntValue('PAGE_' + intToStr(rgVariants.ItemIndex + 1), fTask);
+         savePoint.Save;
+    end;
     freeAndNil(savePoint)
 end;
 
@@ -353,8 +359,6 @@ procedure TfrmUTT.saveResults;
 begin
      if rgVariants.ItemIndex < 0 then exit;
 
-     savePoint.addIntValue('VARIANT', rgVariants.ItemIndex + 1);
-     savePoint.addIntValue('PAGE_' + intToStr(rgVariants.ItemIndex + 1), fTask);
      savePoint.addResultMask('MASK_' + intToStr(rgVariants.ItemIndex + 1), taskResultMask);
      savePoint.Save;
 end;

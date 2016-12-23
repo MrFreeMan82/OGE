@@ -27,6 +27,7 @@ type
 
     isRandom: boolean;
 
+    mResultMask: TResultMask;
     axis: array of TLine;
     axisAngle: array of TaxisAngle;
     gradCircles: array of TGPrectF;
@@ -44,13 +45,11 @@ type
     procedure Render();
   public
     { Public declarations }
-    procedure showDiagram(useRandom, draw: boolean);
+    procedure showDiagram(useRandom, draw: boolean; resultMask: TResultMask);
     procedure refresh(useRandom: boolean);
   end;
 
 implementation
-
-uses uOGE;
 
 {$R *.dfm}
 
@@ -145,13 +144,14 @@ procedure TfrmTaskDiagram.createTasks;
 var i, j, k, offset: integer;
     points : array[0..2] of TGPPointF;
 begin
+     if mResultMask = nil then exit;
      setLength(tasks, taskCount);
 
      offset := -4;
 
      for i := 0 to taskCount -  1 do
      begin
-          if frmOGE.Tasks.ResultMask[i] = true then
+          if mResultMask[i] = true then
           begin
                 tasks[i] := TGPGraphicsPath.Create();
 
@@ -199,7 +199,7 @@ end;
 
 procedure TfrmTaskDiagram.initialize;
 begin
-     taskCount := length(frmOGE.Tasks.ResultMask);
+     taskCount := length(mResultMask);
      setLength(tasks, taskCount);
      createCircle(length(tasks) div MAX_GRADUATION);
      createGradCircles();
@@ -268,8 +268,9 @@ begin
     Render();
 end;
 
-procedure TfrmTaskDiagram.showDiagram(useRandom, draw: boolean);
+procedure TfrmTaskDiagram.showDiagram(useRandom, draw: boolean; resultMask: TResultMask);
 begin
+    mResultMask := resultMask;
     if draw then refresh(useRandom);
     show;
 end;

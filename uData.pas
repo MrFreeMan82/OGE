@@ -214,7 +214,7 @@ begin
    sqlite.ExecSQL(ansiString(sql.Text));
 
    defaultUser.ut_id := 1;
-   defaultUser.fio := 'Администратор';
+   defaultUser.fio := 'Administrator';
    defaultUser.password := '1';
    addUser(@defaultUser);
 

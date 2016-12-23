@@ -19,7 +19,7 @@ type
       rect: TGPRectF;
       resultRect: TGPRectF;
       passPercent: double;
-      result: double;
+      result: boolean;
   end;
 
   TfrmWorkPlan = class(TForm)
@@ -62,6 +62,8 @@ type
     { Public declarations }
     procedure refreshWorkPlan();
     procedure ShowWorkPlan();
+    function Stage1Result(us_id: integer): boolean;
+    function Stage2Result(us_id: integer): boolean;
   end;
 
 implementation
@@ -86,11 +88,28 @@ resourcestring STAGE1 = 'Ётап 1. «адани€ дл€ самосто€тельного выполнени€';
                         'ќценка результатов выполнени€ заданий первого и второго этапа осуществл€етс€ по двухбалльной шкале: Ђзачтеної Ч Ђне зачтеної.'#13#10 +
                         'ќценка Ђзачтеної  ставитс€, если ученик  верно выполнил не менее 80% заданий  в течение определенного промежутка времени. ¬ противном случае выставл€етс€ оценка Ђне зачтеної.';
 
+
+function TfrmWorkPlan.Stage1Result(us_id: integer): boolean;
+var fm, cm: integer;
+begin
+    cm := MonthOf(Date) - 8;  // minus month of September, begin study year
+    fm := 12 - 8;             // final exam month
+
+    result := frmOGE.Tasks.Over80(us_id) and (fm <= cm);
+end;
+
+function TfrmWorkPlan.Stage2Result(us_id: integer): boolean;
+var fm, cm: integer;
+begin
+    cm := MonthOf(Date) - 8;  // minus month of September, begin study year
+    fm := 2 - 8;             // final exam month
+
+    result := frmOGE.CollectiveTasks.Over80(us_id) and (fm <= cm);
+end;
+
 procedure TfrmWorkPlan.createStages;
 var len, len2, k: double;
     i: integer;
-    result: boolean;
-    cm,m:word;
 begin
      stageList[0].displayLabel := STAGE1;
      stageList[1].displayLabel := STAGE2;
@@ -100,19 +119,12 @@ begin
      stageList[1].period := 2;
      stageList[2].period := 3;
 
-     result := frmOGE.Tasks.Over80(frmOGE.User.id);
-     cm := MonthOf(Date);
-     m := 12;
-
-     if result and (cm <= m) then
-        stageList[0].resultLabel := '–≈«”Ћ№“ј“: ' + ZACHET
+     if Stage1Result(frmOGE.User.id) then
+          stageList[0].resultLabel := '–≈«”Ћ№“ј“: ' + ZACHET
      else
-        stageList[0].resultLabel := '–≈«”Ћ№“ј“: ' + NOT_ZACHET;
+          stageList[0].resultLabel := '–≈«”Ћ№“ј“: ' + NOT_ZACHET;
 
-     result := frmOGE.CollectiveTasks.Over80(frmOGE.User.id);
-     m := 2;
-
-     if result and (cm <= m) then
+     if Stage2Result(frmOGE.User.id) then
          stageList[1].resultLabel := '–≈«”Ћ№“ј“: ' + ZACHET
      else
          stageList[1].resultLabel := '–≈«”Ћ№“ј“: ' + NOT_ZACHET;

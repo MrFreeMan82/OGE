@@ -57,7 +57,7 @@ object frmTopics: TfrmTopics
       BevelOuter = bvNone
       BorderStyle = bsNone
       DoubleBuffered = True
-      Color = clWhite
+      Color = clBtnFace
       ParentColor = False
       ParentDoubleBuffered = False
       TabOrder = 0

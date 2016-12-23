@@ -43,20 +43,26 @@ type
     LoadedLink: TLinkLabel;
     mOwner: TComponent;
 
+    procedure loadUserOptions();
     procedure createLinks();
     procedure AllTaskCompleate;
     procedure viewTask(aTopic: TTopic; silent: boolean = true);
     function gettaskResultMask: TResultMask;
     procedure assignedCurrent();
     function LinkByName(const name: string): TLinkLabel;
+    function getSectionLabel: string;
     { Private declarations }
   public
     { Public declarations }
     property ResultMask: TResultMask read gettaskResultMask;
+    property MyOwner: TComponent read mOwner;
+    property SectionLabel: string read getSectionLabel;
     function Over80(us_id: integer): boolean;
     procedure clearUserResults;
     procedure saveResults();
+    function totalTaskCount(): integer;
     procedure ShowTasks(Owner: TComponent);
+
   end;
 
 implementation
@@ -74,7 +80,7 @@ var i,j,k, total_tasks, true_tasks: integer;
     sp: TSavePoint;
     rm: TResultMask;
 begin
-     total_tasks := 0; true_tasks := 0;
+     total_tasks := totalTaskCount; true_tasks := 0;
 
      sp := TSavePoint.Create(us_id, mOwner.name);
      sp.Load;
@@ -83,7 +89,6 @@ begin
      begin
           for j :=  0 to length(mTaskList[i].sections) - 1 do
           begin
-               inc(total_tasks);
                rm := sp.asResultMask('MASK_' +
                         intTostr(mTaskList[i].sections[j].topic_id));
 
@@ -96,6 +101,23 @@ begin
 
      sp.Free;
      result := true_tasks >= trunc(total_tasks * 0.8);
+end;
+
+function TfrmTasks.totalTaskCount: integer;
+var i: Integer;
+begin
+    result := 0;
+    for i := 0 to length(mTaskList) - 1 do
+    begin
+        if (mOwner.Name = frmOGe.tabTasks.Name) and
+              (mTaskList[i].ID = COLLECTIVE_TASK_ID) then continue;
+
+        if (mOwner.Name = frmOGE.tabCollectiveTask.Name) and
+              (mTaskList[i].ID <> COLLECTIVE_TASK_ID) then continue;
+
+        result := result + mTaskList[i].TaskCount;
+    end;
+
 end;
 
 procedure TfrmTasks.AllTaskCompleate;
@@ -225,17 +247,9 @@ begin
      ScrollBox.VertScrollBar.Range := img.Picture.Height;
 end;
 
-procedure TfrmTasks.ShowTasks(Owner: TComponent);
-var id: integer;
+procedure TfrmTasks.loadUserOptions;
+var id: integer; s: PSection;
 begin
-    loadTopicList(self, mTaskList);
-    if (mTaskList = nil) then
-    begin
-      messageBox(self.Handle, 'Не удалось загузить тесты', 'Ошибка', MB_OK or MB_ICONERROR);
-      abort;
-    end;
-    mOwner := Owner;
-    createLinks();
     savePoint := TsavePoint.Create(frmOGE.User.id, mOwner.Name);
     savepoint.Load;
     id := savepoint.asInteger('TOPIC');
@@ -245,9 +259,24 @@ begin
           if mtask = nil then exit;
           id := savepoint.asInteger('SEC');
           if id < 0 then exit;
-          LoadedLink := linkByName(mtask.sectionByID(id).name);
+          s := mtask.sectionByID(id);
+          if s = nil then exit;
+          LoadedLink := linkByName(s.name);
           linkClick(LoadedLink);
     end;
+end;
+
+procedure TfrmTasks.ShowTasks(Owner: TComponent);
+begin
+    loadTopicList(self, mTaskList);
+    if (mTaskList = nil) then
+    begin
+      messageBox(self.Handle, 'Не удалось загузить тесты', 'Ошибка', MB_OK or MB_ICONERROR);
+      abort;
+    end;
+    mOwner := Owner;
+    createLinks();
+    loadUserOptions();
     show;
 end;
 
@@ -270,19 +299,14 @@ begin
 
     viewTask(mTask, false);
     mTask.loadAnswears();
+    frmOGe.UpdateCaption(mTask.Section.display_lable);
 end;
 
 procedure TfrmTasks.saveResults;
 begin
-   if assigned(mTask) then
+   if assigned(mTask) and assigned(mTask.Section)  then
    begin
-       savePoint.addIntValue('TOPIC', mTask.ID);
-       if assigned(mTask.Section) then
-       begin
-          savepoint.addIntValue('SEC', mTask.Section.topic_id);
-          savepoint.addIntValue('PAGE_' +  intToStr(mTask.Section.topic_id), mTask.Page);
-          savepoint.addResultMask('MASK_' + intToStr(mTask.Section.topic_id), mtask.ResultMask);
-       end;
+       savepoint.addResultMask('MASK_' + intToStr(mTask.Section.topic_id), mtask.ResultMask);
        savepoint.Save;
    end;
 end;
@@ -363,6 +387,17 @@ end;
 procedure TfrmTasks.FormDestroy(Sender: TObject);
 var i: integer;
 begin
+     if assigned(mTask) then
+     begin
+         savePoint.addIntValue('TOPIC', mTask.ID);
+         if assigned(mTask.Section) then
+         begin
+              savepoint.addIntValue('SEC', mTask.Section.topic_id);
+              savepoint.addIntValue('PAGE_' +  intToStr(mTask.Section.topic_id), mTask.Page);
+         end;
+         savepoint.Save;
+     end;
+
      savePoint.Free;
      for i := 0 to length(links) - 1 do freeAndNil(links[i]);
      freeTopicList(mTaskList);
@@ -391,6 +426,12 @@ end;
 procedure TfrmTasks.FormResize(Sender: TObject);
 begin
       pnlTools.Left := (Panel3.Width div 2) - (pnlTools.Width div 2);
+end;
+
+function TfrmTasks.getSectionLabel: string;
+begin
+    result := '';
+    if assigned(mTask) and assigned(mTask.Section) then result := mTask.Section.display_lable;
 end;
 
 function TfrmTasks.gettaskResultMask: TResultMask;

@@ -38,6 +38,7 @@ type
     procedure setResultMaskValue(index: integer; const Value: boolean);
     procedure setResultMask(const Value: TResultMask);
     procedure setPage(const Value: integer);
+    function getTaskCount: integer;
   public
       sections: TSectionList;
       content: TBitmap;
@@ -58,6 +59,7 @@ type
       property ContentType: TContentFolder read mContentFolderType;
       property Section : PSection read mSection;
       property Page: integer read PageNo write setPage;
+      property TaskCount: integer read getTaskCount;
 
       procedure setSection(ContentType: TContentFolder; const Value: PSection);
       function isTrueAnswear(answ: double): boolean;
@@ -137,6 +139,16 @@ end;
 function TTopic.getResultMaskValue(index: integer): boolean;
 begin
      result := taskResultMask[index];
+end;
+
+function TTopic.getTaskCount: integer;
+var i: Integer;
+begin
+    result := 0;
+    if not assigned(sections) then exit;
+
+    for i := 0 to length(sections) - 1 do
+        result := result + sections[i].task_count;
 end;
 
 function TTopic.isTrueAnswear(answ: double): boolean;
