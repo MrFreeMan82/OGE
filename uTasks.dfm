@@ -14,6 +14,7 @@ object frmTasks: TfrmTasks
   OldCreateOrder = False
   OnDestroy = FormDestroy
   OnMouseWheel = FormMouseWheel
+  OnPaint = FormPaint
   OnResize = FormResize
   PixelsPerInch = 96
   TextHeight = 16

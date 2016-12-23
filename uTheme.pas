@@ -31,6 +31,7 @@ type
     fTopicList: TTopicList;
     needer: TObject;
     links: array of TLinkLabel;
+    mSender: TObject;
     procedure createLinks();
     procedure viewTopic(silent: boolean = true);
     procedure assignedCurrent;
@@ -200,6 +201,7 @@ end;
 procedure TfrmTopics.HelpWithTopic(topic_id: integer; Sender: TObject);
 var i, j : integer;
 begin
+     mSender := Sender;
      for i := 0 to length(ftopicList) - 1 do
      begin
         for j := 0 to length(ftopicList[i].sections) - 1 do

@@ -216,14 +216,10 @@ end;
 
 procedure TTopic.setPage(const Value: integer);
 begin
-    case mContentFolderType of
-      cntTask:;
-      cntContent:
-                if(value >= 1) and (value <= section.pages_count) then
-                begin
-                    pageNo := value - 1;
-                    NextPage;
-                end;
+    if(value >= 1) and (value <= mContentPageCount) then
+    begin
+        pageNo := value - 1;
+        NextPage;
     end;
 
 end;

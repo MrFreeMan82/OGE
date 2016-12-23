@@ -109,8 +109,13 @@ begin
      else
         stageList[0].resultLabel := 'ĞÅÇÓËÜÒÀÒ: ' + NOT_ZACHET;
 
+     result := frmOGE.CollectiveTasks.Over80(frmOGE.User.id);
+     m := 2;
 
-     stageList[1].resultLabel := 'ĞÅÇÓËÜÒÀÒ: íå çà÷òåíî';
+     if result and (cm <= m) then
+         stageList[1].resultLabel := 'ĞÅÇÓËÜÒÀÒ: ' + ZACHET
+     else
+         stageList[1].resultLabel := 'ĞÅÇÓËÜÒÀÒ: ' + NOT_ZACHET;
 
      len := lineLen(mainRectLeftLine);
      len2 := len / 3;

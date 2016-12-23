@@ -30,12 +30,15 @@ TfrmTestResult = class(TForm)
   private
     { Private declarations }
 
+    mOwner: TComponent;
     frmUTTDiagram: TfrmUTTDiagram;
     frmTaskDiagram: TfrmTaskDiagram;
+  //  frmCollectiveDiagram: TfrmTaskDiagram;
   public
     { Public declarations }
     class function showUTTResults(): TModalResult;
-    class function showTaskResults(): TModalResult;
+    class function showTaskResults(Owner: TComponent): TModalResult;
+  //  class function showCollectiveResults(): TModalResult;
   end;
 
 implementation
@@ -58,25 +61,34 @@ begin
          end
          else if assigned(frmTaskDiagram) then
          begin
-              frmOGE.Tasks.clearUserResults;
+              if mOwner.Name = frmOGE.tabTasks.Name
+                  then frmOGE.Tasks.clearUserResults
+                      else if mOwner.Name = frmOGE.tabCollectiveTask.Name
+                                  then frmOGE.CollectiveTasks.clearUserResults;
+
               frmTaskDiagram.Free;
               frmTaskDiagram := TfrmTaskDiagram.Create(self);
               frmTaskDiagram.Dock(pnlDiagram, pnlDiagram.ClientRect);
               frmTaskDiagram.showDiagram(chkRandom.Checked, true);
               btClearResults.Enabled := false;
-         end;
+         end
 
     end;
 end;
 
-procedure TfrmTestResult.btExitClick(Sender: TObject);
+procedure TfrmTestResult.FormResize(Sender: TObject);
 begin
-    modalResult := mrCancel
-end;
+   pnlOptions.Left := (pnlTools.Width div 2) - (pnlOptions.Width div 2);
 
-procedure TfrmTestResult.btNoClick(Sender: TObject);
-begin
-    modalResult := mrNo;
+   if Assigned(frmUTTDiagram) then
+   begin
+       frmUTTDiagram.refresh(chkRandom.Checked);
+   end
+   else if assigned(frmTaskDiagram) then
+   begin
+       frmTaskDiagram.refresh(chkRandom.Checked);
+   end
+
 end;
 
 procedure TfrmTestResult.btSaveresultsClick(Sender: TObject);
@@ -88,9 +100,23 @@ begin
      end
      else if assigned(frmTaskDiagram) then
      begin
-          frmOGE.Tasks.saveResults;
+          if mOwner.Name = frmOGE.tabTasks.Name
+              then frmOGE.Tasks.saveResults
+                   else if mOwner.Name = frmOGe.tabCollectiveTask.Name
+                                 then frmOGE.CollectiveTasks.saveResults;
+
           btSaveresults.Enabled := false;
-     end;
+     end
+end;
+
+procedure TfrmTestResult.btExitClick(Sender: TObject);
+begin
+    modalResult := mrCancel
+end;
+
+procedure TfrmTestResult.btNoClick(Sender: TObject);
+begin
+    modalResult := mrNo;
 end;
 
 procedure TfrmTestResult.btYesClick(Sender: TObject);
@@ -106,11 +132,11 @@ begin
      end;
 end;
 
-class function TfrmTestResult.showTaskResults: TModalResult;
+class function TfrmTestResult.showTaskResults(Owner: TComponent): TModalResult;
 var frmTestResult: TfrmTestResult;
 begin
-   // if not assigned(frmTestResult) then
     frmTestResult := TFrmTestResult.Create(frmOGE);
+    frmTestResult.mOwner := Owner;
 
     frmTestResult.frmTaskDiagram := TfrmTaskDiagram.Create(frmTestResult);
     try
@@ -146,20 +172,6 @@ begin
         freeAndNil(frmTestResult.frmUTTDiagram);
         freeAndNil(frmTestResult)
     end;
-end;
-
-procedure TfrmTestResult.FormResize(Sender: TObject);
-begin
-   pnlOptions.Left := (pnlTools.Width div 2) - (pnlOptions.Width div 2);
-
-   if Assigned(frmUTTDiagram) then
-   begin
-       frmUTTDiagram.refresh(chkRandom.Checked);
-   end
-   else if assigned(frmTaskDiagram) then
-   begin
-       frmTaskDiagram.refresh(chkRandom.Checked);
-   end;
 end;
 
 end.

@@ -74,6 +74,7 @@ type
     procedure totalResults();
   public
     { Public declarations }
+    property CollectiveTasks: TfrmTasks read frmCollectiveTask;
     property Tasks: TfrmTasks read frmTasks;
     property Topics: TfrmTopics read frmTopics;
     property UTT:TfrmUTT read frmUTT;
@@ -134,6 +135,11 @@ begin
 
      if r then grdUserresult.Cells[1, i] := ZACHET
            else grdUserresult.Cells[1, i] := NOT_ZACHET;
+
+     r := frmCollectiveTask.Over80(us_id);
+
+     if r then grdUserResult.Cells[2, i] := ZACHET
+            else grdUserResult.Cells[2, i] := NOT_ZACHET;
 end;
 
 procedure TfrmOGE.totalresultFillUsesrs;
@@ -271,7 +277,7 @@ begin
 
     if not assigned(frmTasks) then frmTasks := TfrmTasks.Create(self);
     frmTasks.Dock(tabTasks, tabTasks.ClientRect);
-    frmTasks.ShowTasks();
+    frmTasks.ShowTasks(tabTasks);
 
     if not assigned(frmWorkPlan) then frmWorkPlan := TfrmWorkPlan.Create(self);
     frmWorkPlan.Dock(tabPlan, tabPlan.ClientRect);
@@ -279,7 +285,7 @@ begin
 
     if not assigned(frmCollectiveTask) then frmCollectiveTask := TfrmTasks.Create(self);
     frmCollectiveTask.Dock(tabCollectiveTask, tabCollectiveTask.ClientRect);
-    frmCollectiveTask.showCollectiveTask();
+    frmCollectiveTask.ShowTasks(tabCollectiveTask);
 
     fillGrid();
     totalResults();
