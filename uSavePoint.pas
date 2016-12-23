@@ -18,7 +18,7 @@ type
       window: string;
       rec: TRecords;
 
-      function exists(const key : string): boolean;
+      function exists(const key : string; out index: integer): boolean;
     public
       procedure addValue(const key, value: string);
       procedure addFloatValue(const key: string; value: double);
@@ -64,12 +64,20 @@ begin
 end;
 
 procedure TSavePoint.addValue(const key, value: string);
+var i: integer;
 begin
-     if not exists(key) then setLength(rec, length(rec) + 1);
-
-     rec[high(rec)].key := key;
-     rec[high(rec)].value := value;
-     rec[high(rec)].deleted := false;
+     if exists(key, i) then
+     begin
+         rec[i].key := key;
+         rec[i].value := value;
+         rec[i].deleted := false;
+     end
+     else begin
+          setLength(rec, length(rec) + 1);
+          rec[high(rec)].key := key;
+          rec[high(rec)].value := value;
+          rec[high(rec)].deleted := false;
+     end;
 end;
 
 function TSavePoint.asResultMask(const key: string):TResultMask;
@@ -139,12 +147,13 @@ begin
      end;
 end;
 
-function TSavePoint.exists(const key: string): boolean;
+function TSavePoint.exists(const key: string; out index: integer): boolean;
 var i: integer;
 begin
     result := false;
     for i := 0 to length(rec)- 1 do
-        if(rec[i].key = key) then exit(true)
+        if(rec[i].key = key) then
+            begin index := i; exit(true) end;
 end;
 
 procedure TSavePoint.Load();

@@ -35,12 +35,13 @@ type
     procedure btHelpClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure FormPaint(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     savePoint: TSavePoint;
     mTask: TTopic;
     mTaskList: TTopicList;
     links: array of TLinkLabel;
-    LoadedLink: TLinkLabel;
+    LoadedLink, CurrentLink: TLinkLabel;
     mOwner: TComponent;
 
     procedure loadUserOptions();
@@ -57,6 +58,8 @@ type
     property ResultMask: TResultMask read gettaskResultMask;
     property MyOwner: TComponent read mOwner;
     property SectionLabel: string read getSectionLabel;
+
+    procedure refreshLinkContent();
     function Over80(us_id: integer): boolean;
     procedure clearUserResults;
     procedure saveResults();
@@ -247,11 +250,14 @@ begin
      ScrollBox.VertScrollBar.Range := img.Picture.Height;
 end;
 
+procedure TfrmTasks.refreshLinkContent;
+begin
+   linkClick(CurrentLink);
+end;
+
 procedure TfrmTasks.loadUserOptions;
 var id: integer; s: PSection;
 begin
-    savePoint := TsavePoint.Create(frmOGE.User.id, mOwner.Name);
-    savepoint.Load;
     id := savepoint.asInteger('TOPIC');
     if(id > 0) then
     begin
@@ -268,13 +274,16 @@ end;
 
 procedure TfrmTasks.ShowTasks(Owner: TComponent);
 begin
+    mOwner := Owner;
     loadTopicList(self, mTaskList);
     if (mTaskList = nil) then
     begin
       messageBox(self.Handle, 'Не удалось загузить тесты', 'Ошибка', MB_OK or MB_ICONERROR);
       abort;
     end;
-    mOwner := Owner;
+
+    savePoint := TsavePoint.Create(frmOGE.User.id, mOwner.Name);
+    savepoint.Load;
     createLinks();
     loadUserOptions();
     show;
@@ -285,6 +294,7 @@ var page: integer;
 begin
     if (Sender = nil) or (not (Sender is TLinkLabel)) then exit;
 
+    CurrentLink := TLinkLabel(Sender);
     mTask := mTaskList[TLinkLabel(Sender).Tag];
    // mTask.ContentType  := cntTask;
     mTask.OnAllTaskComplete := AllTaskCompleate;
@@ -401,6 +411,16 @@ begin
      savePoint.Free;
      for i := 0 to length(links) - 1 do freeAndNil(links[i]);
      freeTopicList(mTaskList);
+end;
+
+procedure TfrmTasks.FormKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+    case Key of
+    VK_LEFT: btPrevTaskClick(Sender);
+    VK_RIGHT: btNextTaskClick(Sender);
+    end;
+    txtAnswer.SetFocus;
 end;
 
 procedure TfrmTasks.FormMouseWheel(Sender: TObject; Shift: TShiftState;

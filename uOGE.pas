@@ -36,6 +36,7 @@ type
     ToolBar2: TToolBar;
     ToolButton1: TToolButton;
     btRefresh: TSpeedButton;
+    AppnEvents: TApplicationEvents;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure WebBrowser1DocumentComplete(ASender: TObject;
@@ -49,6 +50,7 @@ type
     procedure btRefreshClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormShow(Sender: TObject);
+    procedure AppnEventsShortCut(var Msg: TWMKey; var Handled: Boolean);
   private
     { Private declarations }
     frmTopics: TfrmTopics;
@@ -58,7 +60,6 @@ type
     frmCollectiveTask: TfrmTasks;
 
     saveOGE: TSavePoint;
-
     CurrentUser: PUser;
     usr: PUser;
     usrList: TUserList;
@@ -266,7 +267,6 @@ begin
     end;
 
     if currentUser.ut_id = 1 then tabAdmin.TabVisible := true else tabAdmin.TabVisible := false;
-    UpdateCaption('');
     Path := exePath();
 
     WebBrowser1.Navigate('res://' + Application.ExeName + '/HTML/FIRST_PAGE');
@@ -308,13 +308,7 @@ begin
     begin
          pgPages.ActivePageIndex := p;
 
-         if (pgPages.ActivePage = tabTasks)
-                 then UpdateCaption(self.frmTasks.SectionLabel)
-
-         else if (pgPages.ActivePage = tabCollectiveTask)
-             then UpdateCaption(self.frmCollectiveTask.SectionLabel)
-
-         else UpdateCaption(pgPages.ActivePage.Caption);
+         pgPagesChange(Sender)
     end;
 end;
 
@@ -353,8 +347,40 @@ end;
 
 procedure TfrmOGE.pgPagesChange(Sender: TObject);
 begin
-    if pgPages.ActivePage = tabPlan then frmWorkPlan.refreshWorkPlan;
+    if pgPages.ActivePage = tabPlan
+        then begin
+             frmWorkPlan.refreshWorkPlan;
+             UpdateCaption(pgPages.ActivePage.Caption);
+        end
+
+    else if pgPages.ActivePage = tabTasks
+        then begin
+             frmTasks.refreshLinkContent;
+             UpdateCaption(frmTasks.SectionLabel);
+        end
+
+    else if pgPages.ActivePage = tabCollectiveTask
+        then begin
+            frmCollectiveTask.refreshLinkContent;
+            UpdateCaption(frmCollectiveTask.SectionLabel);
+        end
+    else
     UpdateCaption(pgPages.ActivePage.Caption);
+end;
+
+procedure TfrmOGE.AppnEventsShortCut(var Msg: TWMKey; var Handled: Boolean);
+begin
+    if (pgPages.ActivePage = tabTasks) and assigned(frmTasks)
+              then frmTasks.FormKeyDown(self, msg.CharCode, [])
+
+    else if (pgPages.ActivePage = tabCollectiveTask) and assigned(frmCollectiveTask)
+             then frmCollectiveTask.FormKeyDown(self, msg.CharCode, [])
+
+    else if (pgPages.ActivePage = tabUTT) and assigned(frmUTT)
+          then frmUTT.FormKeyDown(self, msg.CharCode, [])
+
+    else if (pgPages.ActivePage = tabThemes) and assigned(frmTopics)
+      then frmTopics.FormKeyDown(self, msg.CharCode, []);
 end;
 
 procedure TfrmOGE.WebBrowser1DocumentComplete(ASender: TObject;

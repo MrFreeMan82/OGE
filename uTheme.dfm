@@ -13,6 +13,7 @@ object frmTopics: TfrmTopics
   Font.Style = []
   OldCreateOrder = False
   OnDestroy = FormDestroy
+  OnKeyDown = FormKeyDown
   OnMouseWheel = FormMouseWheel
   PixelsPerInch = 96
   TextHeight = 16

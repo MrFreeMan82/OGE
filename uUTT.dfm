@@ -14,6 +14,7 @@ object frmUTT: TfrmUTT
   Font.Style = []
   OldCreateOrder = False
   OnDestroy = FormDestroy
+  OnKeyDown = FormKeyDown
   OnMouseWheel = FormMouseWheel
   OnResize = FormResize
   PixelsPerInch = 96

@@ -49,6 +49,7 @@ type
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure FormDestroy(Sender: TObject);
     procedure FormResize(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     { Private declarations }
     mode: Tmode;
@@ -316,6 +317,15 @@ begin
          savePoint.Save;
     end;
     freeAndNil(savePoint)
+end;
+
+procedure TfrmUTT.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+    case Key of
+    VK_LEFT: btPrevTaskClick(Sender);
+    VK_RIGHT: btNextTaskClick(Sender);
+    end;
+    txtAnswer.setFocus;
 end;
 
 procedure TfrmUTT.FormMouseWheel(Sender: TObject; Shift: TShiftState;

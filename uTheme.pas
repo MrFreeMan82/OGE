@@ -25,11 +25,13 @@ type
     procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure btTestClick(Sender: TObject);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     { Private declarations }
     fTopic: TTopic;
     fTopicList: TTopicList;
     needer: TObject;
+    currentLink: TLinkLabel;
     links: array of TLinkLabel;
     procedure createLinks();
     procedure viewTopic(silent: boolean = true);
@@ -113,7 +115,7 @@ end;
 procedure TfrmTopics.linkClick(Sender: TObject);
 begin
     if not (Sender is TLinkLabel) then exit;
-
+    currentLink := TLinkLabel(Sender);
     fTopic := fTopicList[TLinkLabel(Sender).Tag];
     fTopic.setSection(cntContent, fTopic.sectionByName(TLinkLabel(Sender).Name));
     fTopic.FirstPage;
@@ -192,6 +194,15 @@ var i: integer;
 begin
     for i := 0 to length(links) - 1 do freeAndNil(links[i]);
     freeTopicList(ftopicList);
+end;
+
+procedure TfrmTopics.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+    case Key of
+    VK_LEFT: btPrevPageClick(Sender);
+    VK_RIGHT: btNextPageClick(Sender);
+    end;
+//    if assigned(currentLink) then currentLink.SetFocus;
 end;
 
 procedure TfrmTopics.FormMouseWheel(Sender: TObject; Shift: TShiftState;
