@@ -78,13 +78,7 @@ begin
     btTest.Visible := false;
     if needer = nil then exit;
 
-    if TfrmTasks(needer).MyOwner.Name =
-                frmOGE.tabTasks.Name then
-                    frmOGE.pgPages.ActivePage := frmOGE.tabTasks
-
-    else if TfrmTasks(needer).MyOwner.Name =
-                frmOGE.tabCollectiveTask.Name then
-                      frmOGE.pgPages.ActivePage := frmOGE.tabCollectiveTask;
+    frmOGE.pgPages.ActivePage := TfrmTasks(needer).Parent;
 end;
 
 procedure TfrmTopics.viewTopic(silent: boolean = true);
@@ -124,7 +118,7 @@ end;
 
 procedure TfrmTopics.showTopics;
 begin
-    loadTopicList(self, ftopicList);
+    ftopicList := TTopicList.Create;
     if ftopicList = nil then
     begin
         messageBox(self.Handle, 'Не удалось загузить раздел', 'Ошибка', MB_OK or MB_ICONERROR);
@@ -137,6 +131,7 @@ end;
 
 procedure TfrmTopics.createLinks;
 var i, j, k, l, t, td, ld, cnt: integer;
+    item: TTopic;
 begin
      k := -1;
      l := 2;
@@ -145,44 +140,45 @@ begin
      ld := 10;
 
      cnt := 0;
-     for i := 0 to length(ftopicList) - 1 do
-          cnt := cnt + length(ftopicList[i].sections) + 1;
+     for i := 0 to ftopicList.Count - 1 do
+          cnt := cnt + length(TTopic(ftopicList.Items[i]).sections) + 1;
 
      setLength(links, cnt);
 
-     for i := 0 to length(ftopicList) - 1 do
+     for i := 0 to ftopicList.Count - 1 do
      begin
           inc(k);
+          item := TTopic(ftopicList.Items[i]);
 
           links[k] := TLinkLabel.Create(pnlLinks);
           links[k].Parent := pnlLinks;
           links[k].OnClick := nil;
           links[k].Left := l;
           links[k].Top := t;
-          links[k].Caption := '<a href="#">' + ftopicList[i].Caption + '</a>';
+          links[k].Caption := '<a href="#">' + item.Caption + '</a>';
 
           t := t + links[k].Height + td;
 
-          if length(ftopicList[i].sections) = 1 then
+          if length(item.sections) = 1 then
           begin
-               links[k].Name := ftopicList[i].name;
+               links[k].Name := item.name;
                links[k].OnClick := linkClick;
                links[k].Tag := i;
                continue;
           end;
 
-          for j := 0 to length(ftopicList[i].sections) - 1 do
+          for j := 0 to length(item.sections) - 1 do
           begin
               inc(k);
 
               links[k] := TLinkLabel.Create(pnlLinks);
-              links[k].Name := ftopicList[i].sections[j].name;
+              links[k].Name := item.sections[j].name;
               links[k].Parent := pnlLinks;
               links[k].OnClick := linkClick;
               links[k].Left := l + ld;
               links[k].Top := t;
               links[k].Tag := i;
-              links[k].Caption := '<a href="#">' + ftopicList[i].sections[j].display_lable + '</a>';
+              links[k].Caption := '<a href="#">' + item.sections[j].display_lable + '</a>';
 
               t := t + links[k].Height + td;
           end;
@@ -193,7 +189,7 @@ procedure TfrmTopics.FormDestroy(Sender: TObject);
 var i: integer;
 begin
     for i := 0 to length(links) - 1 do freeAndNil(links[i]);
-    freeTopicList(ftopicList);
+    ftopicList.Free;
 end;
 
 procedure TfrmTopics.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -218,17 +214,19 @@ end;
 
 procedure TfrmTopics.HelpWithTopic(topic_id: integer; Sender: TObject);
 var i, j : integer;
+    item:TTopic;
 begin
-     for i := 0 to length(ftopicList) - 1 do
+     for i := 0 to ftopicList.Count - 1 do
      begin
-        for j := 0 to length(ftopicList[i].sections) - 1 do
+        item := TTopic(fTopicList.Items[i]);
+        for j := 0 to length(item.sections) - 1 do
         begin
-            if ftopicList[i].sections[j].topic_id = topic_id then
+            if item.sections[j].topic_id = topic_id then
             begin
                 btTest.Visible := true;
                 needer := sender;
-                fTopic := ftopicList[i];
-                fTopic.setSection(cntContent, @ftopicList[i].sections[j]);
+                fTopic := item;
+                fTopic.setSection(cntContent, @item.sections[j]);
                 fTopic.FirstPage;
                 viewTopic();
                 frmOGE.pgPages.ActivePage := frmOGE.tabThemes;

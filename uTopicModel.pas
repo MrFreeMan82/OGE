@@ -2,7 +2,7 @@ unit uTopicModel;
 
 interface
 
-uses uGlobals, Graphics, uSavePoint;
+uses uGlobals, Graphics, uSavePoint, Classes;
 
 type
   TContentFolder = (cntUnknown, cntContent, cntTask);
@@ -20,7 +20,7 @@ type
   TSectionList = array of TSection;
 
   TTopic = class
-  private
+ private
       mid: integer;
       mname: string;
       display_lable: string;
@@ -35,7 +35,6 @@ type
     procedure setMode(const Value: TMode);
     function getResultMask: TResultMask;
     function getResultMaskValue(index: integer): boolean;
-    procedure setResultMaskValue(index: integer; const Value: boolean);
     procedure setResultMask(const Value: TResultMask);
     procedure setPage(const Value: integer);
     function getTaskCount: integer;
@@ -51,66 +50,108 @@ type
 
       property Mode: TMode read mMode write setMode;
       property Caption: string read display_lable write display_lable;
-      property ID: integer read mid write mid;
-      property Name: string read mname write mname;
+      property ID: integer read mid;
+      property Name: string read mname;
       property ResultMask: TResultMask read getResultMask write setResultMask;
-      property ResultMaskValue[index: integer]: boolean read getResultMaskValue write setResultMaskValue;
-      property CurrentTask: integer read pageNo;
+      property ResultMaskValue[index: integer]: boolean read getResultMaskValue;
       property ContentType: TContentFolder read mContentFolderType;
       property Section : PSection read mSection;
       property Page: integer read PageNo write setPage;
       property TaskCount: integer read getTaskCount;
 
       procedure setSection(ContentType: TContentFolder; const Value: PSection);
-      function isTrueAnswear(answ: double): boolean;
+      function isTrueAnswear(answ: double; taskNo: integer): boolean;
       function sectionByName(const name: string): PSection;
       function sectionByID(topic_id: integer): PSection;
       procedure loadAnswears();
       procedure clearResults();
   end;
 
-  TTopicList = array of TTopic;
-
-function loadCollective(): TTopic;
-procedure loadTopicList(Sender: TObject; out List: TTopicList);
-procedure freeTopicList(List: TTopicList);
-function getTopicByID(id: integer; topicList: TTopicList): TTopic;
+  TTopicList = class(TList)
+    public
+       procedure Free;
+       function getTopicByID(id: integer): TTopic;
+       constructor Create();
+  end;
 
 implementation
 
-uses uData, sysUtils, uOGE;
-
-{ TModule }
+uses uData, sysUtils, uOGE, XMLIntf;
 
 var filename: string;
 
     taskResultMask: TResultMask;
     answears: TAnswears;
 
-function getTopicByID(id: integer; topicList: TTopicList): TTopic;
+{ TTopicList }
+
+constructor TTopicList.Create;
+var info: string;
+    s: TStringStream;
+    i, j, scnt: integer;
+    item:TTopic;
+    root, node, sectionNodes: IXMLNode;
+begin
+     inherited Create;
+
+     info := TOPIC_DIR + '/info.xml';
+     s := TStringStream.Create;
+     try
+        if not FindData(dm.DataFile, info, s) then abort;
+        dm.xmlDoc.LoadFromStream(s);
+        root := dm.xmlDoc.ChildNodes.FindNode('MODULES');
+
+        Capacity := root.ChildNodes.Count;
+
+        for i := 0 to Capacity - 1 do
+        begin
+          item := TTopic.Create;
+          Add(item);
+          node := root.ChildNodes.Get(i);
+          item.mid := strToInt(node.ChildNodes.FindNode('ID').Text);
+          item.mname := node.ChildNodes.FindNode('DIR').Text;
+          item.Caption := node.ChildNodes.FindNode('DISPLAY_LABEL').Text;
+
+          sectionNodes := node.ChildNodes.FindNode('SECTIONS');
+          scnt := sectionNodes.ChildNodes.Count;
+          setLength(item.sections, scnt);
+
+          for j := 0 to scnt - 1 do
+          with item do
+          begin
+                node := sectionNodes.ChildNodes.Get(j);
+                with node.ChildNodes do
+                begin
+                   sections[j].name := FindNode('DIR').Text;
+                   sections[j].display_lable := FindNode('DISPLAY_LABEL').Text;
+                   sections[j].topic_id := strToInt(FindNode('TOPIC_ID').Text);
+                   sections[j].task_count := strToInt(FindNode('TASK_COUNT').Text);
+                   sections[j].pages_count := strToInt(FindNode('PAGES_COUNT').Text);
+                   sections[j].visible := FindNode('VISIBLE').Text = '0';
+                end;
+          end;
+        end;
+     finally
+          s.Free;
+     end;
+end;
+
+procedure TTopicList.Free;
+var i: integer;
+begin
+   for i := 0 to Count - 1 do freeAndNil(List[i]);
+   inherited Free;
+end;
+
+function TTopicList.getTopicByID(id: integer): TTopic;
 var i: integer;
 begin
      result := nil;
-     for i := 0 to length(topicList) - 1 do
-        if(id = topicList[i].ID) then exit(topicList[i]);
+     for i := 0 to Count - 1 do
+        if(id = TTopic(Items[i]).ID) then exit(TTopic(Items[i]));
 end;
 
-function loadCollective(): TTopic;
-begin
-     result := dm.loadTopic();
-end;
-
-procedure loadTopicList(Sender: TObject; out List: TTopicList);
-begin
-    List := dm.loadTopicList();
-end;
-
-procedure freeTopicList(List: TTopicList);
-var i: integer;
-begin
-    for i := 0 to length(List) - 1 do freeAndNil(List[i]);
-    List := nil;
-end;
+{ TModule }
 
 function TTopic.allTaskComplete: boolean;
 begin
@@ -122,7 +163,7 @@ begin
     filename := format('%s/%s/%s/%s/%d.jpg', [TOPIC_DIR, name, section.name, mContentFolder, pageNo]);
 
     if assigned(content) then freeAndNil(content);
-    content := dm.LoadPage(filename);
+    content := LoadPage(filename);
 end;
 
 procedure TTopic.FirstPage;
@@ -151,9 +192,10 @@ begin
         result := result + sections[i].task_count;
 end;
 
-function TTopic.isTrueAnswear(answ: double): boolean;
+function TTopic.isTrueAnswear(answ: double; taskNo: integer): boolean;
 begin
     result := abs(answ - answears[pageNo - 1]) < e;
+    taskResultMask[taskNo - 1] := result;
 end;
 
 procedure TTopic.NextPage;
@@ -241,11 +283,6 @@ begin
      taskResultMask := value;
 end;
 
-procedure TTopic.setResultMaskValue(index: integer; const Value: boolean);
-begin
-     taskResultMask[index] := value
-end;
-
 procedure TTopic.setSection(ContentType: TContentFolder; const Value: PSection);
 begin
     mMode := mNormal;
@@ -262,7 +299,7 @@ end;
 procedure TTopic.loadAnswears;
 begin
     filename := format('%s/%s/%s/answ.xml',[TOPIC_DIR, name, section.name]);
-    answears := dm.loadAnswears(dm.TaskDataFile, filename, 1);
+    answears := uGlobals.loadAnswears(dm.DataFile, filename, 1);
     if taskResultMask = nil then
     begin
          setLength(taskResultMask, length(answears));

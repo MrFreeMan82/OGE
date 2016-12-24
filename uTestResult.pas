@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Buttons, ExtCtrls, StdCtrls, GdiPlus, GdiPlusHelpers, uData,
-  uUTTDiagram, uTaskDiagram, uGlobals;
+  uUTTDiagram, uTaskDiagram, uGlobals, uTasks;
 
 type
 
@@ -29,14 +29,13 @@ TfrmTestResult = class(TForm)
     procedure btSaveresultsClick(Sender: TObject);
   private
     { Private declarations }
-    rm: TResultMask;
-    mOwner: TComponent;
+    mParent: TfrmTasks;
     frmUTTDiagram: TfrmUTTDiagram;
     frmTaskDiagram: TfrmTaskDiagram;
   public
     { Public declarations }
     class function showUTTResults(): TModalResult;
-    class function showTaskResults(Owner: TComponent): TModalResult;
+    class function showTaskResults(Parent: TfrmTasks): TModalResult;
   end;
 
 implementation
@@ -59,18 +58,12 @@ begin
          end
          else if assigned(frmTaskDiagram) then
          begin
-              if mOwner.Name =
-                frmOGE.tabTasks.Name then
-                  frmOGE.Tasks.clearUserResults
-
-              else if mOwner.Name =
-                  frmOGE.tabCollectiveTask.Name then
-                   frmOGE.CollectiveTasks.clearUserResults;
+              mParent.clearUserResults;
 
               frmTaskDiagram.Free;
               frmTaskDiagram := TfrmTaskDiagram.Create(self);
               frmTaskDiagram.Dock(pnlDiagram, pnlDiagram.ClientRect);
-              frmTaskDiagram.showDiagram(chkRandom.Checked, true, rm);
+              frmTaskDiagram.showDiagram(chkRandom.Checked, true, mParent.ResultMask);
               btClearResults.Enabled := false;
          end
 
@@ -101,11 +94,7 @@ begin
      end
      else if assigned(frmTaskDiagram) then
      begin
-          if mOwner.Name = frmOGE.tabTasks.Name
-              then frmOGE.Tasks.saveResults
-                   else if mOwner.Name = frmOGe.tabCollectiveTask.Name
-                                 then frmOGE.CollectiveTasks.saveResults;
-
+          mParent.saveResults;
           btSaveresults.Enabled := false;
      end
 end;
@@ -133,11 +122,11 @@ begin
      end;
 end;
 
-class function TfrmTestResult.showTaskResults(Owner: TComponent): TModalResult;
+class function TfrmTestResult.showTaskResults(Parent: TfrmTasks): TModalResult;
 var frmTestResult: TfrmTestResult;
 begin
     frmTestResult := TFrmTestResult.Create(frmOGE);
-    frmTestResult.mOwner := Owner;
+    frmTestResult.mParent := Parent;
 
     frmTestResult.frmTaskDiagram := TfrmTaskDiagram.Create(frmTestResult);
     try
@@ -145,15 +134,8 @@ begin
                        frmTestResult.pnlDiagram,
                             frmTestResult.pnlDiagram.ClientRect);
 
-      if frmTestResult.mOwner.Name =
-              frmOGE.tabTasks.Name then
-                    frmTestResult.rm := frmOGE.Tasks.ResultMask
-
-      else if frmTestResult.mOwner.Name =
-            frmOGE.tabCollectiveTask.Name then
-                 frmTestResult.rm := frmOGE.CollectiveTasks.ResultMask;
-
-      frmTestResult.frmTaskDiagram.showDiagram(frmTestResult.chkRandom.Checked, false, frmTestResult.rm);
+      frmTestResult.frmTaskDiagram.showDiagram(
+          frmTestResult.chkRandom.Checked, false, Parent.ResultMask);
       result := frmTestResult.ShowModal;
 
     finally

@@ -316,6 +316,8 @@ object frmUser: TfrmUser
     000000000000FFFF000000000000FFFFFFFFFFFF0000FFFFFFFFFFFF0000}
   OldCreateOrder = False
   Position = poMainFormCenter
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
   DesignSize = (
     371
     143)

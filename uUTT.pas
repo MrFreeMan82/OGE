@@ -60,6 +60,7 @@ type
     savePoint: TSavePoint;
     procedure loadTask(aVariant, aTask: integer);
     procedure AllTaskCompleate();
+    function doLoadUTT: TUTTModulesList;
   public
     { Public declarations }
     function getModuleByID(id: integer): PUTTModule;
@@ -73,7 +74,7 @@ type
   end;
 
 implementation
-uses uOGE, uTestResult, ActiveX, uData;
+uses uOGE, uTestResult, ActiveX, uData, XMLIntf;
 
 {$R *.dfm}
 
@@ -243,12 +244,7 @@ end;
 
 procedure TfrmUTT.loadTask(aVariant, aTask: integer);
 var fileName, answearName: string;
-    mem: TMemoryStream;
-    adptr: IStream;
-    gdiBmp: IGPBitmap;
-    graphic: IGPGraphics;
     bmp: TBitmap;
-    rect: TGPRectF;
 begin
      img.Canvas.Brush.Color:=ClWhite;
      img.Canvas.FillRect(img.Canvas.ClipRect);
@@ -258,44 +254,17 @@ begin
 
      filename := format('%s/%d/%d.jpg', [UTT_DIR, aVariant, aTask]);
 
-     mem := TMemoryStream.Create;
-     bmp := TBitMap.Create;
-
-     try
-         if not FindData(dm.UTTDataFile, fileName, mem) then
-         begin
-              messageBox(self.Handle,
-                  'По данному варианту тесты не загружены',
-                               'Ошибка', MB_OK or MB_ICONERROR);
-              abort;
-         end;
-
-         adptr  := TStreamAdapter.Create(mem);
-         gdiBmp := TGPBitmap.Create(adptr);
-
-         rect.InitializeFromLTRB(0, 0, gdiBMP.Width, gdiBmp.Height);
-
-         bmp.Width := trunc(rect.Width);
-         bmp.Height := trunc(rect.Height);
-
-         graphic := TGPGraphics.Create(bmp.Canvas.Handle);
-         graphic.InterpolationMode := InterpolationModeHighQualityBicubic;
-         graphic.DrawImage(gdiBmp, rect);
-
-         img.SetBounds(0, 0, bmp.Width, bmp.Height);
-         img.Picture.Assign(bmp);
-
-         ScrollBox.HorzScrollBar.Range := img.Picture.Width;
-         ScrollBox.VertScrollBar.Range := img.Picture.Height;
-     finally
-         mem.Free;
-         bmp.Free;
-     end;
+     bmp := LoadPage(fileName);
+     img.SetBounds(0, 0, bmp.Width, bmp.Height);
+     img.Picture.Assign(bmp);
+     bmp.Free;
+     ScrollBox.HorzScrollBar.Range := img.Picture.Width;
+     ScrollBox.VertScrollBar.Range := img.Picture.Height;
 
      if answears = nil then
      begin
         answearName := format('%s/answ.xml', [UTT_DIR]);
-        answears := dm.loadAnswears(dm.UTTDataFile, answearName, aVariant);
+        answears := loadAnswears(dm.DataFile, answearName, aVariant);
      end;
 end;
 
@@ -377,7 +346,7 @@ procedure TfrmUTT.ShowUTT;
 var variant: integer;
 begin
     mode := mNormal;
-    fUTTTest := dm.loadUTTTests();
+    fUTTTest := doLoadUTT();
     if (fUTTTest = nil) then
     begin
       messageBox(self.Handle, 'Не удалось загузить тесты', 'Ошибка', MB_OK or MB_ICONERROR);
@@ -398,6 +367,46 @@ procedure TfrmUTT.txtAnswerKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
     if key = VK_RETURN then btAnswearClick(Sender);
+end;
+
+function TfrmUTT.doLoadUTT: TUTTModulesList;
+var info: string;
+    s: TStringStream;
+    i, id, cnt: integer;
+    root, node: IXMLNode;
+begin
+     result := nil;
+     info := UTT_DIR + '/info.xml';
+     s := TStringStream.Create;
+     try
+        if not FindData(dm.DataFile, info, s) then abort;
+        dm.xmlDoc.LoadFromStream(s);
+        id := 1;
+
+        root := dm.xmlDoc.ChildNodes.FindNode('UTT');
+        if root = nil then exit;
+
+        cnt := root.ChildNodes.Count;
+        setLength(result, cnt);
+
+        for i := 0 to cnt - 1 do
+        begin
+            node := root.ChildNodes.Get(i);
+            with node.ChildNodes do
+            begin
+                result[i].id := id;
+                result[i].level := TUTTLevel(strToInt(FindNode('LEVEL').Text));
+                result[i].lable := FindNode('DISPLAY_LABEL').Text;
+                result[i].task_from := strToInt(FindNode('TASK_FROM').Text);
+                result[i].task_to := strToInt(FindNode('TASK_TO').Text);
+                result[i].visible := boolean(strToInt(FindNode('VISIBLE').Text));
+                result[i].color := hexToColor(FindNode('COLOR').Text);
+                inc(id);
+            end;
+        end;
+     finally
+         s.Free;
+     end;
 end;
 
 end.

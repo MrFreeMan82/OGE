@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, ExtCtrls, uGlobals, uTopicModel, uSavePoint;
+  Dialogs, StdCtrls, Buttons, ExtCtrls, uGlobals, uTopicModel, uSavePoint, ComCtrls;
 
 type
   TfrmTasks = class(TForm)
@@ -42,7 +42,7 @@ type
     mTaskList: TTopicList;
     links: array of TLinkLabel;
     LoadedLink, CurrentLink: TLinkLabel;
-    mOwner: TComponent;
+    mParent: TTabSheet;
 
     procedure loadUserOptions();
     procedure createLinks();
@@ -56,7 +56,7 @@ type
   public
     { Public declarations }
     property ResultMask: TResultMask read gettaskResultMask;
-    property MyOwner: TComponent read mOwner;
+    property Parent: TTabSheet read mParent;
     property SectionLabel: string read getSectionLabel;
 
     procedure refreshLinkContent();
@@ -64,7 +64,7 @@ type
     procedure clearUserResults;
     procedure saveResults();
     function totalTaskCount(): integer;
-    procedure ShowTasks(Owner: TComponent);
+    procedure ShowTasks(Parent: TTabSheet);
 
   end;
 
@@ -82,18 +82,20 @@ function TfrmTasks.Over80(us_id: integer): boolean;
 var i,j,k, total_tasks, true_tasks: integer;
     sp: TSavePoint;
     rm: TResultMask;
+    item : TTopic;
 begin
      total_tasks := totalTaskCount; true_tasks := 0;
 
-     sp := TSavePoint.Create(us_id, mOwner.name);
+     sp := TSavePoint.Create(us_id, mParent.name);
      sp.Load;
 
-     for i := 0 to length(mTaskList) - 1  do
+     for i := 0 to mTaskList.Count - 1  do
      begin
-          for j :=  0 to length(mTaskList[i].sections) - 1 do
+          item := TTopic(mTaskList.Items[i]);
+          for j :=  0 to length(item.sections) - 1 do
           begin
                rm := sp.asResultMask('MASK_' +
-                        intTostr(mTaskList[i].sections[j].topic_id));
+                        intTostr(item.sections[j].topic_id));
 
                if (rm = nil) then continue;
 
@@ -108,17 +110,19 @@ end;
 
 function TfrmTasks.totalTaskCount: integer;
 var i: Integer;
+    item: TTopic;
 begin
     result := 0;
-    for i := 0 to length(mTaskList) - 1 do
+    for i := 0 to mTaskList.Count - 1 do
     begin
-        if (mOwner.Name = frmOGe.tabTasks.Name) and
-              (mTaskList[i].ID = COLLECTIVE_TASK_ID) then continue;
+        item := TTOpic(mTaskList.Items[i]);
+        if (mParent.Name = frmOGe.tabTasks.Name) and
+              (item.ID = COLLECTIVE_TASK_ID) then continue;
 
-        if (mOwner.Name = frmOGE.tabCollectiveTask.Name) and
-              (mTaskList[i].ID <> COLLECTIVE_TASK_ID) then continue;
+        if (mParent.Name = frmOGE.tabCollectiveTask.Name) and
+              (item.ID <> COLLECTIVE_TASK_ID) then continue;
 
-        result := result + mTaskList[i].TaskCount;
+        result := result + item.TaskCount;
     end;
 
 end;
@@ -150,22 +154,13 @@ begin
      assignedCurrent();
      if trim(txtAnswer.Text) = '' then exit;
 
-    task := mTask.CurrentTask;
+    task := mTask.Page;
     usrAnswear := strToFloatEx(trim(txtAnswer.Text));
 
-    trueAnswear := mTask.isTrueAnswear(usrAnswear);
+    trueAnswear := mTask.isTrueAnswear(usrAnswear, task);
 
     if trueAnswear then
     begin
-         if mTask.ResultMaskValue[task - 1] = false then
-         begin
-              mTask.ResultMaskValue[task - 1] := true;
-         end
-         else begin
-                messageBox(self.Handle,
-                   'Верно! Баллы за это задание уже были засчитаны.',
-                                       'ОГЕ', MB_OK or MB_ICONINFORMATION);
-         end;
          if task = mTask.section.task_count then
          begin
              if mTask.
@@ -205,7 +200,7 @@ end;
 procedure TfrmTasks.btResultsClick(Sender: TObject);
 var mr: TModalResult;
 begin
-    mr := TfrmTestResult.showTaskResults(mOwner);
+    mr := TfrmTestResult.showTaskResults(self);
 
     case mr of
       mrYes: mTask.mode := mNormal;
@@ -261,7 +256,7 @@ begin
     id := savepoint.asInteger('TOPIC');
     if(id > 0) then
     begin
-          mtask := getTopicByID(id, mTaskList);
+          mtask := mTaskList.getTopicByID(id);// getTopicByID(id, mTaskList);
           if mtask = nil then exit;
           id := savepoint.asInteger('SEC');
           if id < 0 then exit;
@@ -272,17 +267,17 @@ begin
     end;
 end;
 
-procedure TfrmTasks.ShowTasks(Owner: TComponent);
+procedure TfrmTasks.ShowTasks(Parent: TTabSheet);
 begin
-    mOwner := Owner;
-    loadTopicList(self, mTaskList);
+    mParent := Parent;
+    mTaskList := TTopicList.Create;
     if (mTaskList = nil) then
     begin
       messageBox(self.Handle, 'Не удалось загузить тесты', 'Ошибка', MB_OK or MB_ICONERROR);
       abort;
     end;
 
-    savePoint := TsavePoint.Create(frmOGE.User.id, mOwner.Name);
+    savePoint := TsavePoint.Create(frmOGE.User.id, mParent.Name);
     savepoint.Load;
     createLinks();
     loadUserOptions();
@@ -330,6 +325,7 @@ end;
 
 procedure TfrmTasks.createLinks;
 var i, j, k, l, t, td, ld, cnt: integer;
+    item: TTOpic;
 begin
      k := -1;
      l := 2;
@@ -338,18 +334,19 @@ begin
      ld := 10;
 
      cnt := 0;
-     for i := 0 to length(mTaskList) - 1 do
-          cnt := cnt + length(mTaskList[i].sections) + 1;
+     for i := 0 to mTaskList.Count - 1 do
+          cnt := cnt + length(TTopic(mTaskList.Items[i]).sections) + 1;
 
      setLength(links, cnt);
 
-     for i := 0 to length(mTaskList) - 1 do
+     for i := 0 to mTaskList.Count - 1 do
      begin
-          if (mOwner.Name = frmOGe.tabTasks.Name) and
-                (mTaskList[i].ID = COLLECTIVE_TASK_ID) then continue;
+          item := TTopic(mTaskList.Items[i]);
+          if (mParent.Name = frmOGe.tabTasks.Name) and
+                (item.ID = COLLECTIVE_TASK_ID) then continue;
 
-          if (mOwner.Name = frmOGE.tabCollectiveTask.Name) and
-                (mTaskList[i].ID <> COLLECTIVE_TASK_ID) then continue;
+          if (mParent.Name = frmOGE.tabCollectiveTask.Name) and
+                (item.ID <> COLLECTIVE_TASK_ID) then continue;
 
           inc(k);
 
@@ -358,30 +355,30 @@ begin
           links[k].OnClick := nil;
           links[k].Left := l;
           links[k].Top := t;
-          links[k].Caption := '<a href="#">' + mTaskList[i].Caption + '</a>';
+          links[k].Caption := '<a href="#">' + item.Caption + '</a>';
 
           t := t + links[k].Height + td;
 
-          if length(mTaskList[i].sections) = 1 then
+          if length(item.sections) = 1 then
           begin
-               links[k].Name := mTaskList[i].name;
+               links[k].Name := item.name;
                links[k].OnClick := linkClick;
                links[k].Tag := i;
                continue;
           end;
 
-          for j := 0 to length(mTaskList[i].sections) - 1 do
+          for j := 0 to length(item.sections) - 1 do
           begin
               inc(k);
 
               links[k] := TLinkLabel.Create(pnlLinks);
-              links[k].Name := mTaskList[i].sections[j].name;
+              links[k].Name := item.sections[j].name;
               links[k].Parent := pnlLinks;
               links[k].OnClick := linkClick;
               links[k].Left := l + ld;
               links[k].Top := t;
               links[k].Tag := i;
-              links[k].Caption := '<a href="#">' + mTaskList[i].sections[j].display_lable + '</a>';
+              links[k].Caption := '<a href="#">' + item.sections[j].display_lable + '</a>';
 
               t := t + links[k].Height + td;
           end;
@@ -410,7 +407,7 @@ begin
 
      savePoint.Free;
      for i := 0 to length(links) - 1 do freeAndNil(links[i]);
-     freeTopicList(mTaskList);
+     mTaskList.Free;
 end;
 
 procedure TfrmTasks.FormKeyDown(Sender: TObject; var Key: Word;

@@ -1,7 +1,7 @@
 unit uGlobals;
 
 interface
-uses GdiPlus, GdiPlusHelpers, Classes;
+uses GdiPlus, GdiPlusHelpers, Classes, Graphics;
 
 const
       e = 0.001;
@@ -49,9 +49,110 @@ function rotatePoint(angle:double; center, p: TGPpointF): TGPPointF;
 function rotateLine(angle: double; line: Tline; center: TGPPointF): Tline;
 procedure measureDisplayStringWidthAndHeight(Graphic: IGPGraphics; Font:IGPFont; text: string; var width, height: double);
 
+function LoadPage(const path: string): TBitmap;
+function loadAnswears(const DBFile, fileName: string; aVariant: integer): TAnswears;
+
+function FindData(const zipFile, name: string; outData: TStream): boolean;
 
 implementation
-uses SysUtils, math, Forms;
+uses SysUtils, math, Forms, ActiveX, uData, XMLIntf, FWZipReader, dialogs;
+
+function FindData(const zipFile, name: string; outData: TStream): boolean;
+var Zip: TFWZipReader;
+    i: integer;
+begin
+    result := false;
+    Zip := TFWZipReader.Create;
+    try
+      zip.LoadFromFile(zipFile);
+      for i := 0 to zip.Count - 1 do
+      begin
+          if result then break;
+
+          if (zip.Item[i].FileName = name) then
+          begin
+               zip[i].ExtractToStream(outData, '');
+               outData.Position := 0;
+               result := true;
+               break
+          end;
+      end;
+    finally
+        zip.Free;
+    end;
+end;
+
+function loadAnswears(const DBFile, fileName: string; aVariant: integer): TAnswears;
+var s: TStringStream;
+    j: integer;
+    node: IXMLNode;
+    lst: TStringList;
+begin
+     result := nil;
+
+     lst := TStringList.Create;
+     lst.StrictDelimiter := true;
+     lst.Delimiter := ';';
+
+     s := TStringStream.Create;
+     try
+       if not FindData(DBFile, fileName, s) then abort;
+       dm.xmlDoc.LoadFromStream(s);
+       node := dm.xmlDoc.ChildNodes.FindNode('ANSWEARS');
+       if node = nil then abort;
+       node := node.ChildNodes.FindNode('V_' + intToStr(aVariant));
+       if node = nil then abort;
+
+       lst.DelimitedText := trim(node.Text);
+       setLength(result, lst.Count);
+
+
+       for j := 0 to lst.Count - 1 do
+       try
+        result[j] := strToFloatEx(lst.Strings[j]);
+       except
+           showMessage('Ошибка загрузки ответа № ' + intTOStr(j + 1));
+       end;
+
+     finally
+          lst.free;
+          s.Free;
+     end;
+end;
+
+function LoadPage(const path: string): TBitmap;
+var mem: TMemoryStream;
+    adptr: IStream;
+    graphic: IGPGraphics;
+    source, dest: TGPRectF;
+    gdiBmp: IGPBitmap;
+begin
+     result := nil;
+     mem := TMemoryStream.Create;
+
+     try
+        if FindData(dm.DataFile, path, mem) then
+        begin
+          adptr  := TStreamAdapter.Create(mem);
+          gdiBmp := TGPBitmap.Create(adptr);
+
+          source.InitializeFromLTRB(0, 0, gdiBmp.Width, gdiBmp.Height);
+          dest.InitializeFromLTRB(0, 0, 900, source.Height);
+
+          streach(source, dest.Width, dest.Height, dest);
+
+          result := TBitMap.Create;
+          result.Width := trunc(dest.Width);
+          result.Height := trunc(dest.Height);
+
+          graphic := TGPGraphics.Create(result.Canvas.Handle);
+          graphic.InterpolationMode := InterpolationModeHighQualityBicubic;
+          graphic.DrawImage(gdiBmp, dest);
+        end;
+     finally
+         mem.Free;
+     end;
+end;
 
 function exePath: string;
 begin

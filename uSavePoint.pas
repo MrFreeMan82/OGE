@@ -1,7 +1,7 @@
 unit uSavePoint;
 
 interface
-uses uGlobals;
+uses uGlobals, Classes;
 
 type
   TRecord = record
@@ -17,6 +17,7 @@ type
       us_id: integer;
       window: string;
       rec: TRecords;
+      sql: TStringList;
 
       function exists(const key : string; out index: integer): boolean;
     public
@@ -35,10 +36,12 @@ type
       procedure Load();
 
       constructor Create(user: integer; AWindow: string);
+      procedure Free;
+
 end;
 
 implementation
-uses SysUtils, uData;
+uses SysUtils, uData, SQLite3, SQLiteTable3;
 
 { TSavePoint }
 
@@ -129,6 +132,7 @@ end;
 
 constructor TSavePoint.Create(user: integer; AWindow: string);
 begin
+    sql := TStringList.Create;
     us_id := user;
     window := AWindow;
 end;
@@ -141,7 +145,14 @@ begin
         if(rec[i].key = key) then
         begin
             rec[i].deleted := true;
-            dm.deleteSavePoint(us_id, window, key);
+            sql.Clear;
+            sql.Add(format(
+             'DELETE FROM SAVEPOINT WHERE ' +
+                'US_ID = %d AND WINDOW = "%s" AND ' +
+                      'KEY_FIELD = "%s"', [us_id, window, key])
+             );
+
+            dm.sqlite.ExecSQL(ansistring(sql.Text));
             exit
         end;
      end;
@@ -156,14 +167,90 @@ begin
             begin index := i; exit(true) end;
 end;
 
-procedure TSavePoint.Load();
+procedure TSavePoint.Free;
 begin
-    dm.LoadSavePoint(us_id, window, rec);
+    sql.Free;
+end;
+
+procedure TSavePoint.Load();
+var i, cnt: integer; table: TSQLiteUniTable;
+begin
+    sql.Clear;
+    sql.Add(format(
+        'SELECT COUNT(*)FROM SAVEPOINT ' +
+            'WHERE US_ID = %d AND WINDOW = "%s"', [us_id, window])
+    );
+    try
+      table := TSQLiteUniTable.Create(dm.sqlite, ansiString(sql.Text));
+      cnt := table.FieldAsInteger(0);
+    finally
+        freeAndNil(table);
+    end;
+
+    if (cnt = 0) then exit;
+    setLength(rec, cnt);
+
+    sql.Clear;
+    sql.Add(format(
+        'SELECT KEY_FIELD, VALUE_FIELD FROM SAVEPOINT ' +
+            'WHERE US_ID = %d AND WINDOW = "%s"', [us_id, window]));
+
+    try
+      table := TSQLiteUniTable.Create(dm.sqlite, ansiString(sql.Text));
+
+      for i := 0 to cnt - 1 do
+      begin
+           rec[i].key := table.FieldAsString(0);
+           rec[i].value := table.FieldAsString(1);
+
+           table.Next;
+      end;
+    finally
+          freeAndNil(table)
+    end;
+  //  dm.LoadSavePoint(us_id, window, rec);
 end;
 
 procedure TSavePoint.Save;
+var i, cnt: integer; table: TSQLiteUniTable;
 begin
-    dm.CreateSavePoint(us_id, window, rec);
+    for i := 0 to length(rec) - 1 do
+    begin
+        if rec[i].deleted then continue;
+
+        sql.Clear;
+        sql.Add(format(
+            'SELECT COUNT(*)FROM SAVEPOINT ' +
+                'WHERE US_ID = %d AND WINDOW = "%s" AND KEY_FIELD = "%s"',
+                [us_id, window, rec[i].key])
+        );
+        try
+          table := TSQLiteUniTable.Create(dm.sqlite, ansiString(sql.Text));
+          cnt := table.FieldAsInteger(0);
+        finally
+              freeAndNil(table)
+        end;
+
+        sql.Clear;
+        if cnt = 0 then
+        begin
+             sql.Add(format(
+                'INSERT INTO SAVEPOINT(US_ID, WINDOW, KEY_FIELD, VALUE_FIELD) ' +
+                  'VALUES(%d, "%s", "%s", "%s")',
+                      [us_id, window, rec[i].key, rec[i].value])
+             );
+
+        end
+        else begin
+            sql.Add(format(
+                'UPDATE SAVEPOINT ' +
+                'SET VALUE_FIELD = "%s" ' +
+                'WHERE US_ID = %d AND WINDOW = "%s" AND KEY_FIELD = "%s"',
+                [rec[i].value, us_id, window, rec[i].key])
+            );
+        end;
+        dm.sqlite.ExecSQL(ansistring(sql.Text));
+    end;
 end;
 
 end.

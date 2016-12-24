@@ -151,17 +151,19 @@ end;
 
 procedure TfrmOGE.totalresultFillUsesrs;
 var i,j: integer;
+    item: PUser;
 begin
      j := 0;
      grdUserresult.RowCount := 0;
-     for i := 0 to length(usrList) - 1 do
+     for i := 0 to usrList.Count - 1 do
      begin
-          if (usrList[i].ut_id = 1) then continue;
+          item := usrList.Items[i];
+          if (item.ut_id = 1) then continue;
           grdUserresult.RowCount := grdUserresult.RowCount + 1;
-          grdUserresult.Cells[0, j] := usrList[i].fio;
-          grdUserresult.Objects[0, j] := TObject(usrList[i].id);
-          totalResultIndividual(usrList[i].id, j);
-          totalResultUTT(usrList[i].id, j);
+          grdUserresult.Cells[0, j] := item.fio;
+          grdUserresult.Objects[0, j] := TObject(item.id);
+          totalResultIndividual(item.id, j);
+          totalResultUTT(item.id, j);
           inc(j)
      end;
 end;
@@ -175,11 +177,11 @@ begin
           if InputQuery('OГЭ', 'Введите паоль:', s)
                 then result := mrOK else result := mrCancel;
 
-          for i := 0 to length(usrList) - 1 do
+          for i := 0 to usrList.Count - 1 do
           begin
-              if (s = usrList[i].password) then
+              if (s = Puser(usrList[i]).password) then
               begin
-                   currentUser := usrList[i];
+                   currentUser := PUser(usrList[i])^;
                    exit;
               end;
           end;
@@ -227,25 +229,28 @@ end;
 
 procedure TfrmOGE.fillGrid;
 var i: integer;
+    item: PUser;
 begin
-     grdUsers.RowCount := length(UsrList);
+     grdUsers.RowCount := UsrList.Count;
      grdUsers.ColCount := USR_FIELD_COUNT;
 
      grdUsers.ColWidths[1] := 300;
      grdUsers.ColWidths[2] := 500;
 
-     for i := 0 to length(UsrList) - 1 do
+     for i := 0 to UsrList.Count - 1 do
      begin
-          grdUsers.Cells[0, i] := intToStr(UsrList[i].id);
-          grdUsers.Cells[1, i] := ut_idToString(usrList[i].ut_id);
-          grdUsers.Cells[2, i] := usrList[i].fio;
-          grdUsers.Cells[3, i] := usrList[i].password;
+          item := UsrList.Items[i];
+          grdUsers.Cells[0, i] := intToStr(item.id);
+          grdUsers.Cells[1, i] := ut_idToString(item.ut_id);
+          grdUsers.Cells[2, i] := item.fio;
+          grdUsers.Cells[3, i] := item.password;
      end;
 end;
 
 procedure TfrmOGE.refreshUserList;
 begin
-     usrList := dm.loadUserList();
+     usrList.Free;
+     usrList := TUserList.Create;
      fillGrid();
 end;
 
@@ -255,23 +260,16 @@ begin
     showMessage('Тестовый образец');
     {$ENDIF}
 
-    try
-        usrList := dm.loadUserList();
-    except
-        usrList := nil;
-    end;
+    usrList := TUserList.Create;
 
-    if (usrList = nil) or (Login() = mrCancel) then
+    if Login() = mrCancel then
     begin
         halt(0);
     end;
-
-    if currentUser.ut_id = 1 then tabAdmin.TabVisible := true else tabAdmin.TabVisible := false;
     Path := exePath();
 
     WebBrowser1.Navigate('res://' + Application.ExeName + '/HTML/FIRST_PAGE');
     WebBrowser1.OleObject.Document.bgColor := '#E0FFFF';
-    pgPages.ActivePage := tabInfo;
 
     if not Assigned(frmTopics) then frmTopics := TfrmTopics.Create(self);
     frmTopics.Dock(tabThemes, tabThemes.ClientRect);
@@ -302,14 +300,17 @@ begin
     fillGrid();
     totalResults();
 
+    if currentUser.ut_id = 1
+      then tabAdmin.TabVisible := true
+          else tabAdmin.TabVisible := false;
+
+    pgPages.ActivePage := tabInfo;    // Нужно иначе ошибка Access Violation ??
+
     saveOGE.Load;
     p := saveOGE.asInteger('TAB_INDEX');
-    if p >= 0 then
-    begin
-         pgPages.ActivePageIndex := p;
+    if p >= 0 then pgPages.ActivePageIndex := p;
 
-         pgPagesChange(Sender)
-    end;
+    pgPagesChange(Sender)
 end;
 
 procedure TfrmOGE.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -342,7 +343,7 @@ end;
 procedure TfrmOGE.grdUsersColRowChanged(Sender: TObject; Col, Row: Integer);
 begin
       if (row >= 0) and (grdUsers.Cells[0, row] <> '') then
-        usr := getUserByID(strToInt(grdUsers.Cells[0, Row]), usrList)
+        usr := usrList.getUserByID(strToInt(grdUsers.Cells[0, Row]))
 end;
 
 procedure TfrmOGE.pgPagesChange(Sender: TObject);
