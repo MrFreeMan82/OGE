@@ -51,6 +51,7 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormShow(Sender: TObject);
     procedure AppnEventsShortCut(var Msg: TWMKey; var Handled: Boolean);
+    procedure FormResize(Sender: TObject);
   private
     { Private declarations }
     frmTopics: TfrmTopics;
@@ -381,6 +382,11 @@ begin
 
     else if (pgPages.ActivePage = tabThemes) and assigned(frmTopics)
       then frmTopics.FormKeyDown(self, msg.CharCode, []);
+end;
+
+procedure TfrmOGE.FormResize(Sender: TObject);
+begin
+    pgPagesChange(Sender);
 end;
 
 procedure TfrmOGE.WebBrowser1DocumentComplete(ASender: TObject;

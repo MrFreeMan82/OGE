@@ -35,6 +35,8 @@ type
 
     FontFamily: IGPFontFamily;
     gradFont, stageLabelFont, noteFont, resultFont: IGPFont;
+    header1Font, header2Font: IGPFont;
+    header1Align, header2Align: IGPStringFormat;
     gradFontAlign: IGPStringFormat;
     resultAlign: IGPStringFormat;
     BlackBrush: IGPBrush;
@@ -47,9 +49,11 @@ type
     timeLabels: array of TTimeLabel;
     stageList: array[0..2] of TStage;
     noteRect: TGPRectF;
+    header1, header2: TGPRectF;
     center: TGPPointF;
     delta: double;
 
+    procedure header();
     procedure createNote();
     procedure createStages();
     procedure createGradLines();
@@ -87,6 +91,8 @@ resourcestring STAGE1 = 'Этап 1. Задания для самостоятельного выполнения';
                         'Этапы программы необходимо выполнить в правильном порядке.'#13#10 +
                         'Оценка результатов выполнения заданий первого и второго этапа осуществляется по двухбалльной шкале: «зачтено» — «не зачтено».'#13#10 +
                         'Оценка «зачтено»  ставится, если ученик  верно выполнил не менее 80% заданий  в течение определенного промежутка времени. В противном случае выставляется оценка «не зачтено».';
+              HEADER1STR = 'План работы по подготовке учащихся к ОГЭ';
+              HEADER2STR = 'Линия времени';
 
 
 function TfrmWorkPlan.Stage1Result(us_id: integer): boolean;
@@ -229,6 +235,19 @@ begin
     timeLine.p2.Y := timeLine.p1.Y;
 end;
 
+procedure TfrmWorkPlan.header;
+begin
+     header1.X := 0;
+     header1.Y := 0;
+     header1.Width := mainrect.Width;
+     header1.Height := mainrect.Height / 10;
+
+     header2.X := 0;
+     header2.Y := header1.Height;
+     header2.Width := mainrect.Width;
+     header2.Height := header1.Height;
+end;
+
 procedure TfrmWorkPlan.initialize;
 begin
     createMainRect();
@@ -236,6 +255,7 @@ begin
     createGradLines();
     createStages();
     createNote();
+    header();
 end;
 
 procedure TfrmWorkPlan.refreshWorkPlan;
@@ -243,7 +263,7 @@ begin
     if Assigned(bmp) then freeAndNil(bmp);
 
     bmp := TBitMap.Create;
-    bmp.Width := self.Width;
+    bmp.Width :=  self.Width;
     bmp.Height := self.Height;
 
     Graphic := TGPGraphics.Create(bmp.Canvas.Handle);
@@ -256,6 +276,15 @@ begin
     softPen := TGPPen.Create(TGPColor.Black, 1);
 
     FontFamily := TGPFontFamily.Create('Tahoma');
+
+    header1Font := TGPFont.Create(FontFamily, 12, FontStyleRegular, UnitPoint);
+    header1Align := TGPStringFormat.Create;
+    header1Align.Alignment := StringAlignmentCenter;
+
+    header2Font := TGPFont.Create(FontFamily, 20, FontStyleRegular, UnitPoint);
+    header2Align := TGPStringFormat.Create;
+    header2Align.Alignment := StringAlignmentCenter;
+
     gradFont := TGPFont.Create(FontFamily, 14, FontStyleRegular, UnitPoint);
     gradFontAlign := TGPStringFormat.Create;
     gradFontAlign.Alignment := StringAlignmentCenter;
@@ -277,10 +306,13 @@ end;
 
 procedure TfrmWorkPlan.render;
 var i: integer;
+   ColorPen: IGPPen;
 begin
-  //  graphic.DrawRectangle(softPen, mainRect);
+    graphic.DrawString(HEADER1STR, header1Font, header1, header1Align, BlackBrush);
+    graphic.DrawString(HEADER2STR, header2Font, header2, header2Align, BlackBrush);
 
-    graphic.DrawLine(pen, timeLine.p1, timeLine.p2);
+    ColorPen := TGPPen.Create(TGPColor.Turquoise, 5);
+    graphic.DrawLine(ColorPen, timeLine.p1, timeLine.p2);
 
     for i := 1 to length(timeGrad) - 1 do
          graphic.DrawLine(pen, timeGrad[i].p1, timeGrad[i].p2);
@@ -312,6 +344,7 @@ end;
 
 procedure TfrmWorkPlan.ShowWorkPlan;
 begin
+  //  refreshWorkPlan;
     show;
 end;
 
