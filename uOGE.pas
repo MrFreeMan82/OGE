@@ -61,7 +61,7 @@ type
     frmCollectiveTask: TfrmTasks;
 
     saveOGE: TSavePoint;
-    CurrentUser: PUser;
+    CurrentUser: TUser;
     usr: PUser;
     usrList: TUserList;
     path: string;
@@ -83,7 +83,7 @@ type
     property Tasks: TfrmTasks read frmTasks;
     property Topics: TfrmTopics read frmTopics;
     property UTT:TfrmUTT read frmUTT;
-    property User: PUser read currentUser;
+    property User: TUser read currentUser;
     procedure UpdateCaption(const suffix: string);
   end;
 
@@ -179,7 +179,7 @@ begin
           begin
               if (s = usrList[i].password) then
               begin
-                   currentUser := @usrList[i];
+                   currentUser := usrList[i];
                    exit;
               end;
           end;
@@ -263,8 +263,7 @@ begin
 
     if (usrList = nil) or (Login() = mrCancel) then
     begin
-        Application.Terminate;
-        exit;
+        halt(0);
     end;
 
     if currentUser.ut_id = 1 then tabAdmin.TabVisible := true else tabAdmin.TabVisible := false;
