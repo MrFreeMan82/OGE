@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, Buttons, uGlobals, GdiPlus, GdiPlusHelpers,
-  uSavePoint;
+  uSavePoint, Menus, ActnList;
 
 type
   TUTTLevel = (lvlLow, lvlHigh);
@@ -38,18 +38,26 @@ type
     Label3: TLabel;
     txtAnswer: TEdit;
     Panel1: TPanel;
+    PopupMenu1: TPopupMenu;
+    mnuGoToPage: TMenuItem;
+    ActionList: TActionList;
+    actGoToPage: TAction;
+    actAnswearClick: TAction;
+    actResultClick: TAction;
+    actNextClick: TAction;
+    actPrevClick: TAction;
     procedure rgVariantsClick(Sender: TObject);
-    procedure btNextTaskClick(Sender: TObject);
-    procedure btPrevTaskClick(Sender: TObject);
     procedure txtAnswerKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
-    procedure btAnswearClick(Sender: TObject);
-    procedure btResultsClick(Sender: TObject);
     procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure FormDestroy(Sender: TObject);
     procedure FormResize(Sender: TObject);
-    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure actGoToPageExecute(Sender: TObject);
+    procedure actAnswearClickExecute(Sender: TObject);
+    procedure actResultClickExecute(Sender: TObject);
+    procedure actNextClickExecute(Sender: TObject);
+    procedure actPrevClickExecute(Sender: TObject);
   private
     { Private declarations }
     mode: Tmode;
@@ -61,6 +69,7 @@ type
     procedure loadTask(aVariant, aTask: integer);
     procedure AllTaskCompleate();
     function doLoadUTT: TUTTModulesList;
+    procedure assignedVariant;
   public
     { Public declarations }
     function getModuleByID(id: integer): PUTTModule;
@@ -124,6 +133,15 @@ begin
      sp.Free
 end;
 
+procedure TfrmUTT.assignedVariant;
+begin
+    if rgVariants.ItemIndex < 0 then
+    begin
+        messageBox(handle, 'Для продолжения выберите вариант.', 'ОГЕ', MB_OK or MB_ICONERROR);
+        abort;
+    end;
+end;
+
 function TfrmUTT.getModuleByID(id: integer): PUTTModule;
 var i: integer;
 begin
@@ -142,14 +160,15 @@ begin
                         ' решены, Показать результаты?'),
                               'ОГЕ', MB_YESNO or MB_ICONINFORMATION) = mrYes then
      begin
-         btResultsClick(self);
+         actResultClickExecute(self);
      end;
 end;
 
-procedure TfrmUTT.btAnswearClick(Sender: TObject);
+procedure TfrmUTT.actAnswearClickExecute(Sender: TObject);
 var usrAnswear: double;
     TrueAnswear: boolean;
 begin
+     assignedVariant();
      if (answears = nil) or
            not (fTask in [1..UTT_TASK_COUNT]) or
              (fTask > length(answears)) or
@@ -176,52 +195,20 @@ begin
                   taskResultMask, true) =
                       ALL_TASK_COMPLETE then
                             AllTaskCompleate()
-                                else btResultsClick(self)
+                                else actResultClickExecute(self)
          end
-         else btNextTaskClick(Sender);
+         else actNextClickExecute(Sender);
     end
     else begin
-         btNextTaskClick(Sender);
+         actNextClickExecute(Sender);
     end;
     txtAnswer.Text := '';
 end;
 
-procedure TfrmUTT.btNextTaskClick(Sender: TObject);
-begin
-    if mode = mReTest then
-    begin
-       fTask := getNextFalseTask(fTask, taskResultMask);
-       if fTask = ALL_TASK_COMPLETE then
-       begin
-            AllTaskCompleate();
-            exit;
-       end;
-    end
-    else inc(fTask);
-
-    if fTask > UTT_TASK_COUNT then fTask := UTT_TASK_COUNT;
-    loadTask(rgVariants.ItemIndex + 1, fTask);
-end;
-
-procedure TfrmUTT.btPrevTaskClick(Sender: TObject);
-begin
-    if mode = mRetest then
-    begin
-         fTask := getPrevFalseTask(fTask, taskResultMask);
-         if fTask = ALL_TASK_COMPLETE then
-         begin
-              AllTaskCompleate();
-              exit
-         end;
-    end
-    else dec(fTask);
-    if fTask < 1 then fTask := 1;
-    loadTask(rgVariants.ItemIndex + 1, fTask);
-end;
-
-procedure TfrmUTT.btResultsClick(Sender: TObject);
+procedure TfrmUTT.actResultClickExecute(Sender: TObject);
 var mr: TmodalResult;
 begin
+    assignedVariant;
     mr := TfrmTestResult.showUTTResults;
     case mr of
       mrYes: mode := mNormal;
@@ -243,10 +230,57 @@ begin
     end;
 end;
 
+procedure TfrmUTT.actGoToPageExecute(Sender: TObject);
+var page: integer;
+begin
+     assignedVariant;
+     page := strToIntDef(InputBox('ОГЭ', 'Номер страницы', ''), 0);
+     if page <= 0 then exit;
+     if (page < 1) or (page > UTT_TASK_COUNT) then exit;
+     fTask := page;
+     loadTask(rgVariants.ItemIndex + 1, fTask);
+end;
+
+procedure TfrmUTT.actNextClickExecute(Sender: TObject);
+begin
+    assignedVariant;
+    if mode = mReTest then
+    begin
+       fTask := getNextFalseTask(fTask, taskResultMask);
+       if fTask = ALL_TASK_COMPLETE then
+       begin
+            AllTaskCompleate();
+            exit;
+       end;
+    end
+    else inc(fTask);
+
+    if fTask > UTT_TASK_COUNT then fTask := UTT_TASK_COUNT;
+    loadTask(rgVariants.ItemIndex + 1, fTask);
+end;
+
+procedure TfrmUTT.actPrevClickExecute(Sender: TObject);
+begin
+    assignedVariant;
+    if mode = mRetest then
+    begin
+         fTask := getPrevFalseTask(fTask, taskResultMask);
+         if fTask = ALL_TASK_COMPLETE then
+         begin
+              AllTaskCompleate();
+              exit
+         end;
+    end
+    else dec(fTask);
+    if fTask < 1 then fTask := 1;
+    loadTask(rgVariants.ItemIndex + 1, fTask);
+end;
+
 procedure TfrmUTT.loadTask(aVariant, aTask: integer);
 var fileName, answearName: string;
     bmp: TBitmap;
 begin
+     if (aVariant <= 0) or (aTask < 1) or (aTask > UTT_TASK_COUNT) then abort;
      img.Canvas.Brush.Color:=ClWhite;
      img.Canvas.FillRect(img.Canvas.ClipRect);
 
@@ -287,15 +321,6 @@ begin
          savePoint.Save;
     end;
     freeAndNil(savePoint)
-end;
-
-procedure TfrmUTT.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-begin
-    case Key of
-    VK_LEFT: btPrevTaskClick(Sender);
-    VK_RIGHT: btNextTaskClick(Sender);
-    end;
-    txtAnswer.setFocus;
 end;
 
 procedure TfrmUTT.FormMouseWheel(Sender: TObject; Shift: TShiftState;
@@ -367,7 +392,7 @@ end;
 procedure TfrmUTT.txtAnswerKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-    if key = VK_RETURN then btAnswearClick(Sender);
+    if key = VK_RETURN then actAnswearClickExecute(Sender);
 end;
 
 function TfrmUTT.doLoadUTT: TUTTModulesList;

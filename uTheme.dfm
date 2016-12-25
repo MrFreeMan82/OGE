@@ -13,10 +13,7 @@ object frmTopics: TfrmTopics
   Font.Style = []
   OldCreateOrder = False
   OnDestroy = FormDestroy
-  OnKeyDown = FormKeyDown
   OnMouseWheel = FormMouseWheel
-  ExplicitWidth = 320
-  ExplicitHeight = 240
   PixelsPerInch = 96
   TextHeight = 16
   object Splitter1: TSplitter
@@ -63,6 +60,7 @@ object frmTopics: TfrmTopics
       Color = clBtnFace
       ParentColor = False
       ParentDoubleBuffered = False
+      PopupMenu = PopupMenu1
       TabOrder = 0
       object img: TImage
         Left = 3
@@ -70,6 +68,7 @@ object frmTopics: TfrmTopics
         Width = 430
         Height = 294
         Align = alCustom
+        PopupMenu = PopupMenu1
       end
     end
     object Panel4: TPanel
@@ -81,12 +80,14 @@ object frmTopics: TfrmTopics
       BevelOuter = bvNone
       DoubleBuffered = True
       ParentDoubleBuffered = False
+      ShowCaption = False
       TabOrder = 1
       object btPrevPage: TSpeedButton
         Left = 330
         Top = 0
         Width = 40
         Height = 26
+        Action = actPrevClick
         Align = alRight
         Glyph.Data = {
           36030000424D3603000000000000360000002800000010000000100000000100
@@ -115,7 +116,6 @@ object frmTopics: TfrmTopics
           FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
           FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
           FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
-        OnClick = btPrevPageClick
         ExplicitLeft = 211
       end
       object btNextPage: TSpeedButton
@@ -123,6 +123,7 @@ object frmTopics: TfrmTopics
         Top = 0
         Width = 40
         Height = 26
+        Action = actNextClick
         Align = alRight
         Glyph.Data = {
           36030000424D3603000000000000360000002800000010000000100000000100
@@ -151,8 +152,8 @@ object frmTopics: TfrmTopics
           FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
           FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
           FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
-        OnClick = btNextPageClick
-        ExplicitLeft = 248
+        ExplicitLeft = 376
+        ExplicitTop = -3
       end
       object btTest: TSpeedButton
         Left = 0
@@ -193,6 +194,30 @@ object frmTopics: TfrmTopics
         Visible = False
         OnClick = btTestClick
       end
+    end
+  end
+  object PopupMenu1: TPopupMenu
+    Left = 336
+    Top = 112
+    object mnuGoToPage: TMenuItem
+      Action = actGoToPage
+    end
+  end
+  object ActionList: TActionList
+    Left = 432
+    Top = 120
+    object actGoToPage: TAction
+      Caption = #1055#1077#1088#1077#1081#1090#1080' '#1085#1072' '#1089#1090#1088#1072#1085#1080#1094#1091
+      ShortCut = 16455
+      OnExecute = actGoToPageExecute
+    end
+    object actNextClick: TAction
+      ShortCut = 39
+      OnExecute = actNextClickExecute
+    end
+    object actPrevClick: TAction
+      ShortCut = 37
+      OnExecute = actPrevClickExecute
     end
   end
 end

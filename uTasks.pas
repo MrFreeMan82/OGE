@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, ExtCtrls, uGlobals, uTopicModel, uSavePoint, ComCtrls;
+  Dialogs, StdCtrls, Buttons, ExtCtrls, uGlobals, uTopicModel, uSavePoint, ComCtrls,
+  Menus, ActnList;
 
 type
   TfrmTasks = class(TForm)
@@ -22,20 +23,29 @@ type
     Label3: TLabel;
     txtAnswer: TEdit;
     Panel1: TPanel;
+    PopupMenu1: TPopupMenu;
+    mnuGoToPage: TMenuItem;
+    ActionList: TActionList;
+    actGoToPage: TAction;
+    actAnswearClick: TAction;
+    actResultClick: TAction;
+    actHelpClick: TAction;
+    actNextClick: TAction;
+    actPrevClick: TAction;
     procedure FormDestroy(Sender: TObject);
     procedure linkClick(Sender: TObject);
-    procedure btAnswearClick(Sender: TObject);
-    procedure btResultsClick(Sender: TObject);
-    procedure btPrevTaskClick(Sender: TObject);
-    procedure btNextTaskClick(Sender: TObject);
     procedure txtAnswerKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
-    procedure btHelpClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure FormPaint(Sender: TObject);
-    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure actGoToPageExecute(Sender: TObject);
+    procedure actAnswearClickExecute(Sender: TObject);
+    procedure actResultClickExecute(Sender: TObject);
+    procedure actHelpClickExecute(Sender: TObject);
+    procedure actNextClickExecute(Sender: TObject);
+    procedure actPrevClickExecute(Sender: TObject);
   private
     savePoint: TSavePoint;
     mTask: TTopic;
@@ -43,13 +53,14 @@ type
     links: array of TLinkLabel;
     LoadedLink, CurrentLink: TLinkLabel;
     mParent: TTabSheet;
+    useSaved: boolean;
 
     procedure loadUserOptions();
     procedure createLinks();
     procedure AllTaskCompleate;
     procedure viewTask(aTopic: TTopic; silent: boolean = true);
     function gettaskResultMask: TResultMask;
-    procedure assignedCurrent();
+    procedure assignedTask();
     function LinkByName(const name: string): TLinkLabel;
     function getSectionLabel: string;
     { Private declarations }
@@ -133,11 +144,11 @@ begin
           'Ïîçäğàâëÿåì! Âñå çàäàíèÿ ğåøåíû, Ïîêàçàòü ğåçóëüòàòû?'),
                         'ÎÃÅ', MB_YESNO or MB_ICONINFORMATION) = mrYes then
      begin
-         btResultsClick(self);
+         actResultClickExecute(self);
      end;
 end;
 
-procedure TfrmTasks.assignedCurrent;
+procedure TfrmTasks.assignedTask;
 begin
     if mTask = nil then
     begin
@@ -146,12 +157,12 @@ begin
     end;
 end;
 
-procedure TfrmTasks.btAnswearClick(Sender: TObject);
+procedure TfrmTasks.actAnswearClickExecute(Sender: TObject);
 var usrAnswear: double;
     TrueAnswear: boolean;
     task: integer;
 begin
-     assignedCurrent();
+     assignedTask();
      if trim(txtAnswer.Text) = '' then exit;
 
     task := mTask.Page;
@@ -166,38 +177,47 @@ begin
              if mTask.
                   allTaskComplete()
                        then AllTaskCompleate()
-                            else btResultsClick(self);
+                            else actResultClickExecute(self);
 
          end
-         else btNextTaskClick(Sender);
+         else actNextClickExecute(Sender);
     end
     else begin
-         btNextTaskClick(Sender);
+         actNextClickExecute(Sender);
     end;
     txtAnswer.Text := '';
 end;
 
-procedure TfrmTasks.btHelpClick(Sender: TObject);
+procedure TfrmTasks.actGoToPageExecute(Sender: TObject);
+var page: integer;
 begin
-    assignedCurrent();
+     assignedTask();
+     page := strToIntDef(InputBox('ÎÃİ', 'Íîìåğ ñòğàíèöû', ''), 0);
+     mTask.Page := page;
+     viewTask(mTask);
+end;
+
+procedure TfrmTasks.actHelpClickExecute(Sender: TObject);
+begin
+    assignedTask();
     frmOGE.Topics.HelpWithTopic(mTask.section.topic_id, self);
 end;
 
-procedure TfrmTasks.btNextTaskClick(Sender: TObject);
+procedure TfrmTasks.actNextClickExecute(Sender: TObject);
 begin
-    assignedCurrent();
+    assignedTask();
     mTask.NextPage;
     viewTask(mTask);
 end;
 
-procedure TfrmTasks.btPrevTaskClick(Sender: TObject);
+procedure TfrmTasks.actPrevClickExecute(Sender: TObject);
 begin
-    assignedCurrent();
+    assignedTask();
     mTask.PrevPage;
     viewTask(mTask);
 end;
 
-procedure TfrmTasks.btResultsClick(Sender: TObject);
+procedure TfrmTasks.actResultClickExecute(Sender: TObject);
 var mr: TModalResult;
 begin
     mr := TfrmTestResult.showTaskResults(self);
@@ -245,11 +265,6 @@ begin
      ScrollBox.VertScrollBar.Range := img.Picture.Height;
 end;
 
-procedure TfrmTasks.refreshLinkContent;
-begin
-   linkClick(CurrentLink);
-end;
-
 procedure TfrmTasks.loadUserOptions;
 var id: integer; s: PSection;
 begin
@@ -276,7 +291,7 @@ begin
       messageBox(self.Handle, 'Íå óäàëîñü çàãóçèòü òåñòû', 'Îøèáêà', MB_OK or MB_ICONERROR);
       abort;
     end;
-
+    useSaved := true;
     savePoint := TsavePoint.Create(frmOGE.User.id, mParent.Name);
     savepoint.Load;
     createLinks();
@@ -290,21 +305,32 @@ begin
     if (Sender = nil) or (not (Sender is TLinkLabel)) then exit;
 
     CurrentLink := TLinkLabel(Sender);
-    mTask := mTaskList[TLinkLabel(Sender).Tag];
-   // mTask.ContentType  := cntTask;
-    mTask.OnAllTaskComplete := AllTaskCompleate;
-    mTask.setSection(cntTask, mTask.sectionByName(TLinkLabel(Sender).Name));
-    page := savePoint.asInteger('PAGE_' + intToStr(mTask.Section.topic_id));
 
-    if (page >= 1) and
-      (page <= mTask.Section.task_count)
-          then mTask.Page := page else mTask.FirstPage;
+    if useSaved then
+    begin
+        mTask := mTaskList[TLinkLabel(Sender).Tag];
+       // mTask.ContentType  := cntTask;
+        mTask.OnAllTaskComplete := AllTaskCompleate;
+        mTask.setSection(cntTask, mTask.sectionByName(TLinkLabel(Sender).Name));
+        page := savePoint.asInteger('PAGE_' + intToStr(mTask.Section.topic_id));
+        if (page >= 1) and
+          (page <= mTask.Section.task_count)
+              then mTask.Page := page else mTask.FirstPage;
+    end;
 
     mTask.ResultMask := savepoint.asResultMask('MASK_' + intToStr(mTask.Section.topic_id));
 
     viewTask(mTask, false);
     mTask.loadAnswears();
     frmOGe.UpdateCaption(mTask.Section.display_lable);
+end;
+
+
+procedure TfrmTasks.refreshLinkContent;
+begin
+   useSaved := false;  // Îòêëş÷èì èñïîëüçîâàíèÿ ñîõğàíåíûõ çíà÷åíèé
+                    // ÷òîá ïğè ïåğåõîäå ìåæäó âêëàäêàìè ñòàğàÿ ñòğàíèöà íå çàãğóæàëàñü.
+   try linkClick(CurrentLink); finally useSaved := true end;
 end;
 
 procedure TfrmTasks.saveResults;
@@ -388,7 +414,7 @@ end;
 procedure TfrmTasks.txtAnswerKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-    if key = VK_RETURN then btAnswearClick(Sender);
+    if key = VK_RETURN then actAnswearClickExecute(Sender);
 end;
 
 procedure TfrmTasks.FormDestroy(Sender: TObject);
@@ -408,16 +434,6 @@ begin
      savePoint.Free;
      for i := 0 to length(links) - 1 do freeAndNil(links[i]);
      mTaskList.Free;
-end;
-
-procedure TfrmTasks.FormKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
-begin
-    case Key of
-    VK_LEFT: btPrevTaskClick(Sender);
-    VK_RIGHT: btNextTaskClick(Sender);
-    end;
-    txtAnswer.SetFocus;
 end;
 
 procedure TfrmTasks.FormMouseWheel(Sender: TObject; Shift: TShiftState;

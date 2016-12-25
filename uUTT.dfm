@@ -14,7 +14,6 @@ object frmUTT: TfrmUTT
   Font.Style = []
   OldCreateOrder = False
   OnDestroy = FormDestroy
-  OnKeyDown = FormKeyDown
   OnMouseWheel = FormMouseWheel
   OnResize = FormResize
   PixelsPerInch = 96
@@ -44,7 +43,7 @@ object frmUTT: TfrmUTT
         Top = 0
         Width = 40
         Height = 30
-        Hint = #1042#1087#1077#1088#1077#1076
+        Action = actNextClick
         Align = alRight
         Glyph.Data = {
           36030000424D3603000000000000360000002800000010000000100000000100
@@ -73,7 +72,6 @@ object frmUTT: TfrmUTT
           FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
           FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
           FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
-        OnClick = btNextTaskClick
         ExplicitLeft = 717
         ExplicitHeight = 41
       end
@@ -82,7 +80,7 @@ object frmUTT: TfrmUTT
         Top = 0
         Width = 40
         Height = 30
-        Hint = #1053#1072#1079#1072#1076
+        Action = actPrevClick
         Align = alRight
         Glyph.Data = {
           36030000424D3603000000000000360000002800000010000000100000000100
@@ -111,7 +109,6 @@ object frmUTT: TfrmUTT
           FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
           FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
           FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
-        OnClick = btPrevTaskClick
         ExplicitLeft = 440
         ExplicitTop = 8
         ExplicitHeight = 32
@@ -121,7 +118,7 @@ object frmUTT: TfrmUTT
         Top = 0
         Width = 40
         Height = 30
-        Hint = #1056#1077#1079#1091#1083#1100#1090#1072#1090
+        Action = actResultClick
         Align = alRight
         Glyph.Data = {
           36030000424D3603000000000000360000002800000010000000100000000100
@@ -150,7 +147,6 @@ object frmUTT: TfrmUTT
           DFF4E389D395B4DCB7BCE0BAB9E1B5CEEACBA4CEA695C99AF3DAC4E3AB7CF6E6
           D8FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF9FDFABDE7C492D49C6CC37965
           BD7180C689ACD7B0FEFEFDFEFCF9FFFFFFFFFFFFFFFFFFFFFFFF}
-        OnClick = btResultsClick
         ExplicitLeft = 239
       end
       object btAnswear: TSpeedButton
@@ -158,7 +154,7 @@ object frmUTT: TfrmUTT
         Top = 0
         Width = 40
         Height = 30
-        Hint = #1054#1090#1074#1077#1090#1080#1090#1100
+        Action = actAnswearClick
         Align = alRight
         Glyph.Data = {
           36030000424D3603000000000000360000002800000010000000100000000100
@@ -187,7 +183,6 @@ object frmUTT: TfrmUTT
           FFFFFFFFFFFFE5F8E99FE3B055CB723BC05C37BE5A49C36A97DCAAE1F5E7FFFF
           FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
           FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
-        OnClick = btAnswearClick
         ExplicitLeft = 204
       end
       object Label3: TLabel
@@ -231,6 +226,7 @@ object frmUTT: TfrmUTT
     Color = clWhite
     ParentColor = False
     ParentDoubleBuffered = False
+    PopupMenu = PopupMenu1
     TabOrder = 1
     object img: TImage
       Left = 21
@@ -238,6 +234,7 @@ object frmUTT: TfrmUTT
       Width = 591
       Height = 169
       Align = alCustom
+      PopupMenu = PopupMenu1
     end
   end
   object rgVariants: TRadioGroup
@@ -281,5 +278,35 @@ object frmUTT: TfrmUTT
       '30')
     TabOrder = 2
     OnClick = rgVariantsClick
+  end
+  object PopupMenu1: TPopupMenu
+    Left = 336
+    Top = 112
+    object mnuGoToPage: TMenuItem
+      Action = actGoToPage
+    end
+  end
+  object ActionList: TActionList
+    Left = 432
+    Top = 120
+    object actGoToPage: TAction
+      Caption = #1055#1077#1088#1077#1081#1090#1080' '#1085#1072' '#1089#1090#1088#1072#1085#1080#1094#1091
+      ShortCut = 16455
+      OnExecute = actGoToPageExecute
+    end
+    object actAnswearClick: TAction
+      OnExecute = actAnswearClickExecute
+    end
+    object actResultClick: TAction
+      OnExecute = actResultClickExecute
+    end
+    object actNextClick: TAction
+      ShortCut = 39
+      OnExecute = actNextClickExecute
+    end
+    object actPrevClick: TAction
+      ShortCut = 37
+      OnExecute = actPrevClickExecute
+    end
   end
 end

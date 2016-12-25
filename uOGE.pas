@@ -36,7 +36,6 @@ type
     ToolBar2: TToolBar;
     ToolButton1: TToolButton;
     btRefresh: TSpeedButton;
-    AppnEvents: TApplicationEvents;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure WebBrowser1DocumentComplete(ASender: TObject;
@@ -50,7 +49,6 @@ type
     procedure btRefreshClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormShow(Sender: TObject);
-    procedure AppnEventsShortCut(var Msg: TWMKey; var Handled: Boolean);
     procedure FormResize(Sender: TObject);
   private
     { Private declarations }
@@ -77,6 +75,7 @@ type
     procedure totalResultIndividual(us_id, i: integer);
     procedure totalresultFillUsesrs();
     procedure totalResults();
+    procedure suspendActions();
   public
     { Public declarations }
     property CollectiveTasks: TfrmTasks read frmCollectiveTask;
@@ -346,8 +345,17 @@ begin
         usr := usrList.getUserByID(strToInt(grdUsers.Cells[0, Row]))
 end;
 
+procedure TfrmOGE.suspendActions;
+begin
+    frmTasks.ActionList.State := asSuspendedEnabled;
+    frmCollectiveTask.ActionList.State := asSuspendedEnabled;
+    frmTopics.ActionList.State := asSuspendedEnabled;
+    frmUTT.ActionList.State := asSuspendedEnabled;
+end;
+
 procedure TfrmOGE.pgPagesChange(Sender: TObject);
 begin
+    suspendActions();
     if pgPages.ActivePage = tabPlan
         then begin
              frmWorkPlan.refreshWorkPlan;
@@ -356,32 +364,32 @@ begin
 
     else if pgPages.ActivePage = tabTasks
         then begin
-             frmTasks.refreshLinkContent;
+             frmTasks.refreshLinkContent;  //   Так как  frmTasks и  frmCollectiveTask используют одну модель
+                                          //    то REsultMask у них один, чтоб переключать Resultmask
+                                          //    при смене вкладок нужно запускать эту проц.
+             frmTasks.ActionList.State := asNormal;
              UpdateCaption(frmTasks.SectionLabel);
         end
 
     else if pgPages.ActivePage = tabCollectiveTask
         then begin
             frmCollectiveTask.refreshLinkContent;
+            frmCollectiveTask.ActionList.State := asNormal;
             UpdateCaption(frmCollectiveTask.SectionLabel);
         end
+    else if pgPages.ActivePage = tabUTT then
+      begin
+          frmUTT.ActionList.State := asNormal;
+          UpdateCaption(pgPages.ActivePage.Caption);
+      end
+    else if pgPages.ActivePage = tabThemes then
+         begin
+            frmTopics.ActionList.State := asNormal;
+            UpdateCaption(pgPages.ActivePage.Caption);
+         end
+
     else
     UpdateCaption(pgPages.ActivePage.Caption);
-end;
-
-procedure TfrmOGE.AppnEventsShortCut(var Msg: TWMKey; var Handled: Boolean);
-begin
-    if (pgPages.ActivePage = tabTasks) and assigned(frmTasks)
-              then frmTasks.FormKeyDown(self, msg.CharCode, [])
-
-    else if (pgPages.ActivePage = tabCollectiveTask) and assigned(frmCollectiveTask)
-             then frmCollectiveTask.FormKeyDown(self, msg.CharCode, [])
-
-    else if (pgPages.ActivePage = tabUTT) and assigned(frmUTT)
-          then frmUTT.FormKeyDown(self, msg.CharCode, [])
-
-    else if (pgPages.ActivePage = tabThemes) and assigned(frmTopics)
-      then frmTopics.FormKeyDown(self, msg.CharCode, []);
 end;
 
 procedure TfrmOGE.FormResize(Sender: TObject);

@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, Buttons, ExtCtrls, uTopicModel;
+  Dialogs, Buttons, ExtCtrls, uTopicModel, Menus, ActnList;
 
 type
 
@@ -18,14 +18,20 @@ type
     btNextPage: TSpeedButton;
     Splitter1: TSplitter;
     btTest: TSpeedButton;
+    PopupMenu1: TPopupMenu;
+    mnuGoToPage: TMenuItem;
+    ActionList: TActionList;
+    actGoToPage: TAction;
+    actNextClick: TAction;
+    actPrevClick: TAction;
     procedure linkClick(Sender: TObject);
-    procedure btNextPageClick(Sender: TObject);
-    procedure btPrevPageClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure btTestClick(Sender: TObject);
-    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure actGoToPageExecute(Sender: TObject);
+    procedure actNextClickExecute(Sender: TObject);
+    procedure actPrevClickExecute(Sender: TObject);
   private
     { Private declarations }
     fTopic: TTopic;
@@ -35,7 +41,7 @@ type
     links: array of TLinkLabel;
     procedure createLinks();
     procedure viewTopic(silent: boolean = true);
-    procedure assignedCurrent;
+    procedure assignedTopic;
   public
     { Public declarations }
     procedure showTopics();
@@ -50,7 +56,21 @@ uses uGlobals, uOGE, uTasks;
 
 { TfrmTopics }
 
-procedure TfrmTopics.assignedCurrent;
+procedure TfrmTopics.actNextClickExecute(Sender: TObject);
+begin
+   assignedTopic();
+   fTopic.NextPage;
+   viewTopic();
+end;
+
+procedure TfrmTopics.actPrevClickExecute(Sender: TObject);
+begin
+    assignedTopic();
+    fTopic.PrevPage;
+    viewTopic();
+end;
+
+procedure TfrmTopics.assignedTopic;
 begin
     if fTopic = nil then
     begin
@@ -59,17 +79,12 @@ begin
     end;
 end;
 
-procedure TfrmTopics.btNextPageClick(Sender: TObject);
+procedure TfrmTopics.actGoToPageExecute(Sender: TObject);
+var page: integer;
 begin
-   assignedCurrent();
-   fTopic.NextPage;
-   viewTopic();
-end;
-
-procedure TfrmTopics.btPrevPageClick(Sender: TObject);
-begin
-    assignedCurrent();
-    fTopic.PrevPage;
+    assignedTopic();
+    page := strToIntDef(InputBox('ОГЭ', 'Номер страницы', ''), 0);
+    fTopic.Page := page;
     viewTopic();
 end;
 
@@ -115,7 +130,6 @@ begin
     fTopic.FirstPage;
     viewTopic(false);
 end;
-
 procedure TfrmTopics.showTopics;
 begin
     ftopicList := TTopicList.Create;
@@ -190,15 +204,6 @@ var i: integer;
 begin
     for i := 0 to length(links) - 1 do freeAndNil(links[i]);
     ftopicList.Free;
-end;
-
-procedure TfrmTopics.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-begin
-    case Key of
-    VK_LEFT: btPrevPageClick(Sender);
-    VK_RIGHT: btNextPageClick(Sender);
-    end;
-//    if assigned(currentLink) then currentLink.SetFocus;
 end;
 
 procedure TfrmTopics.FormMouseWheel(Sender: TObject; Shift: TShiftState;
