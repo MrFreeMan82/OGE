@@ -101,6 +101,11 @@ end;
 
 procedure TfrmTestResult.btExitClick(Sender: TObject);
 begin
+    if btSaveresults.Enabled and
+        (MessageBox(handle,
+          '—охранить результаты?', 'ќ√Ё',
+            MB_YESNO or MB_ICONQUESTION) = mrYes) then btSaveresultsClick(Sender);
+
     modalResult := mrCancel
 end;
 
