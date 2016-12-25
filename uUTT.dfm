@@ -17,8 +17,6 @@ object frmUTT: TfrmUTT
   OnKeyDown = FormKeyDown
   OnMouseWheel = FormMouseWheel
   OnResize = FormResize
-  ExplicitWidth = 320
-  ExplicitHeight = 240
   PixelsPerInch = 96
   TextHeight = 16
   object Panel3: TPanel

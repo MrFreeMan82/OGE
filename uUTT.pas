@@ -151,8 +151,9 @@ var usrAnswear: double;
     TrueAnswear: boolean;
 begin
      if (answears = nil) or
-              not (fTask in [1..UTT_TASK_COUNT]) or
-                    (trim(txtAnswer.Text) = '') then exit;
+           not (fTask in [1..UTT_TASK_COUNT]) or
+             (fTask > length(answears)) or
+                   (trim(txtAnswer.Text) = '') then exit;
 
     usrAnswear := strToFloatEx(trim(txtAnswer.Text));
 
