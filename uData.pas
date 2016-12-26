@@ -73,7 +73,7 @@ begin
 
    defaultUser.ut_id := 1;
    defaultUser.fio := 'Administrator';
-   defaultUser.password := '1';
+   defaultUser.password := 'saidov1986';
 
    sql.Clear;
    sql.Add('INSERT INTO USER(UT_ID, FIO, PASSWORD)');

@@ -267,9 +267,6 @@ begin
     end;
     Path := exePath();
 
-    WebBrowser1.Navigate('res://' + Application.ExeName + '/HTML/FIRST_PAGE');
-    WebBrowser1.OleObject.Document.bgColor := '#E0FFFF';
-
     if not Assigned(frmTopics) then frmTopics := TfrmTopics.Create(self);
     frmTopics.Dock(tabThemes, tabThemes.ClientRect);
 
@@ -291,6 +288,9 @@ end;
 procedure TfrmOGE.FormShow(Sender: TObject);
 var p: integer;
 begin
+    WebBrowser1.Navigate('res://' + Application.ExeName + '/HTML/FIRST_PAGE');
+    WebBrowser1.OleObject.Document.bgColor := '#E0FFFF';
+
     frmTopics.showTopics();
     frmUTT.ShowUTT();
     frmTasks.ShowTasks(tabTasks);

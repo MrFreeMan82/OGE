@@ -145,8 +145,6 @@ var i,j,k, dl: integer;
     expire: TDate;
     y,m,d: Word;
 begin
-     k := 0;
-
      for i := 0 to frmOGE.CollectiveTasks.TaskList.Count - 1 do
      begin
           if TTOpic(frmOGE.CollectiveTasks.
@@ -475,7 +473,7 @@ begin
              graphic.DrawString(timeLabels[i].displayLabel,
                     gradFont, timeLabels[i].rect, gradFontAlign, BlackBrush);
 
-    d := 1;
+  {  d := 1;
     for i := 0 to length(decadeStage1) - 1 do
     begin
           if decadeStage1[i].result = false then
@@ -501,7 +499,7 @@ begin
 
           inc(d);
           if d > 3 then d := 1;
-    end;
+    end;  }
 
      graphic.DrawString(NOTE, noteFont, noteRect, nil, BlackBrush);
 
