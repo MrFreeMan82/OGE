@@ -53,28 +53,31 @@ type
     links: array of TLinkLabel;
     LoadedLink, CurrentLink: TLinkLabel;
     mParent: TTabSheet;
-    useSaved: boolean;
+    taskResultMask: TResultMask;
+    answears: TAnswears;
 
     procedure loadUserOptions();
     procedure createLinks();
     procedure AllTaskCompleate;
     procedure viewTask(aTopic: TTopic; silent: boolean = true);
-    function gettaskResultMask: TResultMask;
     procedure assignedTask();
     function LinkByName(const name: string): TLinkLabel;
     function getSectionLabel: string;
+    procedure loadAnswears;
+    procedure setResultMask(const Value: TResultMask);
     { Private declarations }
   public
     { Public declarations }
-    property ResultMask: TResultMask read gettaskResultMask;
+    property ResultMask: TResultMask read taskResultMask write setResultMask;
     property Parent: TTabSheet read mParent;
     property SectionLabel: string read getSectionLabel;
+    property TaskList: TTopicList read mTaskList;
 
-    procedure refreshLinkContent();
     function Over80(us_id: integer): boolean;
     procedure clearUserResults;
     procedure saveResults();
     function totalTaskCount(): integer;
+    function OverPercBySection(section: PSection; percent: integer): boolean;
     procedure ShowTasks(Parent: TTabSheet);
 
   end;
@@ -86,8 +89,6 @@ uses uData, uTestResult, uOGE;
 {$R *.dfm}
 
 { TfrmTasks }
-
-const COLLECTIVE_TASK_ID = 4;
 
 function TfrmTasks.Over80(us_id: integer): boolean;
 var i,j,k, total_tasks, true_tasks: integer;
@@ -138,6 +139,24 @@ begin
 
 end;
 
+function TfrmTasks.OverPercBySection(section: PSection; percent: integer): boolean;
+var i: integer;
+    total_tasks, true_tasks: integer;
+    rm: TResultMask;
+begin
+    result := false;
+    true_tasks := 0;
+    rm := SavePoint.asResultMask('MASK_' + intToStr(section.topic_id));
+    if (rm = nil) then exit(false);
+
+    total_tasks := length(rm);
+
+    for i := 0 to length(rm) - 1 do
+        if rm[i] = true then inc(true_tasks);
+
+    result := true_tasks >= trunc(total_tasks * percent / 100);
+end;
+
 procedure TfrmTasks.AllTaskCompleate;
 begin
      if messageBox(handle, PWideChar(
@@ -168,16 +187,18 @@ begin
     task := mTask.Page;
     usrAnswear := strToFloatEx(trim(txtAnswer.Text));
 
-    trueAnswear := mTask.isTrueAnswear(usrAnswear, task);
+    trueAnswear := abs(usrAnswear - answears[task - 1]) < e;
 
     if trueAnswear then
     begin
+         taskResultMask[task - 1] := true;
          if task = mTask.section.task_count then
          begin
-             if mTask.
-                  allTaskComplete()
-                       then AllTaskCompleate()
-                            else actResultClickExecute(self);
+             if getNextFalseTask(Task,
+                  taskResultMask, true) =
+                      ALL_TASK_COMPLETE then
+                            AllTaskCompleate()
+                                else actResultClickExecute(self)
 
          end
          else actNextClickExecute(Sender);
@@ -291,7 +312,6 @@ begin
       messageBox(self.Handle, 'Не удалось загузить тесты', 'Ошибка', MB_OK or MB_ICONERROR);
       abort;
     end;
-    useSaved := true;
     savePoint := TsavePoint.Create(frmOGE.User.id, mParent.Name);
     savepoint.Load;
     createLinks();
@@ -306,45 +326,41 @@ begin
 
     CurrentLink := TLinkLabel(Sender);
 
-    if useSaved then
-    begin
-        mTask := mTaskList[TLinkLabel(Sender).Tag];
-       // mTask.ContentType  := cntTask;
-        mTask.OnAllTaskComplete := AllTaskCompleate;
-        mTask.setSection(cntTask, mTask.sectionByName(TLinkLabel(Sender).Name));
-        page := savePoint.asInteger('PAGE_' + intToStr(mTask.Section.topic_id));
-        if (page >= 1) and
-          (page <= mTask.Section.task_count)
-              then mTask.Page := page else mTask.FirstPage;
-    end;
+    mTask := mTaskList[TLinkLabel(Sender).Tag];
+   // mTask.ContentType  := cntTask;
+    mTask.OnAllTaskComplete := AllTaskCompleate;
+    mTask.setSection(cntTask, mTask.sectionByName(TLinkLabel(Sender).Name));
+    page := savePoint.asInteger('PAGE_' + intToStr(mTask.Section.topic_id));
+    if (page >= 1) and
+      (page <= mTask.Section.task_count)
+          then mTask.Page := page else mTask.FirstPage;
 
-    mTask.ResultMask := savepoint.asResultMask('MASK_' + intToStr(mTask.Section.topic_id));
+    ResultMask := savepoint.asResultMask('MASK_' + intToStr(mTask.Section.topic_id));
 
     viewTask(mTask, false);
-    mTask.loadAnswears();
+    loadAnswears();
     frmOGe.UpdateCaption(mTask.Section.display_lable);
-end;
-
-
-procedure TfrmTasks.refreshLinkContent;
-begin
-   useSaved := false;  // Отключим использования сохраненых значений
-                    // чтоб при переходе между вкладками старая страница не загружалась.
-   try linkClick(CurrentLink); finally useSaved := true end;
 end;
 
 procedure TfrmTasks.saveResults;
 begin
    if assigned(mTask) and assigned(mTask.Section)  then
    begin
-       savepoint.addResultMask('MASK_' + intToStr(mTask.Section.topic_id), mtask.ResultMask);
+       savepoint.addResultMask('MASK_' + intToStr(mTask.Section.topic_id), ResultMask);
        savepoint.Save;
    end;
 end;
 
-procedure TfrmTasks.clearUserResults;
+procedure TfrmTasks.setResultMask(const Value: TResultMask);
 begin
-    mTask.clearResults;
+    taskResultMask := Value;
+    mTask.ResultMask := value;
+end;
+
+procedure TfrmTasks.clearUserResults;
+var i: integer;
+begin
+    for i := 0 to length(taskResultMask) - 1 do taskResultMask[i] := false;
     if assigned(mTask) and assigned(mTask.section) then
         savepoint.Delete('MASK_' + intToStr(mTask.Section.topic_id));
 end;
@@ -411,6 +427,19 @@ begin
      end;
 end;
 
+procedure TfrmTasks.loadAnswears;
+var filename: string;
+    i: integer;
+begin
+    filename := format('%s/%s/%s/answ.xml',[TOPIC_DIR, mTask.name, mTask.section.name]);
+    answears := uGlobals.loadAnswears(dm.DataFile, filename, 1);
+    if taskResultMask = nil then
+    begin
+         setLength(taskResultMask, length(answears));
+         for i := 0 to length(taskResultMask) - 1 do taskResultMask[i] := false;
+    end;
+end;
+
 procedure TfrmTasks.txtAnswerKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
@@ -465,11 +494,6 @@ function TfrmTasks.getSectionLabel: string;
 begin
     result := '';
     if assigned(mTask) and assigned(mTask.Section) then result := mTask.Section.display_lable;
-end;
-
-function TfrmTasks.gettaskResultMask: TResultMask;
-begin
-    result := mtask.ResultMask;
 end;
 
 function TfrmTasks.LinkByName(const name: string): TLinkLabel;

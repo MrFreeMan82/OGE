@@ -12,6 +12,7 @@ type
     topic_id: integer;
     task_count: integer;
     pages_count: integer;
+    expire: TDate;
     name: string;
     display_lable: string;
     visible: boolean;
@@ -30,12 +31,10 @@ type
       mContentFolderType: TContentFolder;
       mContentFolder: string;
       msection: PSection;
+      mResultMask: TResultMask;
 
     procedure doLoadPage();
     procedure setMode(const Value: TMode);
-    function getResultMask: TResultMask;
-    function getResultMaskValue(index: integer): boolean;
-    procedure setResultMask(const Value: TResultMask);
     procedure setPage(const Value: integer);
     function getTaskCount: integer;
   public
@@ -46,25 +45,19 @@ type
       procedure NextPage;
       procedure PrevPage;
 
-      function allTaskComplete(): boolean;
-
       property Mode: TMode read mMode write setMode;
       property Caption: string read display_lable write display_lable;
       property ID: integer read mid;
       property Name: string read mname;
-      property ResultMask: TResultMask read getResultMask write setResultMask;
-      property ResultMaskValue[index: integer]: boolean read getResultMaskValue;
+      property ResultMask: TResultMask read mResultMask write mResultMask;
       property ContentType: TContentFolder read mContentFolderType;
       property Section : PSection read mSection;
       property Page: integer read PageNo write setPage;
       property TaskCount: integer read getTaskCount;
 
       procedure setSection(ContentType: TContentFolder; const Value: PSection);
-      function isTrueAnswear(answ: double; taskNo: integer): boolean;
       function sectionByName(const name: string): PSection;
       function sectionByID(topic_id: integer): PSection;
-      procedure loadAnswears();
-      procedure clearResults();
   end;
 
   TTopicList = class(TList)
@@ -79,9 +72,6 @@ implementation
 uses uData, sysUtils, uOGE, XMLIntf;
 
 var filename: string;
-
-    taskResultMask: TResultMask;
-    answears: TAnswears;
 
 { TTopicList }
 
@@ -127,6 +117,7 @@ begin
                    sections[j].topic_id := strToInt(FindNode('TOPIC_ID').Text);
                    sections[j].task_count := strToInt(FindNode('TASK_COUNT').Text);
                    sections[j].pages_count := strToInt(FindNode('PAGES_COUNT').Text);
+                   sections[j].expire := strToDate(FindNode('FINAL').Text);
                    sections[j].visible := FindNode('VISIBLE').Text = '0';
                 end;
           end;
@@ -152,11 +143,11 @@ begin
 end;
 
 { TModule }
-
+{
 function TTopic.allTaskComplete: boolean;
 begin
    result := getNextFalseTask(pageNo, taskResultMask, true) = ALL_TASK_COMPLETE;
-end;
+end;}
 
 procedure TTopic.doLoadPage;
 begin
@@ -172,16 +163,6 @@ begin
    doLoadPage();
 end;
 
-function TTopic.getResultMask: TResultMask;
-begin
-    result := taskResultMask
-end;
-
-function TTopic.getResultMaskValue(index: integer): boolean;
-begin
-     result := taskResultMask[index];
-end;
-
 function TTopic.getTaskCount: integer;
 var i: Integer;
 begin
@@ -192,17 +173,11 @@ begin
         result := result + sections[i].task_count;
 end;
 
-function TTopic.isTrueAnswear(answ: double; taskNo: integer): boolean;
-begin
-    result := abs(answ - answears[pageNo - 1]) < e;
-    taskResultMask[taskNo - 1] := result;
-end;
-
 procedure TTopic.NextPage;
 begin
    if mode = mReTest then
    begin
-        pageNo := getNextFalseTask(pageNo, taskResultMask);
+        pageNo := getNextFalseTask(pageNo, mResultMask);
         if pageNo = ALL_TASK_COMPLETE then
         begin
             mode := mNormal;
@@ -225,7 +200,7 @@ procedure TTopic.PrevPage;
 begin
    if mode = mRetest then
    begin
-      pageNo := getPrevFalseTask(pageNo, taskResultMask);
+      pageNo := getPrevFalseTask(pageNo, mResultMask);
       if pageNo = ALL_TASK_COMPLETE then
       begin
            mode := mNormal;
@@ -278,11 +253,6 @@ begin
 
 end;
 
-procedure TTopic.setResultMask(const Value: TResultMask);
-begin
-     taskResultMask := value;
-end;
-
 procedure TTopic.setSection(ContentType: TContentFolder; const Value: PSection);
 begin
     mMode := mNormal;
@@ -294,23 +264,6 @@ begin
       cntContent: begin mContentPageCount := section.pages_count; mContentFolder := 'Content' end;
       cntTask: begin mContentPageCount := section.task_count; mContentFolder := 'Task' end;
     end;
-end;
-
-procedure TTopic.loadAnswears;
-begin
-    filename := format('%s/%s/%s/answ.xml',[TOPIC_DIR, name, section.name]);
-    answears := uGlobals.loadAnswears(dm.DataFile, filename, 1);
-    if taskResultMask = nil then
-    begin
-         setLength(taskResultMask, length(answears));
-         clearResults();
-    end;
-end;
-
-procedure TTopic.clearResults;
-var i: integer;
-begin
-     for i := 0 to length(taskResultMask) - 1 do taskResultMask[i] := false;
 end;
 
 end.

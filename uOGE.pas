@@ -364,7 +364,7 @@ begin
 
     else if pgPages.ActivePage = tabTasks
         then begin
-             frmTasks.refreshLinkContent;  //   Так как  frmTasks и  frmCollectiveTask используют одну модель
+      //       frmTasks.refreshLinkContent;  //   Так как  frmTasks и  frmCollectiveTask используют одну модель
                                           //    то REsultMask у них один, чтоб переключать Resultmask
                                           //    при смене вкладок нужно запускать эту проц.
              frmTasks.ActionList.State := asNormal;
@@ -373,7 +373,7 @@ begin
 
     else if pgPages.ActivePage = tabCollectiveTask
         then begin
-            frmCollectiveTask.refreshLinkContent;
+       //     frmCollectiveTask.refreshLinkContent;
             frmCollectiveTask.ActionList.State := asNormal;
             UpdateCaption(frmCollectiveTask.SectionLabel);
         end

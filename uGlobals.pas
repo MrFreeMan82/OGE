@@ -15,6 +15,8 @@ const TOPIC_DIR = 'Topics';
       NOT_ZACHET = 'не зачтено';
 
 
+const COLLECTIVE_TASK_ID = 4;
+
 const USR_FIELD_COUNT = 4;
 
 type
