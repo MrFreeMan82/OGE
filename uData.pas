@@ -34,7 +34,7 @@ var
   dm: Tdm;
 
 implementation
-uses uOGE, uUser, uGlobals;
+uses uOGE, uUser, uGlobals, Windows;
 
 {$R *.dfm}
 
@@ -94,10 +94,15 @@ end;
 
 procedure Tdm.DataModuleCreate(Sender: TObject);
 begin
-    sql := TStringList.Create;
     fDataFile := exePath() + 'OGE.dat';
     sqliteFile := exePath() + 'sqlite.dat';
+    if not FileExists(fDataFile) then
+    begin
+        messageBox(0, PWideChar('Ôאיכ ' + fDataFile + ' םו םאיהום!'), 'ÎÃÅ', MB_OK or MB_ICONERROR);
+        halt(0);
+    end;
 
+    sql := TStringList.Create;
     sqlite := TSQLiteDatabase.Create(sqliteFile);
     createTableUser();
     createTableSavePoints();

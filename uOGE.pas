@@ -90,7 +90,7 @@ var
   frmOGE: TfrmOGE;
 
 implementation
-uses uGlobals, uData;
+uses uGlobals, uData, uStress;
 
 {$R *.dfm}
 
@@ -171,7 +171,7 @@ function TfrmOGE.Login():TModalResult;
 var s: string;
     i: integer;
 begin
-     s := '1';
+     s := '';
      repeat
           if InputQuery('OГЭ', 'Введите паоль:', s)
                 then result := mrOK else result := mrCancel;
@@ -257,6 +257,8 @@ procedure TfrmOGE.FormCreate(Sender: TObject);
 begin
     {$IFDEF TEST}
     showMessage('Тестовый образец');
+  //  addUsersMasksAllSections();
+ //   halt(0);
     {$ENDIF}
 
     usrList := TUserList.Create;
@@ -298,6 +300,7 @@ begin
     frmCollectiveTask.ShowTasks(tabCollectiveTask);
     fillGrid();
     totalResults();
+
 
     if currentUser.ut_id = 1
       then tabAdmin.TabVisible := true

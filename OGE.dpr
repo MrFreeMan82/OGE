@@ -16,7 +16,8 @@ uses
   uWorkPlan in 'uWorkPlan.pas' {frmWorkPlan},
   uTopicModel in 'uTopicModel.pas',
   uUser in 'uUser.pas' {frmUser},
-  uSavePoint in 'uSavePoint.pas';
+  uSavePoint in 'uSavePoint.pas',
+  uStress in 'uStress.pas';
 
 {$R *.res}
 

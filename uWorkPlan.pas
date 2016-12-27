@@ -165,6 +165,7 @@ begin
                    y := YearOf(Date);
                    m := MonthOf(sections[j].expire);
                    d := DayOf(sections[j].expire);
+                   if MonthOf(Date) in [9..12] then inc(y);
 
                    expire := EncodeDate(y, m, d);
 
@@ -194,7 +195,7 @@ var y,m,d: Word;
     expire: TDate;
 begin
     y := YearOf(Date);
-    if MonthOf(Date) in [3..8] then dec(y);
+    if MonthOf(Date) in [9..12] then inc(y);
     m := 2;
     d := 28;
     expire := EncodeDate(y, m, d);
@@ -473,7 +474,7 @@ begin
              graphic.DrawString(timeLabels[i].displayLabel,
                     gradFont, timeLabels[i].rect, gradFontAlign, BlackBrush);
 
-  {  d := 1;
+    d := 1;
     for i := 0 to length(decadeStage1) - 1 do
     begin
           if decadeStage1[i].result = false then
@@ -499,7 +500,7 @@ begin
 
           inc(d);
           if d > 3 then d := 1;
-    end;  }
+    end;
 
      graphic.DrawString(NOTE, noteFont, noteRect, nil, BlackBrush);
 
