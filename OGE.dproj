@@ -84,6 +84,11 @@
 			</DCCReference>
 			<DCCReference Include="uSavePoint.pas"/>
 			<DCCReference Include="uStress.pas"/>
+			<DCCReference Include="uSync.pas"/>
+			<DCCReference Include="uWait.pas">
+				<Form>frmWait</Form>
+			</DCCReference>
+			<None Include="OGE.todo"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

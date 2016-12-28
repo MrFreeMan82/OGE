@@ -76,6 +76,7 @@ type
     property ResultMask: TResultMask read taskResultMask;
     procedure clearUserResults();
     procedure saveResults();
+    procedure send();
     property UTTTModuleList: TUTTModulesList read fUTTTest;
     function pointByUserAndModule(us_id: integer; mdl: PUTTModule): integer;
     function pointsByUserAllVariant(us_id: integer; mdl: PUTTModule): TPointsPerVariant;
@@ -137,7 +138,7 @@ procedure TfrmUTT.assignedVariant;
 begin
     if rgVariants.ItemIndex < 0 then
     begin
-        messageBox(handle, 'Для продолжения выберите вариант.', 'ОГЕ', MB_OK or MB_ICONERROR);
+        messageBox(handle, 'Для продолжения выберите вариант.', 'ОГЭ', MB_OK or MB_ICONERROR);
         abort;
     end;
 end;
@@ -158,7 +159,7 @@ begin
           'Поздравляем! Все задания варианта ' +
                 intToStr(rgVariants.ItemIndex + 1) +
                         ' решены, Показать результаты?'),
-                              'ОГЕ', MB_YESNO or MB_ICONINFORMATION) = mrYes then
+                              'ОГЭ', MB_YESNO or MB_ICONINFORMATION) = mrYes then
      begin
          actResultClickExecute(self);
      end;
@@ -187,7 +188,7 @@ begin
          else begin
                 messageBox(self.Handle,
                    'Верно! Баллы за это задание уже были засчитаны.',
-                                       'ОГЕ', MB_OK or MB_ICONINFORMATION);
+                                       'ОГЭ', MB_OK or MB_ICONINFORMATION);
          end;
          if fTask = UTT_TASK_COUNT then
          begin
@@ -387,6 +388,18 @@ begin
         (variant <= rgVariants.Items.Count) then
                  rgVariants.ItemIndex := variant - 1;
     show;
+end;
+
+procedure TfrmUTT.send;
+var key, value: string;
+begin
+     key := 'MASK';
+     value := format('%d;%s;%s;MASK_%d;%s',
+        [frmOGE.User.id, frmOGE.User.fio, savepoint.Window,
+                      rgVariants.ItemIndex + 1, savepoint.asString(
+                            'MASK_' + intToStr(rgVariants.ItemIndex + 1))]
+     );
+     frmOGE.Sync.send(key, value);
 end;
 
 procedure TfrmUTT.txtAnswerKeyDown(Sender: TObject; var Key: Word;

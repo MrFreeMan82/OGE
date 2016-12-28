@@ -56,8 +56,32 @@ function loadAnswears(const DBFile, fileName: string; aVariant: integer): TAnswe
 
 function FindData(const zipFile, name: string; outData: TStream): boolean;
 
+procedure extract(fromList: TStringList; key: string; toList: TStringList);
+
 implementation
 uses SysUtils, math, Forms, ActiveX, uData, XMLIntf, FWZipReader, dialogs;
+
+procedure extract(fromList: TStringList; key: string; toList: TStringList);
+var i: integer;
+    b,e: string;
+begin
+     i := 0;
+     b := '<' + key + '>';
+     e := '</' + key + '>';
+
+     toList.Clear;
+     while i <= (fromList.Count - 1) do
+     begin
+          while (i < fromList.Count) and (pos(b, fromList.Strings[i]) = 0) do inc(i);
+          inc(i);
+
+          while (i < fromList.Count) and (pos(e, fromList.Strings[i]) = 0) do
+          begin
+               toList.Add(trim(fromList.Strings[i]));
+               inc(i);
+          end;
+     end;
+end;
 
 function FindData(const zipFile, name: string; outData: TStream): boolean;
 var Zip: TFWZipReader;

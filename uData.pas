@@ -20,6 +20,7 @@ type
 
     procedure createTableUser();
     procedure createTableSavePoints();
+    procedure createTableParams();
     procedure dropTable(const tableName: string);
 
     procedure loadUserFromFile(fl: string);
@@ -28,6 +29,8 @@ type
     sqlite : TSQLiteDatabase;
 
     property DataFile: string read fDataFile;
+    procedure SaveParam(const paramName, paramValue: string);
+    function LoadParam(const paramName: string): string;
   end;
 
 var
@@ -39,6 +42,18 @@ uses uOGE, uUser, uGlobals, Windows;
 {$R *.dfm}
 
 { Tdm }
+
+procedure Tdm.createTableParams;
+begin
+    if sqlite.TableExists('PARAMS') then exit;
+
+    sql.Clear;
+    sql.Add('CREATE TABLE PARAMS');
+    sql.Add('(ID INTEGER PRIMARY KEY AUTOINCREMENT,');
+    sql.Add('KEY_FIELD TEXT,');
+    sql.Add('VALUE_FIELD TEXT)');
+    sqlite.ExecSQL(ansistring(sql.Text));
+end;
 
 procedure Tdm.createTableSavePoints;
 begin
@@ -91,7 +106,6 @@ begin
      sqlite.ExecSQL(ansiString(sql.Text));
 end;
 
-
 procedure Tdm.DataModuleCreate(Sender: TObject);
 begin
     fDataFile := exePath() + 'OGE.dat';
@@ -106,6 +120,7 @@ begin
     sqlite := TSQLiteDatabase.Create(sqliteFile);
     createTableUser();
     createTableSavePoints();
+    createTableParams();
 //  dropTable('RESULTS')
 end;
 
@@ -124,6 +139,50 @@ begin
           
           sqlite.ExecSQL(ansistring(sql.Text));
      end;
+end;
+
+procedure Tdm.SaveParam(const paramName, paramValue: string);
+var table: TSQLiteUniTable;
+    cnt: integer;
+begin
+     sql.Clear;
+     sql.Add(format('SELECT COUNT(*) FROM PARAMS WHERE KEY_FIELD = "%s"', [paramName]));
+
+     try
+        table := TSQLiteUniTable.Create(dm.sqlite, ansiString(sql.Text));
+        cnt := table.FieldAsInteger(0);
+     finally
+         freeAndNil(table);
+     end;
+
+     sql.Clear;
+     if cnt = 0 then
+     begin
+          sql.Add(format(
+            'INSERT INTO PARAMS(KEY_FIELD, VALUE_FIELD)' +
+              'VALUES("%s", "%s")', [paramName, paramValue]))
+     end
+     else begin
+            sql.Add(format(
+              'UPDATE PARAMS ' +
+              'SET VALUE_FIELD = "%s" ' +
+              'WHERE KEY_FIELD = "%s"', [paramValue, paramName]));
+     end;
+
+     sqlite.ExecSQL(ansistring(sql.Text));
+end;
+
+function Tdm.LoadParam(const paramName: string): string;
+var table: TSQLiteUniTable;
+begin
+    sql.Clear;
+    sql.Add(format('SELECT VALUE_FIELD FROM PARAMS WHERE KEY_FIELD = "%s"', [paramName]));
+    try
+        table := TSQLiteUniTable.Create(sqlite, ansiString(sql.Text));
+        result := table.FieldAsString(0);
+    finally
+        freeAndNil(table);
+    end;
 end;
 
 procedure Tdm.DataModuleDestroy(Sender: TObject);

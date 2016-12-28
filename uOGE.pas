@@ -7,7 +7,7 @@ uses
   Dialogs, OleCtrls, SHDocVw, ComCtrls, StdCtrls, ExtCtrls, ExtDlgs, Grids,
   ToolWin, Buttons, PlatformDefaultStyleActnCtrls, ActnList, ActnMan,
   AppEvnts, uTheme, uUTT, uTasks, uWorkPlan, XPMan, ImgList,
-  ShellAnimations, uUser, NiceGrid, uSavePoint;
+  ShellAnimations, uUser, NiceGrid, uSavePoint, uSync;
 
 type
   TfrmOGE = class(TForm)
@@ -36,6 +36,22 @@ type
     ToolBar2: TToolBar;
     ToolButton1: TToolButton;
     btRefresh: TSpeedButton;
+    GroupBox2: TGroupBox;
+    txtSMTPPort: TEdit;
+    Label5: TLabel;
+    Label4: TLabel;
+    txtSMTP: TEdit;
+    txtPassword: TEdit;
+    Label3: TLabel;
+    Label2: TLabel;
+    txtUser: TEdit;
+    txtGate: TEdit;
+    Label1: TLabel;
+    btsaveSync: TButton;
+    txtIMAP: TEdit;
+    Label6: TLabel;
+    Label7: TLabel;
+    txtIMAPPort: TEdit;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure WebBrowser1DocumentComplete(ASender: TObject;
@@ -50,6 +66,7 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormShow(Sender: TObject);
     procedure FormResize(Sender: TObject);
+    procedure btsaveSyncClick(Sender: TObject);
   private
     { Private declarations }
     frmTopics: TfrmTopics;
@@ -58,6 +75,8 @@ type
     frmWorkPlan: TfrmWorkPlan;
     frmCollectiveTask: TfrmTasks;
 
+    syncParams: TSyncParams;
+    syncro: TSync;
     saveOGE: TSavePoint;
     CurrentUser: TUser;
     usr: PUser;
@@ -76,6 +95,8 @@ type
     procedure totalresultFillUsesrs();
     procedure totalResults();
     procedure suspendActions();
+    procedure loadSyncParams();
+    procedure syncMask();
   public
     { Public declarations }
     property CollectiveTasks: TfrmTasks read frmCollectiveTask;
@@ -83,6 +104,7 @@ type
     property Topics: TfrmTopics read frmTopics;
     property UTT:TfrmUTT read frmUTT;
     property User: TUser read currentUser;
+    property Sync: TSync read syncro;
     procedure UpdateCaption(const suffix: string);
   end;
 
@@ -100,7 +122,7 @@ uses uGlobals, uData, uStress;
 
 procedure TfrmOGE.UpdateCaption(const suffix: string);
 begin
-    Caption := format('ОГЕ - %s [%s]', [currentUser.fio, suffix]);
+    Caption := format('ОГЭ - %s [%s]', [currentUser.fio, suffix]);
 end;
 
 procedure TfrmOGE.totalResults;
@@ -192,6 +214,29 @@ begin
      until result = mrCancel;
 end;
 
+procedure TfrmOGE.btsaveSyncClick(Sender: TObject);
+begin
+    syncParams.Gate := txtGate.Text;
+    syncParams.UserName := txtUser.Text;
+    syncParams.Password := txtPassword.Text;
+    syncParams.SMTPHost := txtSMTP.Text;
+    syncParams.SMTPPort := txtSMTPPort.Text;
+    syncParams.IMAPHost := txtIMAP.Text;
+    syncParams.IMAPPort := txtIMAPPort.Text;
+    messageBox(handle, 'Настройки успешно сохранены.', 'ОГЭ', MB_OK or MB_ICONINFORMATION);
+end;
+
+procedure TfrmOGE.loadSyncParams;
+begin
+     txtGate.Text := syncParams.Gate;
+     txtUser.Text := syncParams.UserName;
+     txtPassword.Text := syncParams.Password;
+     txtSMTP.Text := syncParams.SMTPHost;
+     txtSMTPPort.Text :=  syncParams.SMTPPort;
+     txtIMAP.Text := syncParams.IMAPHost;
+     txtIMAPPort.Text := syncParams.IMAPPort;
+end;
+
 procedure TfrmOGE.btAddUserClick(Sender: TObject);
 begin
     TfrmUser.addUser();
@@ -203,7 +248,7 @@ begin
     if assigned(usr) then
     begin
         if messageBox(handle,
-            'Удалить пользователя?','ОГЕ',
+            'Удалить пользователя?','ОГЭ',
                 MB_YESNO or MB_ICONQUESTION) = mrYes then
         begin
              TfrmUser.deleteUser(usr.id);
@@ -221,8 +266,28 @@ begin
    end;
 end;
 
+procedure TfrmOGE.syncMask;
+var i: integer;
+    body: TStringList;
+    dataList: TStringList;
+    sp: TSavePoint;
+begin
+     body := TStringList.Create;
+     dataList := TStringList.Create;
+     try
+         syncro.reciev(body);
+         extract(body, 'MASK', dataList);
+         TSavePoint.fromCSV(';', dataList.Text);
+         // ToDo: Доделать прием сообщений
+     finally
+       body.Free;
+       dataList.Free;
+     end;
+end;
+
 procedure TfrmOGE.btRefreshClick(Sender: TObject);
 begin
+    syncMask();
     totalResults()
 end;
 
@@ -285,11 +350,15 @@ begin
     frmCollectiveTask.Dock(tabCollectiveTask, tabCollectiveTask.ClientRect);
 
     saveOGE := TSavePoint.Create(user.id, self.ClassName);
+    syncParams := TSyncParams.Create;
+    syncro := TSync.Create;
 end;
 
 procedure TfrmOGE.FormShow(Sender: TObject);
 var p: integer;
 begin
+    syncro.SyncParams := syncParams;
+    loadSyncParams();
     WebBrowser1.Navigate('res://' + Application.ExeName + '/HTML/FIRST_PAGE');
     WebBrowser1.OleObject.Document.bgColor := '#E0FFFF';
 
@@ -300,7 +369,6 @@ begin
     frmCollectiveTask.ShowTasks(tabCollectiveTask);
     fillGrid();
     totalResults();
-
 
     if currentUser.ut_id = 1
       then tabAdmin.TabVisible := true
@@ -329,6 +397,7 @@ begin
     freeAndNil(frmWorkPlan);
     freeAndNil(frmCollectiveTask);
     freeAndNil(saveOGE);
+    freeAndNil(syncro);
 end;
 
 procedure TfrmOGE.grdUserresultColRowChanged(Sender: TObject; Col,Row: Integer);

@@ -387,8 +387,8 @@ begin
     createStages();
     createNote();
     header();
-    createDacadesStage1;
-    createDacadesStage2;
+  //  createDacadesStage1;
+  //  createDacadesStage2;
 end;
 
 procedure TfrmWorkPlan.refreshWorkPlan;
@@ -438,7 +438,7 @@ begin
 end;
 
 procedure TfrmWorkPlan.render;
-var i,d: integer;
+var i: integer;
    ColorPen: IGPPen;
    RedBrush, GreenBrush: IGPBrush;
 begin
@@ -474,7 +474,7 @@ begin
              graphic.DrawString(timeLabels[i].displayLabel,
                     gradFont, timeLabels[i].rect, gradFontAlign, BlackBrush);
 
-    d := 1;
+  {  d := 1;
     for i := 0 to length(decadeStage1) - 1 do
     begin
           if decadeStage1[i].result = false then
@@ -500,7 +500,7 @@ begin
 
           inc(d);
           if d > 3 then d := 1;
-    end;
+    end; }
 
      graphic.DrawString(NOTE, noteFont, noteRect, nil, BlackBrush);
 

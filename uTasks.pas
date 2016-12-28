@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, ExtCtrls, uGlobals, uTopicModel, uSavePoint, ComCtrls,
-  Menus, ActnList;
+  Menus, ActnList, uSync;
 
 type
   TfrmTasks = class(TForm)
@@ -76,6 +76,7 @@ type
     function Over80(us_id: integer): boolean;
     procedure clearUserResults;
     procedure saveResults();
+    procedure send();
     function totalTaskCount(): integer;
     function OverPercBySection(section: PSection; percent: integer): boolean;
     procedure ShowTasks(Parent: TTabSheet);
@@ -161,7 +162,7 @@ procedure TfrmTasks.AllTaskCompleate;
 begin
      if messageBox(handle, PWideChar(
           'Поздравляем! Все задания решены, Показать результаты?'),
-                        'ОГЕ', MB_YESNO or MB_ICONINFORMATION) = mrYes then
+                        'ОГЭ', MB_YESNO or MB_ICONINFORMATION) = mrYes then
      begin
          actResultClickExecute(self);
      end;
@@ -171,7 +172,7 @@ procedure TfrmTasks.assignedTask;
 begin
     if mTask = nil then
     begin
-        messageBox(handle, 'Для продолжения выберите раздел.', 'ОГЕ', MB_OK or MB_ICONERROR);
+        messageBox(handle, 'Для продолжения выберите раздел.', 'ОГЭ', MB_OK or MB_ICONERROR);
         abort;
     end;
 end;
@@ -317,6 +318,18 @@ begin
     createLinks();
     loadUserOptions();
     show;
+end;
+
+procedure TfrmTasks.send;
+var key, value: string;
+begin
+     key := 'MASK';
+     value := format('%d;%s;%s;MASK_%d;%s',
+        [frmOGE.User.id, frmOGE.User.fio, savepoint.Window,
+                      mTask.Section.topic_id, savepoint.asString(
+                            'MASK_' + intToStr(mTask.Section.topic_id))]
+     );
+     frmOGE.Sync.send(key, value);
 end;
 
 procedure TfrmTasks.linkClick(Sender: TObject);

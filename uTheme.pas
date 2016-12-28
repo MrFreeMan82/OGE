@@ -74,7 +74,7 @@ procedure TfrmTopics.assignedTopic;
 begin
     if fTopic = nil then
     begin
-        messageBox(handle, 'Для продолжения выберите раздел.', 'ОГЕ', MB_OK or MB_ICONERROR);
+        messageBox(handle, 'Для продолжения выберите раздел.', 'ОГЭ', MB_OK or MB_ICONERROR);
         abort;
     end;
 end;
@@ -108,7 +108,7 @@ begin
     if  fTopic.content = nil then
     begin
        if not silent then
-           messageBox(handle, 'Раздел не загружен.', 'ОГЕ', MB_OK or MB_ICONERROR);
+           messageBox(handle, 'Раздел не загружен.', 'ОГЭ', MB_OK or MB_ICONERROR);
        exit;
     end;
 

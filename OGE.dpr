@@ -17,7 +17,9 @@ uses
   uTopicModel in 'uTopicModel.pas',
   uUser in 'uUser.pas' {frmUser},
   uSavePoint in 'uSavePoint.pas',
-  uStress in 'uStress.pas';
+  uStress in 'uStress.pas',
+  uSync in 'uSync.pas',
+  uWait in 'uWait.pas' {frmWait};
 
 {$R *.res}
 
@@ -26,5 +28,6 @@ begin
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(Tdm, dm);
   Application.CreateForm(TfrmOGE, frmOGE);
+  Application.CreateForm(TfrmWait, frmWait);
   Application.Run;
 end.

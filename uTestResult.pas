@@ -12,7 +12,7 @@ type
 TfrmTestResult = class(TForm)
     pnlTools: TPanel;
     btExit: TSpeedButton;
-    btClearResults: TSpeedButton;
+    btSaveAndSend: TSpeedButton;
     pnlOptions: TPanel;
     Label1: TLabel;
     btYes: TSpeedButton;
@@ -20,6 +20,7 @@ TfrmTestResult = class(TForm)
     chkRandom: TCheckBox;
     pnlDiagram: TPanel;
     btSaveresults: TSpeedButton;
+    btClearResults: TSpeedButton;
     procedure btExitClick(Sender: TObject);
     procedure btClearResultsClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
@@ -27,6 +28,7 @@ TfrmTestResult = class(TForm)
     procedure btNoClick(Sender: TObject);
     procedure btYesClick(Sender: TObject);
     procedure btSaveresultsClick(Sender: TObject);
+    procedure btSaveAndSendClick(Sender: TObject);
   private
     { Private declarations }
     mParent: TfrmTasks;
@@ -40,7 +42,7 @@ TfrmTestResult = class(TForm)
 
 implementation
 
-uses uOGE, math;
+uses uOGE, math, uWait;
 
 {$R *.dfm}
 
@@ -66,7 +68,6 @@ begin
               frmTaskDiagram.showDiagram(chkRandom.Checked, true, mParent.ResultMask);
               btClearResults.Enabled := false;
          end
-
     end;
 end;
 
@@ -82,7 +83,41 @@ begin
    begin
        frmTaskDiagram.refresh(chkRandom.Checked);
    end
+end;
 
+procedure TfrmTestResult.btSaveAndSendClick(Sender: TObject);
+begin
+   if btSaveresults.Enabled then btSaveresultsClick(Sender);
+
+   try
+       if Assigned(frmUTTDiagram) then
+       begin
+           frmWait.Show;
+           Application.ProcessMessages;
+           frmOGE.UTT.send;
+           btSaveAndSend.Enabled := false;
+       end
+       else if assigned(frmTaskDiagram) then
+       begin
+           frmWait.Show;
+           Application.ProcessMessages;
+           mParent.send;
+           btSaveAndSend.Enabled := false;
+       end;
+
+       if not btSaveAndSend.Enabled then
+       begin
+           frmWait.Hide;
+           Application.ProcessMessages;
+           messageBox(handle, 'Отправлено.', 'ОГЭ', MB_OK or MB_ICONINFORMATION);
+       end;
+   except
+       frmOGE.Sync.saveLog;
+       frmWait.Hide;
+       Application.ProcessMessages;
+       messageBox(handle, 'Во врея отправления произошла ошибка. '#13 +
+        'Попробуйте снова через несколько минут.', 'ОГЭ', MB_OK or MB_ICONERROR);
+   end;
 end;
 
 procedure TfrmTestResult.btSaveresultsClick(Sender: TObject);

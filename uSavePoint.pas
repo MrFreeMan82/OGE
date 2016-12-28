@@ -8,6 +8,7 @@ type
       key: string;
       value: string;
       deleted: boolean;
+      sync_record: boolean;
   end;
 
   TRecords = array of TRecord;
@@ -15,12 +16,14 @@ type
   TSavePoint = class
     private
       us_id: integer;
-      window: string;
+      mwindow: string;
       rec: TRecords;
       sql: TStringList;
 
       function exists(const key : string; out index: integer): boolean;
     public
+      property Window: string read mWindow;
+
       procedure addValue(const key, value: string);
       procedure addFloatValue(const key: string; value: double);
       procedure addIntValue(const key: string; value: integer);
@@ -30,10 +33,12 @@ type
       function  asFloat(const key: string): double;
       function  asResultMask(const key: string): TResultMask;
       function count(): integer;
+      class procedure fromCSV(delimChar: Char; const csvString: string);
 
       procedure Delete(const key: string);
       procedure Save;
       procedure Load();
+
 
       constructor Create(user: integer; AWindow: string);
       procedure Free;
@@ -134,7 +139,7 @@ constructor TSavePoint.Create(user: integer; AWindow: string);
 begin
     sql := TStringList.Create;
     us_id := user;
-    window := AWindow;
+    mwindow := AWindow;
 end;
 
 procedure TSavePoint.Delete(const key: string);
@@ -149,7 +154,7 @@ begin
             sql.Add(format(
              'DELETE FROM SAVEPOINT WHERE ' +
                 'US_ID = %d AND WINDOW = "%s" AND ' +
-                      'KEY_FIELD = "%s"', [us_id, window, key])
+                      'KEY_FIELD = "%s"', [us_id, mwindow, key])
              );
 
             dm.sqlite.ExecSQL(ansistring(sql.Text));
@@ -172,13 +177,34 @@ begin
     sql.Free;
 end;
 
+class procedure TSavePoint.fromCSV(delimChar: Char; const csvString: string);
+var i: integer;
+    csvList: TStringList;
+begin
+     if csvString = '' then exit;
+
+     csvList := TStringList.Create;
+     try
+         csvList.Delimiter := delimChar;
+         csvList.StrictDelimiter := true;
+         csvList.DelimitedText := csvString;
+         // ToDo: ƒоделать запись контрольной точки из CSV
+         for i := 0 to csvList.Count - 1 do
+         begin
+
+         end;
+     finally
+         csvList.Free;
+     end;
+end;
+
 procedure TSavePoint.Load();
 var i, cnt: integer; table: TSQLiteUniTable;
 begin
     sql.Clear;
     sql.Add(format(
         'SELECT COUNT(*)FROM SAVEPOINT ' +
-            'WHERE US_ID = %d AND WINDOW = "%s"', [us_id, window])
+            'WHERE US_ID = %d AND WINDOW = "%s"', [us_id, mwindow])
     );
     try
       table := TSQLiteUniTable.Create(dm.sqlite, ansiString(sql.Text));
@@ -193,7 +219,7 @@ begin
     sql.Clear;
     sql.Add(format(
         'SELECT KEY_FIELD, VALUE_FIELD FROM SAVEPOINT ' +
-            'WHERE US_ID = %d AND WINDOW = "%s"', [us_id, window]));
+            'WHERE US_ID = %d AND WINDOW = "%s"', [us_id, mwindow]));
 
     try
       table := TSQLiteUniTable.Create(dm.sqlite, ansiString(sql.Text));
@@ -222,7 +248,7 @@ begin
         sql.Add(format(
             'SELECT COUNT(*)FROM SAVEPOINT ' +
                 'WHERE US_ID = %d AND WINDOW = "%s" AND KEY_FIELD = "%s"',
-                [us_id, window, rec[i].key])
+                [us_id, mwindow, rec[i].key])
         );
         try
           table := TSQLiteUniTable.Create(dm.sqlite, ansiString(sql.Text));
@@ -237,7 +263,7 @@ begin
              sql.Add(format(
                 'INSERT INTO SAVEPOINT(US_ID, WINDOW, KEY_FIELD, VALUE_FIELD) ' +
                   'VALUES(%d, "%s", "%s", "%s")',
-                      [us_id, window, rec[i].key, rec[i].value])
+                      [us_id, mwindow, rec[i].key, rec[i].value])
              );
 
         end
@@ -246,7 +272,7 @@ begin
                 'UPDATE SAVEPOINT ' +
                 'SET VALUE_FIELD = "%s" ' +
                 'WHERE US_ID = %d AND WINDOW = "%s" AND KEY_FIELD = "%s"',
-                [rec[i].value, us_id, window, rec[i].key])
+                [rec[i].value, us_id, mwindow, rec[i].key])
             );
         end;
         dm.sqlite.ExecSQL(ansistring(sql.Text));
