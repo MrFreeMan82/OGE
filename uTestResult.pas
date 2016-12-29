@@ -87,35 +87,34 @@ end;
 
 procedure TfrmTestResult.btSaveAndSendClick(Sender: TObject);
 begin
+   frmWait.Show;
+   Application.ProcessMessages;
    if btSaveresults.Enabled then btSaveresultsClick(Sender);
 
-   try
+   try try
        if Assigned(frmUTTDiagram) then
        begin
-           frmWait.Show;
-           Application.ProcessMessages;
            frmOGE.UTT.send;
            btSaveAndSend.Enabled := false;
        end
        else if assigned(frmTaskDiagram) then
        begin
-           frmWait.Show;
-           Application.ProcessMessages;
            mParent.send;
            btSaveAndSend.Enabled := false;
        end;
-
-       if not btSaveAndSend.Enabled then
-       begin
-           frmWait.Hide;
-           Application.ProcessMessages;
-           messageBox(handle, 'Отправлено.', 'ОГЭ', MB_OK or MB_ICONINFORMATION);
-       end;
+     finally
+            if not btSaveAndSend.Enabled then
+            begin
+                frmWait.Hide;
+                Application.ProcessMessages;
+                messageBox(handle, 'Отправлено.', 'ОГЭ', MB_OK or MB_ICONINFORMATION);
+            end;
+     end;
    except
        frmOGE.Sync.saveLog;
        frmWait.Hide;
        Application.ProcessMessages;
-       messageBox(handle, 'Во врея отправления произошла ошибка. '#13 +
+       messageBox(handle, 'Во время отправления произошла ошибка. '#13 +
         'Попробуйте снова через несколько минут.', 'ОГЭ', MB_OK or MB_ICONERROR);
    end;
 end;

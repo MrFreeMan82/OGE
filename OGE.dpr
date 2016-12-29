@@ -19,7 +19,8 @@ uses
   uSavePoint in 'uSavePoint.pas',
   uStress in 'uStress.pas',
   uSync in 'uSync.pas',
-  uWait in 'uWait.pas' {frmWait};
+  uWait in 'uWait.pas' {frmWait},
+  uTaskResults in 'uTaskResults.pas' {frmTaskResults};
 
 {$R *.res}
 

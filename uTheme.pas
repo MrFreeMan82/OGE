@@ -94,6 +94,7 @@ begin
     if needer = nil then exit;
 
     frmOGE.pgPages.ActivePage := TfrmTasks(needer).Parent;
+    frmOGE.pgPagesChange(Sender);
 end;
 
 procedure TfrmTopics.viewTopic(silent: boolean = true);
@@ -235,6 +236,7 @@ begin
                 fTopic.FirstPage;
                 viewTopic();
                 frmOGE.pgPages.ActivePage := frmOGE.tabThemes;
+                frmOGE.pgPagesChange(Sender);
             end;
         end;
      end;

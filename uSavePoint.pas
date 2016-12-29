@@ -33,8 +33,9 @@ type
       function  asFloat(const key: string): double;
       function  asResultMask(const key: string): TResultMask;
       function count(): integer;
-      class procedure fromCSV(delimChar: Char; const csvString: string);
+      class procedure fromCSV(delimChar: Char; const dataList: TStringList);
 
+      procedure Clear;
       procedure Delete(const key: string);
       procedure Save;
       procedure Load();
@@ -46,7 +47,7 @@ type
 end;
 
 implementation
-uses SysUtils, uData, SQLite3, SQLiteTable3;
+uses SysUtils, uData, SQLite3, SQLiteTable3, uUser;
 
 { TSavePoint }
 
@@ -130,6 +131,13 @@ begin
         if (key = rec[i].key) then exit(rec[i].value)
 end;
 
+procedure TSavePoint.Clear;
+begin
+    us_id := 0;
+    mWindow := '';
+    rec := nil;
+end;
+
 function TSavePoint.count: integer;
 begin
     result := length(rec);
@@ -177,23 +185,34 @@ begin
     sql.Free;
 end;
 
-class procedure TSavePoint.fromCSV(delimChar: Char; const csvString: string);
+class procedure TSavePoint.fromCSV(delimChar: Char; const dataList: TStringList);
 var i: integer;
     csvList: TStringList;
+    sp: TSavePoint;
+    key, value: string;
 begin
-     if csvString = '' then exit;
-
+     sp := nil;
      csvList := TStringList.Create;
+     sp := TSavePoint.Create(0, '');
      try
          csvList.Delimiter := delimChar;
          csvList.StrictDelimiter := true;
-         csvList.DelimitedText := csvString;
-         // ToDo: ƒоделать запись контрольной точки из CSV
-         for i := 0 to csvList.Count - 1 do
-         begin
 
+         for i := 0 to dataList.Count - 1 do
+         begin
+             sp.Clear;
+             csvList.Clear;
+             csvList.DelimitedText := trim(dataList.Strings[i]);
+
+             key := trim(csvList.Strings[3]);
+             value := trim(csvList.Strings[4]);
+             sp.us_id := strToInt(trim(csvList.Strings[0]));
+             sp.mWindow := trim(csvList.Strings[2]);
+             sp.addValue(key, value);
+             sp.Save;
          end;
      finally
+         freeAndNil(sp);
          csvList.Free;
      end;
 end;

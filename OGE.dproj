@@ -88,6 +88,9 @@
 			<DCCReference Include="uWait.pas">
 				<Form>frmWait</Form>
 			</DCCReference>
+			<DCCReference Include="uTaskResults.pas">
+				<Form>frmTaskResults</Form>
+			</DCCReference>
 			<None Include="OGE.todo"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

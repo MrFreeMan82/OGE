@@ -14,8 +14,9 @@ type
     pages_count: integer;
     expire: TDate;
     name: string;
-    display_lable: string;
+    display_lable, short: string;
     visible: boolean;
+    typeOf: TTopicType;
   end;
 
   TSectionList = array of TSection;
@@ -32,6 +33,7 @@ type
       mContentFolder: string;
       msection: PSection;
       mResultMask: TResultMask;
+      typeOf: TTopicType;
 
     procedure doLoadPage();
     procedure setMode(const Value: TMode);
@@ -54,6 +56,7 @@ type
       property Section : PSection read mSection;
       property Page: integer read PageNo write setPage;
       property TaskCount: integer read getTaskCount;
+      property TopicType: TTopicType read typeOf;
 
       procedure setSection(ContentType: TContentFolder; const Value: PSection);
       function sectionByName(const name: string): PSection;
@@ -101,6 +104,7 @@ begin
           item.mid := strToInt(node.ChildNodes.FindNode('ID').Text);
           item.mname := node.ChildNodes.FindNode('DIR').Text;
           item.Caption := node.ChildNodes.FindNode('DISPLAY_LABEL').Text;
+          item.typeOf := TTopicType(strToInt(node.ChildNodes.FindNode('TYPE').Text));
 
           sectionNodes := node.ChildNodes.FindNode('SECTIONS');
           scnt := sectionNodes.ChildNodes.Count;
@@ -118,7 +122,9 @@ begin
                    sections[j].task_count := strToInt(FindNode('TASK_COUNT').Text);
                    sections[j].pages_count := strToInt(FindNode('PAGES_COUNT').Text);
                    sections[j].expire := strToDate(FindNode('FINAL').Text);
+                   sections[j].short := FindNode('SHORT').Text;
                    sections[j].visible := FindNode('VISIBLE').Text = '0';
+                   sections[j].typeOf := item.typeOf;
                 end;
           end;
         end;

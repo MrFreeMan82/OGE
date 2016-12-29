@@ -59,12 +59,13 @@ type
     procedure loadUserOptions();
     procedure createLinks();
     procedure AllTaskCompleate;
-    procedure viewTask(aTopic: TTopic; silent: boolean = true);
+    procedure viewTask(aTopic: TTopic);
     procedure assignedTask();
     function LinkByName(const name: string): TLinkLabel;
     function getSectionLabel: string;
     procedure loadAnswears;
     procedure setResultMask(const Value: TResultMask);
+    procedure UpdateButtons(value: boolean);
     { Private declarations }
   public
     { Public declarations }
@@ -74,6 +75,7 @@ type
     property TaskList: TTopicList read mTaskList;
 
     function Over80(us_id: integer): boolean;
+    function Over80ByUserAndSection(us_id, topic_id: integer): boolean;
     procedure clearUserResults;
     procedure saveResults();
     procedure send();
@@ -121,6 +123,25 @@ begin
      result := true_tasks >= trunc(total_tasks * 0.8);
 end;
 
+function TfrmTasks.Over80ByUserAndSection(us_id, topic_id: integer): boolean;
+var sp: TSavePoint;
+    rm: TResultMask;
+    i,total_tasks, true_tasks: integer;
+begin
+     result := false;
+     sp := TSavePoint.Create(us_id, mParent.Name);
+     sp.Load;
+     rm := sp.asResultMask('MASK_' + intToStr(topic_id));
+     if assigned(rm) then
+     begin
+          total_tasks := length(rm);
+          true_tasks  := 0;
+          for i := 0 to total_tasks - 1 do if rm[i] then inc(true_tasks);
+          result := true_tasks >= (total_tasks * 0.8);
+     end;
+     sp.Free;
+end;
+
 function TfrmTasks.totalTaskCount: integer;
 var i: Integer;
     item: TTopic;
@@ -130,10 +151,10 @@ begin
     begin
         item := TTOpic(mTaskList.Items[i]);
         if (mParent.Name = frmOGe.tabTasks.Name) and
-              (item.ID = COLLECTIVE_TASK_ID) then continue;
+              (item.TopicType = tCollective) then continue;
 
         if (mParent.Name = frmOGE.tabCollectiveTask.Name) and
-              (item.ID <> COLLECTIVE_TASK_ID) then continue;
+              (item.TopicType <> tCollective) then continue;
 
         result := result + item.TaskCount;
     end;
@@ -145,7 +166,6 @@ var i: integer;
     total_tasks, true_tasks: integer;
     rm: TResultMask;
 begin
-    result := false;
     true_tasks := 0;
     rm := SavePoint.asResultMask('MASK_' + intToStr(section.topic_id));
     if (rm = nil) then exit(false);
@@ -242,6 +262,9 @@ end;
 procedure TfrmTasks.actResultClickExecute(Sender: TObject);
 var mr: TModalResult;
 begin
+    assignedTask;
+    if mTask.content = nil then exit;
+
     mr := TfrmTestResult.showTaskResults(self);
 
     case mr of
@@ -257,7 +280,7 @@ begin
     end;
 end;
 
-procedure TfrmTasks.viewTask(aTopic: TTopic; silent: boolean = true);
+procedure TfrmTasks.viewTask(aTopic: TTopic);
 begin
      ScrollBox.HorzScrollBar.Range := 0;
      ScrollBox.VertScrollBar.Range := 0;
@@ -267,11 +290,8 @@ begin
 
      if (aTopic.content = nil) then
      begin
-          if not silent then
-              messageBox(self.Handle,
-                  'По данному разделу тесты не загружены',
-                               'Ошибка', MB_OK or MB_ICONERROR);
-          exit;
+         UpdateButtons(false);
+         exit;
      end;
 
      ScrollBox.HorzScrollBar.Range := 0;
@@ -285,6 +305,7 @@ begin
 
      ScrollBox.HorzScrollBar.Range := img.Picture.Width;
      ScrollBox.VertScrollBar.Range := img.Picture.Height;
+     UpdateButtons(true)
 end;
 
 procedure TfrmTasks.loadUserOptions;
@@ -313,6 +334,7 @@ begin
       messageBox(self.Handle, 'Не удалось загузить тесты', 'Ошибка', MB_OK or MB_ICONERROR);
       abort;
     end;
+    UpdateButtons(false);
     savePoint := TsavePoint.Create(frmOGE.User.id, mParent.Name);
     savepoint.Load;
     createLinks();
@@ -325,7 +347,7 @@ var key, value: string;
 begin
      key := 'MASK';
      value := format('%d;%s;%s;MASK_%d;%s',
-        [frmOGE.User.id, frmOGE.User.fio, savepoint.Window,
+        [frmOGE.User.id, 'n/a', savepoint.Window,
                       mTask.Section.topic_id, savepoint.asString(
                             'MASK_' + intToStr(mTask.Section.topic_id))]
      );
@@ -350,7 +372,7 @@ begin
 
     ResultMask := savepoint.asResultMask('MASK_' + intToStr(mTask.Section.topic_id));
 
-    viewTask(mTask, false);
+    viewTask(mTask);
     loadAnswears();
     frmOGe.UpdateCaption(mTask.Section.display_lable);
 end;
@@ -398,10 +420,10 @@ begin
      begin
           item := TTopic(mTaskList.Items[i]);
           if (mParent.Name = frmOGe.tabTasks.Name) and
-                (item.ID = COLLECTIVE_TASK_ID) then continue;
+                (item.TopicType = tCollective) then continue;
 
           if (mParent.Name = frmOGE.tabCollectiveTask.Name) and
-                (item.ID <> COLLECTIVE_TASK_ID) then continue;
+                (item.TopicType <> tCOllective) then continue;
 
           inc(k);
 
@@ -457,6 +479,15 @@ procedure TfrmTasks.txtAnswerKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
     if key = VK_RETURN then actAnswearClickExecute(Sender);
+end;
+
+procedure TfrmTasks.UpdateButtons(value: boolean);
+var i: integer;
+begin
+     for i := 0 to ActionList.ActionCount - 1 do
+     begin
+            TAction(ActionList.Actions[i]).Enabled := value
+     end;
 end;
 
 procedure TfrmTasks.FormDestroy(Sender: TObject);

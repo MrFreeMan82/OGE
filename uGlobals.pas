@@ -15,11 +15,13 @@ const TOPIC_DIR = 'Topics';
       NOT_ZACHET = 'не зачтено';
 
 
-const COLLECTIVE_TASK_ID = 4;
+//const COLLECTIVE_TASK_ID = 4;
 
 const USR_FIELD_COUNT = 4;
 
 type
+  TTopicType = (tUnknown, tIndividual, tCollective);
+
   TaxisAngle = double;
 
   TMode = (mNormal, mReTest);
@@ -57,9 +59,28 @@ function loadAnswears(const DBFile, fileName: string; aVariant: integer): TAnswe
 function FindData(const zipFile, name: string; outData: TStream): boolean;
 
 procedure extract(fromList: TStringList; key: string; toList: TStringList);
+procedure join(list: TStringList);
 
 implementation
 uses SysUtils, math, Forms, ActiveX, uData, XMLIntf, FWZipReader, dialogs;
+
+procedure join(list: TStringList);
+var i, len: integer;
+    s: string;
+begin
+     for i := list.Count - 1 downto 0 do
+     begin
+           s := list.Strings[i];
+           len := length(s);
+           if s[len] = '=' then
+           begin
+                s[len] := #0;
+                s := trim(s);
+                list.Strings[i] := s + list.Strings[i + 1];
+                list.Delete(i+1);
+           end;
+     end;
+end;
 
 procedure extract(fromList: TStringList; key: string; toList: TStringList);
 var i: integer;
@@ -69,7 +90,6 @@ begin
      b := '<' + key + '>';
      e := '</' + key + '>';
 
-     toList.Clear;
      while i <= (fromList.Count - 1) do
      begin
           while (i < fromList.Count) and (pos(b, fromList.Strings[i]) = 0) do inc(i);

@@ -59,7 +59,6 @@ type
     header1, header2: TGPRectF;
     center: TGPPointF;
     delta: double;
-    decadeStage1, decadeStage2: TDecadeList;
 
     procedure header();
     procedure createNote();
@@ -67,8 +66,6 @@ type
     procedure createGradLines();
     procedure createTimeLine();
     procedure createMainRect();
-    procedure createDacadesStage1();
-    procedure createDacadesStage2();
     procedure initialize();
     procedure render();
     { Private declarations }
@@ -103,80 +100,6 @@ resourcestring STAGE1 = 'Этап 1. Задания для самостоятельного выполнения';
                         'Оценка «зачтено»  ставится, если ученик  верно выполнил не менее 80% заданий  в течение определенного промежутка времени. В противном случае выставляется оценка «не зачтено».';
               HEADER1STR = 'План работы по подготовке учащихся к ОГЭ';
               HEADER2STR = 'Линия времени';
-
-
-procedure TfrmWorkPlan.createDacadesStage1();
-var i,j,k: integer;
-    sections: TSectionList;
-    over80: boolean;
-    expire: TDate;
-    y,m,d: Word;
-begin
-     k := 0;
-
-     for i := 0 to frmOGE.Tasks.TaskList.Count - 1 do
-     begin
-          if TTOpic(frmOGE.CollectiveTasks.
-              TaskList.Items[i]).ID = COLLECTIVE_TASK_ID then continue;
-
-          sections := TTopic(frmOGE.Tasks.TaskList.Items[i]).sections;
-
-          for j := 0 to length(sections) - 1 do
-          begin
-              over80 := frmOGE.Tasks.OverPercBySection(@sections[j], 80);
-
-               y := YearOf(Date);
-               m := MonthOf(sections[j].expire);
-               d := DayOf(sections[j].expire);
-
-               expire := EncodeDate(y, m, d);
-
-               if (k >= 0) and (k < length(decadeStage1)) then
-                    decadeStage1[k].result := over80 and (Date <= expire);
-               inc(k);
-          end;
-     end;
-end;
-
-procedure TfrmWorkPlan.createDacadesStage2;
-var i,j,k, dl: integer;
-    sections: TSectionList;
-    over, over80: boolean;
-    expire: TDate;
-    y,m,d: Word;
-begin
-     for i := 0 to frmOGE.CollectiveTasks.TaskList.Count - 1 do
-     begin
-          if TTOpic(frmOGE.CollectiveTasks.
-              TaskList.Items[i]).ID <> COLLECTIVE_TASK_ID then continue;
-
-          sections := TTopic(frmOGE.CollectiveTasks.TaskList.Items[i]).sections;
-
-          for j := 0 to length(sections) - 1 do
-          begin
-              dl := 1; over80 := false;
-              for k := 1 to length(decadeStage2) - 1 do
-              begin
-                   over := frmOGE.CollectiveTasks.OverPercBySection(@sections[j], 20 * dl);
-
-                   if (dl = 4) and over then over80 := true;
-                   if over80 then over := true;
-
-                   y := YearOf(Date);
-                   m := MonthOf(sections[j].expire);
-                   d := DayOf(sections[j].expire);
-                   if MonthOf(Date) in [9..12] then inc(y);
-
-                   expire := EncodeDate(y, m, d);
-
-                   if (k >= 0) and (k < length(decadeStage2)) then
-                        decadeStage2[k].result := over and (Date <= expire);
-
-                   inc(dl);
-              end;
-          end;
-     end;
-end;
 
 function TfrmWorkPlan.Stage1Result(us_id: integer): boolean;
 var y,m,d: Word;
@@ -255,14 +178,11 @@ begin
 end;
 
 procedure TfrmWorkPlan.createGradLines;
-var i,j, k:integer;
-    scaleWidth, x, y: double;
+var i:integer;
+    scaleWidth: double;
     cp: TGPPointF;
     ln: TLine;
 begin
-    setLength(decadeStage1, 12);
-    setLength(decadeStage2, 6);
-
     setLength(timeGrad, MAX_TIMELINE_GRAD);
     setLength(timeLabels, MAX_TIMELINE_GRAD);
 
@@ -286,44 +206,6 @@ begin
         timeLabels[i].rect.Width := delta;
         timeLabels[i].rect.Height := 30;
 
-    end;
-
-    k := 0;
-    for i := 1 to length(timeLabels) - 1 do
-    begin
-        x := timeLabels[i].rect.X; y := timeLabels[i].rect.Y - 40;
-        for j := 0 to 2 do
-        begin
-            if k >= length(decadeStage1) then break;
-
-            decadeStage1[k].result := false;
-            decadeStage1[k].rect.X := x;
-            decadeStage1[k].rect.Y := y;
-            decadeStage1[k].rect.Width := delta / 3;
-            decadeStage1[k].rect.Height := 30;
-
-            x := x + (delta / 3);
-            inc(k);
-        end;
-    end;
-
-    k := 0;
-    for i := 5 to length(timeLabels) - 1 do
-    begin
-        x := timeLabels[i].rect.X; y := timeLabels[i].rect.Y - 40;
-        for j := 0 to 2 do
-        begin
-            if k >= length(decadeStage1) then break;
-
-            decadeStage2[k].result := false;
-            decadeStage2[k].rect.X := x;
-            decadeStage2[k].rect.Y := y;
-            decadeStage2[k].rect.Width := delta / 3;
-            decadeStage2[k].rect.Height := 30;
-
-            x := x + (delta / 3);
-            inc(k);
-        end;
     end;
 end;
 
@@ -473,34 +355,6 @@ begin
     for i := 1 to length(timeLabels) - 1 do
              graphic.DrawString(timeLabels[i].displayLabel,
                     gradFont, timeLabels[i].rect, gradFontAlign, BlackBrush);
-
-  {  d := 1;
-    for i := 0 to length(decadeStage1) - 1 do
-    begin
-          if decadeStage1[i].result = false then
-              graphic.DrawString(intToStr(d),
-                      gradFont, decadeStage1[i].rect, gradFontAlign, RedBrush)
-          else
-              graphic.DrawString(intToStr(d),
-                      gradFont, decadeStage1[i].rect, gradFontAlign, GreenBrush);
-
-          inc(d);
-          if d > 3 then d := 1;
-    end;
-
-    d := 1;
-    for i := 0 to length(decadeStage2) - 1 do
-    begin
-          if decadeStage2[i].result = false then
-              graphic.DrawString(intToStr(d),
-                      gradFont, decadeStage2[i].rect, gradFontAlign, RedBrush)
-          else
-              graphic.DrawString(intToStr(d),
-                      gradFont, decadeStage2[i].rect, gradFontAlign, GreenBrush);
-
-          inc(d);
-          if d > 3 then d := 1;
-    end; }
 
      graphic.DrawString(NOTE, noteFont, noteRect, nil, BlackBrush);
 

@@ -70,6 +70,7 @@ type
     procedure AllTaskCompleate();
     function doLoadUTT: TUTTModulesList;
     procedure assignedVariant;
+    procedure UpdateButtons(value: boolean);
   public
     { Public declarations }
     function getModuleByID(id: integer): PUTTModule;
@@ -277,6 +278,15 @@ begin
     loadTask(rgVariants.ItemIndex + 1, fTask);
 end;
 
+procedure TfrmUTT.UpdateButtons(value: boolean);
+var i: integer;
+begin
+     for i := 0 to ActionList.ActionCount - 1 do
+     begin
+            TAction(ActionList.Actions[i]).Enabled := value
+     end;
+end;
+
 procedure TfrmUTT.loadTask(aVariant, aTask: integer);
 var fileName, answearName: string;
     bmp: TBitmap;
@@ -291,6 +301,12 @@ begin
      filename := format('%s/%d/%d.jpg', [UTT_DIR, aVariant, aTask]);
 
      bmp := LoadPage(fileName);
+     if bmp = nil then
+     begin
+         rgVariants.ItemIndex := -1;
+         UpdateButtons(false);
+         exit;
+     end;
      img.SetBounds(0, 0, bmp.Width, bmp.Height);
      img.Picture.Assign(bmp);
      bmp.Free;
@@ -302,6 +318,7 @@ begin
         answearName := format('%s/answ.xml', [UTT_DIR]);
         answears := loadAnswears(dm.DataFile, answearName, aVariant);
      end;
+     UpdateButtons(true);
 end;
 
 procedure TfrmUTT.clearUserResults;
@@ -379,7 +396,7 @@ begin
       messageBox(self.Handle, 'Не удалось загузить тесты', 'Ошибка', MB_OK or MB_ICONERROR);
       abort;
     end;
-
+    UpdateButtons(false);
     savePoint := TSavePoint.Create(frmOGE.User.id, self.ClassName);
     savePoint.Load;
     variant := savePoint.asInteger('VARIANT');
@@ -395,7 +412,7 @@ var key, value: string;
 begin
      key := 'MASK';
      value := format('%d;%s;%s;MASK_%d;%s',
-        [frmOGE.User.id, frmOGE.User.fio, savepoint.Window,
+        [frmOGE.User.id, 'n/a', savepoint.Window,
                       rgVariants.ItemIndex + 1, savepoint.asString(
                             'MASK_' + intToStr(rgVariants.ItemIndex + 1))]
      );

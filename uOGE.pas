@@ -7,7 +7,7 @@ uses
   Dialogs, OleCtrls, SHDocVw, ComCtrls, StdCtrls, ExtCtrls, ExtDlgs, Grids,
   ToolWin, Buttons, PlatformDefaultStyleActnCtrls, ActnList, ActnMan,
   AppEvnts, uTheme, uUTT, uTasks, uWorkPlan, XPMan, ImgList,
-  ShellAnimations, uUser, NiceGrid, uSavePoint, uSync;
+  ShellAnimations, uUser, NiceGrid, uSavePoint, uSync, uTaskResults;
 
 type
   TfrmOGE = class(TForm)
@@ -30,12 +30,7 @@ type
     ImageList1: TImageList;
     ShellResources1: TShellResources;
     tabResults: TTabSheet;
-    grdUserresult: TNiceGrid;
     grdUsers: TNiceGrid;
-    grdVariants: TNiceGrid;
-    ToolBar2: TToolBar;
-    ToolButton1: TToolButton;
-    btRefresh: TSpeedButton;
     GroupBox2: TGroupBox;
     txtSMTPPort: TEdit;
     Label5: TLabel;
@@ -61,8 +56,6 @@ type
     procedure btEditUserClick(Sender: TObject);
     procedure btDeleteUserClick(Sender: TObject);
     procedure grdUsersColRowChanged(Sender: TObject; Col, Row: Integer);
-    procedure grdUserresultColRowChanged(Sender: TObject; Col, Row: Integer);
-    procedure btRefreshClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormShow(Sender: TObject);
     procedure FormResize(Sender: TObject);
@@ -74,6 +67,7 @@ type
     frmTasks: TfrmTasks;
     frmWorkPlan: TfrmWorkPlan;
     frmCollectiveTask: TfrmTasks;
+    frmTaskResults: TfrmTaskResults;
 
     syncParams: TSyncParams;
     syncro: TSync;
@@ -83,28 +77,24 @@ type
     usrList: TUserList;
     path: string;
 
-    ptsPerVariant: TPointsPerVariant;
-
     function Login(): TModalResult;
-    procedure fillGrid();
+    procedure fillUserGrid();
     procedure refreshUserList();
 
-    procedure totalResultUTTVariants(us_id: integer; mdl: PUTTModule);
-    procedure totalResultUTT(us_id, i: integer);
-    procedure totalResultIndividual(us_id, i: integer);
-    procedure totalresultFillUsesrs();
-    procedure totalResults();
     procedure suspendActions();
     procedure loadSyncParams();
-    procedure syncMask();
+    procedure setAccessWindow();
   public
     { Public declarations }
+    property UserList: TUserList read usrList;
     property CollectiveTasks: TfrmTasks read frmCollectiveTask;
     property Tasks: TfrmTasks read frmTasks;
     property Topics: TfrmTopics read frmTopics;
+    property WorkPlan: TfrmWorkPlan read frmWorkPlan;
     property UTT:TfrmUTT read frmUTT;
     property User: TUser read currentUser;
     property Sync: TSync read syncro;
+    procedure syncronize();
     procedure UpdateCaption(const suffix: string);
   end;
 
@@ -112,7 +102,7 @@ var
   frmOGE: TfrmOGE;
 
 implementation
-uses uGlobals, uData, uStress;
+uses uGlobals, uData, uStress, uWait;
 
 {$R *.dfm}
 
@@ -120,73 +110,12 @@ uses uGlobals, uData, uStress;
 
 {$DEFINE TEST}
 
+//ToDo: Перенести результаты в отдельную форму.
+//ToDo: Сделать подробный вариант результатов по индивид. и коллект тестам
+
 procedure TfrmOGE.UpdateCaption(const suffix: string);
 begin
     Caption := format('ОГЭ - %s [%s]', [currentUser.fio, suffix]);
-end;
-
-procedure TfrmOGE.totalResults;
-begin
-    totalresultFillUsesrs();
-end;
-
-procedure TfrmOGE.totalResultUTT(us_id, i: integer);
-var j, k, pts: integer;
-begin
-     k := 3;
-
-     for j := 0 to length(frmUTT.UTTTModuleList) - 1 do
-     begin
-           if not frmUTT.UTTTModuleList[j].visible then continue;
-
-           pts := frmUTT.pointByUserAndModule(us_id, @frmUTT.UTTTModuleList[j]);
-
-           grdUserresult.Cells[k, i] := intToStr(pts);
-           grdUserresult.Objects[k, i] := TObject(frmUTT.UTTTModuleList[j].id);
-
-           inc(k)
-     end;
-end;
-
-procedure TfrmOGE.totalResultUTTVariants(us_id: integer; mdl: PUTTModule);
-var i: integer;
-begin
-     ptsPerVariant := frmUTT.pointsByUserAllVariant(us_id, mdl);
-
-     if ptsPerVariant = nil then exit;
-
-     for i := 0 to grdVariants.ColCount - 1 do
-          grdVariants.Cells[i, 0] := intToStr(ptsPerVariant[i]);
-end;
-
-procedure TfrmOGE.totalResultIndividual(us_id, i: integer);
-begin
-     if frmWorkPlan.Stage1Result(us_id)
-        then grdUserresult.Cells[1, i] := ZACHET
-           else grdUserresult.Cells[1, i] := NOT_ZACHET;
-
-     if frmWorkPlan.Stage2Result(Us_id)
-       then grdUserResult.Cells[2, i] := ZACHET
-            else grdUserResult.Cells[2, i] := NOT_ZACHET;
-end;
-
-procedure TfrmOGE.totalresultFillUsesrs;
-var i,j: integer;
-    item: PUser;
-begin
-     j := 0;
-     grdUserresult.RowCount := 0;
-     for i := 0 to usrList.Count - 1 do
-     begin
-          item := usrList.Items[i];
-          if (item.ut_id = 1) then continue;
-          grdUserresult.RowCount := grdUserresult.RowCount + 1;
-          grdUserresult.Cells[0, j] := item.fio;
-          grdUserresult.Objects[0, j] := TObject(item.id);
-          totalResultIndividual(item.id, j);
-          totalResultUTT(item.id, j);
-          inc(j)
-     end;
 end;
 
 function TfrmOGE.Login():TModalResult;
@@ -266,32 +195,33 @@ begin
    end;
 end;
 
-procedure TfrmOGE.syncMask;
-var i: integer;
-    body: TStringList;
+procedure TfrmOGE.syncronize;
+var body: TStringList;
     dataList: TStringList;
-    sp: TSavePoint;
 begin
+     frmWait.Show;
+     Application.ProcessMessages;
+
      body := TStringList.Create;
      dataList := TStringList.Create;
-     try
-         syncro.reciev(body);
-         extract(body, 'MASK', dataList);
-         TSavePoint.fromCSV(';', dataList.Text);
-         // ToDo: Доделать прием сообщений
-     finally
-       body.Free;
-       dataList.Free;
+     try try
+             syncro.reciev(body);
+             extract(body, 'MASK', dataList);
+             join(dataList);
+             TSavePoint.fromCSV(';', dataList);
+        finally
+            frmWait.Hide;
+            Application.ProcessMessages;
+            freeAndNil(body);
+            freeAndNil(dataList);
+        end;
+     except
+          messageBox(handle, 'Во время отправления произошла ошибка. '#13 +
+                'Попробуйте снова через несколько минут.', 'ОГЭ', MB_OK or MB_ICONERROR);
      end;
 end;
 
-procedure TfrmOGE.btRefreshClick(Sender: TObject);
-begin
-    syncMask();
-    totalResults()
-end;
-
-procedure TfrmOGE.fillGrid;
+procedure TfrmOGE.fillUserGrid;
 var i: integer;
     item: PUser;
 begin
@@ -315,7 +245,7 @@ procedure TfrmOGE.refreshUserList;
 begin
      usrList.Free;
      usrList := TUserList.Create;
-     fillGrid();
+     fillUserGrid();
 end;
 
 procedure TfrmOGE.FormCreate(Sender: TObject);
@@ -349,6 +279,9 @@ begin
     if not assigned(frmCollectiveTask) then frmCollectiveTask := TfrmTasks.Create(self);
     frmCollectiveTask.Dock(tabCollectiveTask, tabCollectiveTask.ClientRect);
 
+    if not assigned(frmTaskResults) then frmTaskResults := TfrmTaskResults.Create(self);
+    frmTaskResults.Dock(tabResults, tabResults.ClientRect);
+
     saveOGE := TSavePoint.Create(user.id, self.ClassName);
     syncParams := TSyncParams.Create;
     syncro := TSync.Create;
@@ -362,17 +295,15 @@ begin
     WebBrowser1.Navigate('res://' + Application.ExeName + '/HTML/FIRST_PAGE');
     WebBrowser1.OleObject.Document.bgColor := '#E0FFFF';
 
+    setAccessWindow();
+
     frmTopics.showTopics();
     frmUTT.ShowUTT();
     frmTasks.ShowTasks(tabTasks);
     frmWorkPlan.ShowWorkPlan();
     frmCollectiveTask.ShowTasks(tabCollectiveTask);
-    fillGrid();
-    totalResults();
-
-    if currentUser.ut_id = 1
-      then tabAdmin.TabVisible := true
-          else tabAdmin.TabVisible := false;
+    frmTaskResults.ShowTaskResults();
+    fillUserGrid();
 
     pgPages.ActivePage := tabInfo;    // Нужно иначе ошибка Access Violation ??
 
@@ -381,6 +312,19 @@ begin
     if p >= 0 then pgPages.ActivePageIndex := p;
 
     pgPagesChange(Sender)
+end;
+
+procedure TfrmOGE.setAccessWindow;
+begin
+    if currentUser.ut_id = 1 then
+    begin
+        tabAdmin.TabVisible := true;
+        tabResults.TabVisible := true;
+    end
+    else begin
+        tabAdmin.TabVisible := false;
+        tabResults.TabVisible := false;
+    end;
 end;
 
 procedure TfrmOGE.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -398,17 +342,6 @@ begin
     freeAndNil(frmCollectiveTask);
     freeAndNil(saveOGE);
     freeAndNil(syncro);
-end;
-
-procedure TfrmOGE.grdUserresultColRowChanged(Sender: TObject; Col,Row: Integer);
-var us_id, mdl_id: integer;
-begin
-    if (row >= 0) and (grdUserresult.Cells[0, row] <> '') and (Col in [3..5]) then
-    begin
-        us_id := integer(grdUserresult.Objects[0, row]);
-        mdl_id := integer(grdUserresult.Objects[Col, row]);
-        totalResultUTTVariants(us_id, frmUTT.getModuleByID(mdl_id));
-    end;
 end;
 
 procedure TfrmOGE.grdUsersColRowChanged(Sender: TObject; Col, Row: Integer);
@@ -436,16 +369,12 @@ begin
 
     else if pgPages.ActivePage = tabTasks
         then begin
-      //       frmTasks.refreshLinkContent;  //   Так как  frmTasks и  frmCollectiveTask используют одну модель
-                                          //    то REsultMask у них один, чтоб переключать Resultmask
-                                          //    при смене вкладок нужно запускать эту проц.
              frmTasks.ActionList.State := asNormal;
              UpdateCaption(frmTasks.SectionLabel);
         end
 
     else if pgPages.ActivePage = tabCollectiveTask
         then begin
-       //     frmCollectiveTask.refreshLinkContent;
             frmCollectiveTask.ActionList.State := asNormal;
             UpdateCaption(frmCollectiveTask.SectionLabel);
         end
@@ -459,7 +388,6 @@ begin
             frmTopics.ActionList.State := asNormal;
             UpdateCaption(pgPages.ActivePage.Caption);
          end
-
     else
     UpdateCaption(pgPages.ActivePage.Caption);
 end;

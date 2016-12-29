@@ -39,7 +39,6 @@ type TSync = class
         mimap: TIMAPSend;
         msmtp: TSMTPSend;
 
-        function getBody(msg: TStringList): string;
         procedure OnReadFilter(Sender: TObject; var Value: AnsiString);
     procedure setsyncParams(const Value: TSyncParams);
      public
@@ -53,7 +52,7 @@ end;
 
 implementation
 
-uses uData, SQLite3, SQLiteTable3;
+uses uData, SQLite3, SQLiteTable3, uGlobals;
 
 { TSync }
 
@@ -88,35 +87,6 @@ begin
     log.SaveToFile('log.log');
 end;
 
-function TSync.getBody(msg: TStringList): string;
-var i,k, eq: integer;
-begin
-     result := '';
-
-     i := 0;
-     while  i < Msg.Count do
-     begin
-          while (i < Msg.Count) and
-                     (pos('<OGE_SYNC>', Msg.Strings[i]) = 0) do inc(i);
-
-          inc(i);
-
-          while (i < Msg.Count) and
-                (pos('</OGE_SYNC>', Msg.Strings[i]) = 0) do
-          begin
-               result := result + trim(Msg.Strings[i]);
-               eq := pos('=', result);
-               if eq > 0 then
-               begin
-                    result[eq] := #0;
-                    result := trim(result)
-               end;
-               inc(i);
-          end;
-          break;
-     end;
-end;
-
 function TSync.reciev(body: TStringList): boolean;
 var i,id: integer;
     msgID, msg: TStringList;
@@ -124,12 +94,11 @@ var i,id: integer;
 begin
     msgID := TStringList.Create;
     msg := TstringList.Create;
-    body := TstringList.Create;
     try
         if not mimap.Login then abort;
         if not mimap.SelectFolder('INBOX') then abort;
         mimap.SearchMess('UNSEEN SUBJECT SYNC', msgID);
-
+       //   mimap.SearchMess('SUBJECT SYNC', msgID);
         for i := 0 to msgID.Count - 1 do
         begin
             id := strToInt(msgID.Strings[i]);
@@ -140,8 +109,8 @@ begin
             begin
                  msg.clear;
                  mimap.FetchMess(id, msg);
-                 body.Add(getBody(msg));
-                 mimap.DeleteMess(id);
+                 extract(msg, 'OGE_SYNC', body);
+                // mimap.DeleteMess(id);
             end;
         end;
         mimap.CloseFolder;
@@ -149,7 +118,6 @@ begin
     finally
         msgID.Free;
         msg.Free;
-        body.Free;
     end;
     result := true;
 end;
@@ -163,7 +131,7 @@ begin
     Msg := TMimeMess.Create;
     try
         list.Add('<OGE_SYNC>');
-        list.Add(key); list.Add(value); list.Add(key);
+        list.Add('<' + key + '>'); list.Add(value); list.Add('</' + key + '>');
         list.Add('</OGE_SYNC>');
 
         Msg.Header.Subject := 'SYNC';
