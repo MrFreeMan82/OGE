@@ -49,7 +49,7 @@ object frmTopics: TfrmTopics
       Width = 410
       Height = 344
       Margins.Left = 20
-      VertScrollBar.Increment = 2
+      VertScrollBar.Increment = 5
       Align = alClient
       AutoScroll = False
       BevelEdges = []

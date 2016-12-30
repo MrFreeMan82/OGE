@@ -108,10 +108,7 @@ uses uGlobals, uData, uStress, uWait;
 
 
 
-{$DEFINE TEST}
-
-//ToDo: Перенести результаты в отдельную форму.
-//ToDo: Сделать подробный вариант результатов по индивид. и коллект тестам
+//{$DEFINE TEST}
 
 procedure TfrmOGE.UpdateCaption(const suffix: string);
 begin
@@ -387,6 +384,7 @@ begin
          begin
             frmTopics.ActionList.State := asNormal;
             UpdateCaption(pgPages.ActivePage.Caption);
+            frmTopics.SetFocusedControl(frmTopics);
          end
     else
     UpdateCaption(pgPages.ActivePage.Caption);

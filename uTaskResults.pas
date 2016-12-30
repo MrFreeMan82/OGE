@@ -72,6 +72,7 @@ begin
     totalresultFillTasksUsesrs();
     pnlTasks.Align := alClient;
     pnlTasks.Visible := true;
+    if self.Visible then grdTasks.SetFocus;
 end;
 
 procedure TfrmTaskResults.totalResultByUser(us_id, y: integer);
@@ -169,6 +170,7 @@ begin
     totalresultFillUTTUsesrs();
     pnlUTT.Align := alClient;
     pnlUTT.Visible := true;
+    if self.Visible then grdUserresult.SetFocus;
 end;
 
 procedure TfrmTaskResults.totalResultUTT(us_id, i: integer);

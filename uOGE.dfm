@@ -337,6 +337,10 @@ object frmOGE: TfrmOGE
     OnChange = pgPagesChange
     object tabInfo: TTabSheet
       Caption = #1048#1085#1092#1086#1088#1084#1072#1094#1080#1103
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object WebBrowser1: TWebBrowser
         Left = 0
         Top = 0
@@ -359,28 +363,52 @@ object frmOGE: TfrmOGE
     object tabThemes: TTabSheet
       Caption = #1056#1072#1079#1076#1077#1083#1099
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
     object tabTasks: TTabSheet
       Caption = #1047#1072#1076#1072#1085#1080#1103' '#1076#1083#1103' '#1089#1072#1084#1086#1089#1090#1086#1103#1090#1077#1083#1100#1085#1086#1075#1086' '#1074#1099#1087#1086#1083#1085#1077#1085#1080#1103
       ImageIndex = 4
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
     object tabCollectiveTask: TTabSheet
       Caption = #1057#1086#1074#1084#1077#1089#1090#1085#1072#1103' '#1088#1072#1073#1086#1090#1072
       ImageIndex = 5
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
     object tabUTT: TTabSheet
       Caption = #1058#1088#1077#1088#1086#1074#1086#1095#1085#1099#1077' '#1074#1072#1088#1080#1072#1085#1090#1099' '#1050#1048#1052#1086#1074
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
     object tabTests: TTabSheet
       Caption = #1058#1077#1089#1090#1099
       Enabled = False
       ImageIndex = 4
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
     object tabPlan: TTabSheet
       Caption = #1055#1083#1072#1085' '#1088#1072#1073#1086#1090
       ImageIndex = 6
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
     end
     object tabResults: TTabSheet
       Caption = #1056#1077#1079#1091#1083#1100#1090#1072#1090#1099
@@ -389,6 +417,10 @@ object frmOGE: TfrmOGE
     object tabAdmin: TTabSheet
       Caption = #1040#1076#1084#1080#1085#1080#1089#1090#1088#1072#1090#1086#1088
       ImageIndex = 7
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object GroupBox1: TGroupBox
         Left = 0
         Top = 0

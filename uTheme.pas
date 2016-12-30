@@ -210,6 +210,7 @@ end;
 procedure TfrmTopics.FormMouseWheel(Sender: TObject; Shift: TShiftState;
   WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
 begin
+   if scrollBox.VertScrollBar.Increment = 0 then exit;
     with scrollBox.VertScrollBar do
     begin
         if (wheelDelta < 0) and (position < range)

@@ -88,9 +88,6 @@ object frmTaskResults: TfrmTaskResults
       #1048#1085#1076#1080#1074#1080#1076#1091#1072#1083#1100#1085#1099#1077' '#1080' '#1082#1086#1083#1083#1077#1082#1090#1080#1074#1085#1099#1077' '#1079#1072#1076#1072#1095#1080)
     TabIndex = 0
     OnChange = TabSetChange
-    ExplicitLeft = 8
-    ExplicitTop = 117
-    ExplicitWidth = 651
   end
   object pnlUTT: TPanel
     Left = 8
@@ -128,7 +125,7 @@ object frmTaskResults: TfrmTaskResults
         end
         item
           Title = #1054#1094#1077#1085#1082#1072' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1086#1074'|'#1057#1072#1084#1086#1089#1090#1086#1103#1090#1077#1083#1100#1085#1086#1077' '#1074#1099#1087#1086#1083#1085#1077#1085#1080#1077
-          Width = 118
+          Width = 119
         end
         item
           Title = #1054#1094#1077#1085#1082#1072' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1086#1074'|'#1057#1086#1074#1084#1077#1089#1090#1085#1072#1103' '#1088#1072#1073#1086#1090#1072
@@ -148,7 +145,7 @@ object frmTaskResults: TfrmTaskResults
           Title = 
             #1054#1094#1077#1085#1082#1072' '#1088#1077#1079#1091#1083#1100#1090#1072#1090#1086#1074'|'#1058#1088#1077#1085#1080#1088#1086#1074#1086#1095#1085#1099#1077' '#1074#1072#1088#1080#1072#1085#1090#1099' '#1050#1048#1052#1086#1074'|'#1052#1086#1076#1091#1083#1100' '#171#1056#1077#1072#1083#1100#1085#1072#1103 +
             ' '#1084#1072#1090#1077#1084#1072#1090#1080#1082#1072#187
-          Width = 88
+          Width = 87
         end>
       GutterKind = gkNone
       GutterFont.Charset = DEFAULT_CHARSET
@@ -166,9 +163,6 @@ object frmTaskResults: TfrmTaskResults
       Align = alClient
       BorderStyle = bsNone
       TabOrder = 0
-      ExplicitLeft = -8
-      ExplicitTop = -26
-      ExplicitHeight = 310
     end
     object grdVariants: TNiceGrid
       Left = 1
@@ -246,19 +240,19 @@ object frmTaskResults: TfrmTaskResults
         end
         item
           Title = '14'
-          Width = 32
+          Width = 33
         end
         item
           Title = '15'
-          Width = 32
+          Width = 33
         end
         item
           Title = '16'
-          Width = 32
+          Width = 33
         end
         item
           Title = '17'
-          Width = 31
+          Width = 32
         end
         item
           Title = '18'
@@ -274,19 +268,19 @@ object frmTaskResults: TfrmTaskResults
         end
         item
           Title = '21'
-          Width = 8
+          Width = 7
         end
         item
           Title = '22'
-          Width = 8
+          Width = 7
         end
         item
           Title = '23'
-          Width = 8
+          Width = 7
         end
         item
           Title = '24'
-          Width = 8
+          Width = 7
         end
         item
           Title = '25'
@@ -327,8 +321,6 @@ object frmTaskResults: TfrmTaskResults
       Align = alBottom
       BorderStyle = bsNone
       TabOrder = 1
-      ExplicitLeft = 0
-      ExplicitTop = 235
     end
   end
   object pnlTasks: TPanel
@@ -418,8 +410,6 @@ object frmTaskResults: TfrmTaskResults
       Font.Style = []
       Align = alClient
       TabOrder = 0
-      ExplicitLeft = 0
-      ExplicitWidth = 646
     end
   end
 end

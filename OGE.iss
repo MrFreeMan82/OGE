@@ -10,7 +10,7 @@
 ; NOTE: The value of AppId uniquely identifies this application.
 ; Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{72004983-3980-4975-AA5E-37BAC84D835F}
+AppId={{A07DD1E9-0C67-4A6B-ACF7-D185365FFC8A}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 ;AppVerName={#MyAppName} {#MyAppVersion}
@@ -19,7 +19,7 @@ DefaultDirName={pf}\{#MyAppName}
 DisableProgramGroupPage=yes
 LicenseFile=D:\oge\licence.txt
 OutputDir=D:\
-OutputBaseFilename=OGESetup
+OutputBaseFilename=OGE_setup
 SetupIconFile=D:\oge\ico.ico
 Compression=lzma
 SolidCompression=yes
@@ -34,10 +34,12 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: "D:\oge\OGE.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "D:\oge\ico.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "D:\oge\libeay32.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "D:\oge\licence.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "D:\oge\OGE.dat"; DestDir: "{app}"; Flags: ignoreversion
 Source: "D:\oge\sqlite.dat"; DestDir: "{app}"; Flags: ignoreversion
 Source: "D:\oge\sqlite3.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "D:\oge\ssleay32.dll"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
