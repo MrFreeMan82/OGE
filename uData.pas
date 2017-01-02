@@ -107,12 +107,21 @@ begin
 end;
 
 procedure Tdm.DataModuleCreate(Sender: TObject);
+var appData: string;
 begin
+    appData := GetEnvironmentVariable('LocalAppData');
     fDataFile := exePath() + 'OGE.dat';
-    sqliteFile := exePath() + 'sqlite.dat';
+    sqliteFile := appData + '\OGE\' + 'sqlite.dat';
+
     if not FileExists(fDataFile) then
     begin
         messageBox(0, PWideChar('Ôאיכ ' + fDataFile + ' םו םאיהום!'), 'ÎÃÅ', MB_OK or MB_ICONERROR);
+        halt(0);
+    end;
+
+    if not FileExists(sqliteFile) then
+    begin
+        messageBox(0, PWideChar('Ôאיכ ' + sqliteFile + ' םו םאיהום!'), 'ÎÃÅ', MB_OK or MB_ICONERROR);
         halt(0);
     end;
 
