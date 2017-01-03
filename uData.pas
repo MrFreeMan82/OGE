@@ -43,6 +43,8 @@ uses uOGE, uUser, uGlobals, Windows;
 
 { Tdm }
 
+//{$DEFINE TEST}
+
 procedure Tdm.createTableParams;
 begin
     if sqlite.TableExists('PARAMS') then exit;
@@ -109,9 +111,14 @@ end;
 procedure Tdm.DataModuleCreate(Sender: TObject);
 var appData: string;
 begin
+    {$IFDEF TEST}
+      fDataFile := exePath + 'OGE.dat';
+      sqliteFile := exePath + 'sqlite.dat';
+    {$ELSE}
     appData := GetEnvironmentVariable('LocalAppData');
-    fDataFile := exePath() + 'OGE.dat';
+    fDataFile := appData + '\OGE\' + 'OGE.dat';
     sqliteFile := appData + '\OGE\' + 'sqlite.dat';
+    {$ENDIF}
 
     if not FileExists(fDataFile) then
     begin

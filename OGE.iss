@@ -36,7 +36,7 @@ Source: "D:\oge\OGE.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "D:\oge\ico.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "D:\oge\libeay32.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "D:\oge\licence.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "D:\oge\OGE.dat"; DestDir: "{app}"; Flags: ignoreversion
+Source: "D:\oge\OGE.dat"; DestDir: "{localappdata}\OGE"; Flags: ignoreversion
 Source: "D:\oge\sqlite.dat"; DestDir: "{localappdata}\OGE"; Flags: ignoreversion
 Source: "D:\oge\sqlite3.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "D:\oge\ssleay32.dll"; DestDir: "{app}"; Flags: ignoreversion
