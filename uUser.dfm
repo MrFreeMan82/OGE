@@ -358,6 +358,7 @@ object frmUser: TfrmUser
     Width = 306
     Height = 22
     Style = csOwnerDrawFixed
+    Enabled = False
     ItemIndex = 1
     TabOrder = 1
     Text = #1055#1086#1083#1100#1079#1086#1074#1072#1090#1077#1083#1100

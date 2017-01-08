@@ -206,7 +206,7 @@ procedure TfrmTaskResults.btRefreshClick(Sender: TObject);
 var allowChange: boolean;
 begin
     allowChange := true;
-    frmOGE.syncronize;
+    if frmOGE.User.ut_id = 1 then frmOGE.syncronize;
     TabSetChange(Sender, TabSet.TabIndex, allowChange);
 end;
 

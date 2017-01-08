@@ -83,8 +83,13 @@ begin
 end;
 
 procedure TSync.saveLog;
+var logdir,logfile: string;
 begin
-    log.SaveToFile('log.log');
+    logdir := GetEnvironmentVariable('LocalAppData') + '\OGE\';
+    if not DirectoryExists(logdir) then mkdir(logdir);
+
+    logfile := logdir + 'log.log';
+    log.SaveToFile(logfile);
 end;
 
 function TSync.reciev(body: TStringList): boolean;
@@ -99,6 +104,7 @@ begin
         if not mimap.SelectFolder('INBOX') then abort;
         mimap.SearchMess('UNSEEN SUBJECT SYNC', msgID);
        //   mimap.SearchMess('SUBJECT SYNC', msgID);
+
         for i := 0 to msgID.Count - 1 do
         begin
             id := strToInt(msgID.Strings[i]);

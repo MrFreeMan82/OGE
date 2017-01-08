@@ -49,8 +49,6 @@ type
     txtIMAPPort: TEdit;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure WebBrowser1DocumentComplete(ASender: TObject;
-      const pDisp: IDispatch; var URL: OleVariant);
     procedure pgPagesChange(Sender: TObject);
     procedure btAddUserClick(Sender: TObject);
     procedure btEditUserClick(Sender: TObject);
@@ -121,7 +119,7 @@ var s: string;
 begin
      s := '';
      repeat
-          if InputQuery('OГЭ', 'Введите паоль:', s)
+          if InputQuery('OГЭ', '«Получить пароль по email: G.saidov28@yandex.ru»'#13#13'Введите пароль:', s)
                 then result := mrOK else result := mrCancel;
 
           for i := 0 to usrList.Count - 1 do
@@ -213,6 +211,7 @@ begin
             freeAndNil(dataList);
         end;
      except
+         frmOGE.Sync.saveLog;
           messageBox(handle, 'Во время отправления произошла ошибка. '#13 +
                 'Попробуйте снова через несколько минут.', 'ОГЭ', MB_OK or MB_ICONERROR);
      end;
@@ -257,6 +256,8 @@ begin
 
     if Login() = mrCancel then
     begin
+        usrList.Free;
+        dm.Free;
         halt(0);
     end;
     Path := exePath();
@@ -290,7 +291,7 @@ begin
     syncro.SyncParams := syncParams;
     loadSyncParams();
     WebBrowser1.Navigate('res://' + Application.ExeName + '/HTML/FIRST_PAGE');
-    WebBrowser1.OleObject.Document.bgColor := '#E0FFFF';
+   // WebBrowser1.OleObject.Document.bgColor := '#E0FFFF';
 
     setAccessWindow();
 
@@ -320,7 +321,7 @@ begin
     end
     else begin
         tabAdmin.TabVisible := false;
-        tabResults.TabVisible := false;
+     //   tabResults.TabVisible := false;
     end;
 end;
 
@@ -393,13 +394,6 @@ end;
 procedure TfrmOGE.FormResize(Sender: TObject);
 begin
     pgPagesChange(Sender);
-end;
-
-procedure TfrmOGE.WebBrowser1DocumentComplete(ASender: TObject;
-  const pDisp: IDispatch; var URL: OleVariant);
-begin
-    while WebBrowser1.ReadyState <> 4 do Application.ProcessMessages;
-    WebBrowser1.OleObject.Document.bgColor := '#E0FFFF';
 end;
 
 end.
