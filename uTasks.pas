@@ -274,7 +274,7 @@ begin
           // Перейдем в режим прохода теста заново
           // Найдем первый не пройденый тест
               mTask.mode := mReTest;
-              mTask.NextPage;
+              mTask.FirstPage;
               viewTask(mTask);
         end;
     end;
@@ -472,6 +472,7 @@ begin
     begin
          setLength(taskResultMask, length(answears));
          for i := 0 to length(taskResultMask) - 1 do taskResultMask[i] := false;
+         ResultMask := taskResultMask;
     end;
 end;
 

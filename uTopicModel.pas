@@ -165,7 +165,18 @@ end;
 
 procedure TTopic.FirstPage;
 begin
-   pageNo := 1;
+   if mode = mReTest then
+   begin
+       pageNo := getNextFalseTask(pageNo, mResultMask, true);
+       if pageNo = ALL_TASK_COMPLETE then
+       begin
+          mode := mNormal;
+          if assigned(OnAllTaskComplete) then OnAllTaskComplete();
+          exit;
+       end;
+   end
+   else pageNo := 1;
+
    doLoadPage();
 end;
 
